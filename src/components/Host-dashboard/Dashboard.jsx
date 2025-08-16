@@ -83,7 +83,7 @@ const CurrencySelector = ({
           </div>
         </div>
         <FaChevronDown
-          className={`text-primary-400 transition-transform duration-300 ${
+          className={`text-lg md:text-xl text-primary-400 transition-transform duration-300 ${
             isOpen ? 'transform rotate-180' : ''
           }`}
         />
@@ -112,7 +112,7 @@ const CurrencySelector = ({
                   <div className='font-bold text-primary-800 flex items-center gap-2 text-sm md:text-base'>
                     {currency.symbol} {currency.code}
                     {selectedCurrency === currency.code && (
-                      <FaCheck className='text-primary-500 text-sm' />
+                      <FaCheck className='text-primary-500 text-base md:text-lg' />
                     )}
                   </div>
                   <div className='text-xs md:text-sm text-primary-600 mb-1'>
@@ -352,7 +352,7 @@ const Dashboard = () => {
                             : 'bg-primary-100 text-primary-600'
                         }`}
                       >
-                        <type.icon className='text-xl md:text-2xl' />
+                        <type.icon className='text-2xl md:text-3xl' />
                       </div>
                       <div>
                         <h4 className='font-bold text-primary-800 text-base md:text-lg'>
@@ -393,7 +393,7 @@ const Dashboard = () => {
                             : 'bg-primary-100 text-primary-600'
                         }`}
                       >
-                        <place.icon className='text-xl md:text-2xl' />
+                        <place.icon className='text-2xl md:text-3xl' />
                       </div>
                       <div>
                         <h4 className='font-bold text-primary-800 text-base md:text-lg'>
@@ -422,9 +422,9 @@ const Dashboard = () => {
                         bedrooms: Math.max(1, prev.bedrooms - 1),
                       }))
                     }
-                    className='p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
                   >
-                    <FaMinus className='text-primary-600' />
+                    <FaMinus className='text-primary-600 text-lg' />
                   </button>
                   <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.bedrooms}
@@ -436,9 +436,9 @@ const Dashboard = () => {
                         bedrooms: prev.bedrooms + 1,
                       }))
                     }
-                    className='p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
                   >
-                    <FaPlus className='text-primary-600' />
+                    <FaPlus className='text-primary-600 text-lg' />
                   </button>
                 </div>
               </div>
@@ -455,9 +455,9 @@ const Dashboard = () => {
                         bathrooms: Math.max(1, prev.bathrooms - 1),
                       }))
                     }
-                    className='p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
                   >
-                    <FaMinus className='text-primary-600' />
+                    <FaMinus className='text-primary-600 text-lg' />
                   </button>
                   <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.bathrooms}
@@ -469,9 +469,9 @@ const Dashboard = () => {
                         bathrooms: prev.bathrooms + 1,
                       }))
                     }
-                    className='p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
                   >
-                    <FaPlus className='text-primary-600' />
+                    <FaPlus className='text-primary-600 text-lg' />
                   </button>
                 </div>
               </div>
@@ -488,9 +488,9 @@ const Dashboard = () => {
                         maxGuests: Math.max(1, prev.maxGuests - 1),
                       }))
                     }
-                    className='p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
                   >
-                    <FaMinus className='text-primary-600' />
+                    <FaMinus className='text-primary-600 text-lg' />
                   </button>
                   <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.maxGuests}
@@ -502,9 +502,9 @@ const Dashboard = () => {
                         maxGuests: prev.maxGuests + 1,
                       }))
                     }
-                    className='p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
                   >
-                    <FaPlus className='text-primary-600' />
+                    <FaPlus className='text-primary-600 text-lg' />
                   </button>
                 </div>
               </div>
@@ -520,7 +520,7 @@ const Dashboard = () => {
                 Share photos of your space
               </h3>
               <div className='border-2 border-dashed border-primary-300 rounded-xl md:rounded-2xl p-6 md:p-8 text-center bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
-                <FaCamera className='text-4xl md:text-5xl text-primary-400 mx-auto mb-4' />
+                <FaCamera className='text-5xl md:text-6xl text-primary-400 mx-auto mb-4' />
                 <h4 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
                   Upload your photos
                 </h4>
@@ -553,7 +553,7 @@ const Dashboard = () => {
                         className='w-full h-24 md:h-32 object-cover rounded-xl'
                       />
                       <button className='absolute top-2 right-2 bg-error-500 text-white p-1 md:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                        <FaTrash className='text-xs md:text-sm' />
+                        <FaTrash className='text-sm md:text-base' />
                       </button>
                     </div>
                   ))}
@@ -622,7 +622,7 @@ const Dashboard = () => {
 
                 <div className='bg-primary-25 border-2 border-primary-200 rounded-xl h-48 md:h-64 flex items-center justify-center'>
                   <div className='text-center'>
-                    <FaMapMarkerAlt className='text-3xl md:text-4xl text-primary-400 mx-auto mb-2' />
+                    <FaMapMarkerAlt className='text-4xl md:text-5xl text-primary-400 mx-auto mb-2' />
                     <p className='text-primary-600 text-sm md:text-base'>
                       Interactive map will appear here
                     </p>
@@ -665,13 +665,13 @@ const Dashboard = () => {
                                   : 'bg-primary-100 text-primary-600'
                               }`}
                             >
-                              <amenity.icon className='text-lg md:text-xl' />
+                              <amenity.icon className='text-xl md:text-2xl' />
                             </div>
                             <span className='text-xs md:text-sm font-medium text-primary-800'>
                               {amenity.name}
                             </span>
                             {formData.amenities.includes(amenity.id) && (
-                              <FaCheck className='text-primary-500 mt-1' />
+                              <FaCheck className='text-primary-500 mt-1 text-base' />
                             )}
                           </div>
                         </button>
@@ -750,7 +750,7 @@ const Dashboard = () => {
                 <div className='mt-4 p-3 md:p-4 bg-primary-25 rounded-xl border border-primary-200'>
                   <div className='flex items-start gap-3'>
                     <div className='w-6 h-6 md:w-8 md:h-8 bg-info-100 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <span className='text-info-600 text-sm md:text-lg'>
+                      <span className='text-info-600 text-base md:text-lg'>
                         💡
                       </span>
                     </div>
@@ -974,7 +974,7 @@ const Dashboard = () => {
                       3
                     </p>
                   </div>
-                  <FaHome className='text-lg md:text-2xl text-primary-400' />
+                  <FaHome className='text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
 
@@ -988,7 +988,7 @@ const Dashboard = () => {
                       24
                     </p>
                   </div>
-                  <FaCalendarAlt className='text-lg md:text-2xl text-primary-400' />
+                  <FaCalendarAlt className='text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
 
@@ -1002,7 +1002,7 @@ const Dashboard = () => {
                       ₦125k
                     </p>
                   </div>
-                  <FaDollarSign className='text-lg md:text-2xl text-primary-400' />
+                  <FaDollarSign className='text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
 
@@ -1016,7 +1016,7 @@ const Dashboard = () => {
                       4.8
                     </p>
                   </div>
-                  <FaCheck className='text-lg md:text-2xl text-primary-400' />
+                  <FaCheck className='text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
             </div>
@@ -1045,7 +1045,7 @@ const Dashboard = () => {
               >
                 <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6'>
                   <div className='w-16 h-16 md:w-24 md:h-24 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0'>
-                    <FaHome className='text-xl md:text-2xl text-primary-600' />
+                    <FaHome className='text-2xl md:text-3xl text-primary-600' />
                   </div>
                   <div className='flex-1 min-w-0'>
                     <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
@@ -1068,14 +1068,14 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className='flex items-center gap-2 self-start sm:self-center'>
-                    <button className='p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                      <FaEye className='text-sm md:text-base' />
+                    <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                      <FaEye className='text-base md:text-lg' />
                     </button>
-                    <button className='p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                      <FaEdit className='text-sm md:text-base' />
+                    <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                      <FaEdit className='text-base md:text-lg' />
                     </button>
-                    <button className='p-2 text-error-600 hover:bg-error-50 rounded-lg'>
-                      <FaTrash className='text-sm md:text-base' />
+                    <button className='p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg'>
+                      <FaTrash className='text-base md:text-lg' />
                     </button>
                   </div>
                 </div>
@@ -1099,9 +1099,9 @@ const Dashboard = () => {
                       }`}
                     >
                       {currentStep > step.id ? (
-                        <FaCheck className='text-sm md:text-base' />
+                        <FaCheck className='text-base md:text-lg' />
                       ) : (
-                        <step.icon className='text-sm md:text-base' />
+                        <step.icon className='text-base md:text-lg' />
                       )}
                     </div>
                     <div className='ml-2 md:ml-3 hidden sm:block'>
@@ -1180,7 +1180,7 @@ const Dashboard = () => {
               </h3>
               <div className='bg-primary-25 h-48 md:h-64 rounded-xl flex items-center justify-center'>
                 <div className='text-center'>
-                  <HiOutlineChartBar className='text-3xl md:text-4xl text-primary-400 mx-auto mb-2' />
+                  <HiOutlineChartBar className='text-4xl md:text-5xl text-primary-400 mx-auto mb-2' />
                   <p className='text-primary-600 text-sm md:text-base'>
                     Revenue chart will be displayed here
                   </p>
@@ -1348,7 +1348,7 @@ const Dashboard = () => {
                     : 'text-primary-600 hover:bg-primary-50'
                 }`}
               >
-                <tab.icon className='text-sm md:text-lg' />
+                <tab.icon className='text-lg md:text-xl' />
                 <span className='hidden sm:inline'>{tab.name}</span>
               </button>
             ))}
