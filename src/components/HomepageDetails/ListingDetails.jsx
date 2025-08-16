@@ -32,10 +32,12 @@ import { FaRegFlag } from 'react-icons/fa6'
 import Footer from '../Footer/Footer'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { IoIosArrowBack } from 'react-icons/io'
 import { AiFillHeart } from 'react-icons/ai'
 import { userAuth } from '../../../firebaseConfig'
+import { navigateToHome } from '../../utils/navigation'
+import useScrollToTop from '../../hooks/useScrollToTop'
 
 const listingData = [
   {
@@ -80,6 +82,9 @@ const listingData = [
 ]
 
 const ListingDetails = () => {
+  // Use scroll to top hook
+  useScrollToTop()
+
   const auth = userAuth
   const [user, setUser] = useState(null)
   useEffect(() => {
@@ -89,7 +94,13 @@ const ListingDetails = () => {
     return () => unsubscribe()
   }, [auth])
   const navigate = useNavigate()
+  const location = useLocation()
   const { id } = useParams()
+
+  // Smart navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+  }
   // Parse id safely
   const homeId = parseInt(id, 10)
   const home = listingData.find((l) => l.id === homeId)
@@ -193,8 +204,12 @@ const ListingDetails = () => {
             <HomeHiveLogo
               className='cursor-pointer w-10 h-10 md:w-16 md:h-16 lg:w-20 lg:h-20 transition-transform duration-300 hover:scale-110'
               alt='Homehive Logo'
+              onClick={handleHomeNavigation}
             />
-            <h1 className='font-NotoSans text-lg md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 bg-clip-text text-transparent'>
+            <h1
+              className='font-NotoSans text-lg md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity duration-300'
+              onClick={handleHomeNavigation}
+            >
               Homehive
             </h1>
           </div>
@@ -529,6 +544,17 @@ const ListingDetails = () => {
               {/* Enhanced Check-in Form */}
               <div className='space-y-3 md:space-y-4 mb-4 md:mb-6'>
                 <div className='grid grid-cols-2 gap-1 md:gap-2 border-2 border-primary-200 rounded-xl overflow-hidden hover:border-primary-300 transition-colors duration-300'>
+                  <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
+                    <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
+                      Check-in
+                    </label>
+                    <input
+                      type='date'
+                      className='w-full mt-1 bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base'
+                      value={checkIn}
+                      onChange={(e) => setCheckIn(e.target.value)}
+                    />
+                  </div>
                   <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
                     <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
                       Check-out

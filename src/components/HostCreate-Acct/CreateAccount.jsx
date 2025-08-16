@@ -1,11 +1,22 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
 import { HiUser } from 'react-icons/hi2'
+import { navigateToHome } from '../../utils/navigation'
+import useScrollToTop from '../../hooks/useScrollToTop'
 
 const Createacct = () => {
+  // Use scroll to top hook
+  useScrollToTop()
+
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Smart home navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+  }
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -122,12 +133,15 @@ const Createacct = () => {
             <div className='w-full max-w-2xl mx-auto'>
               {/* Mobile Logo */}
               <div className='text-center mb-8'>
-                <div className='flex items-center justify-center gap-4 mb-4'>
-                  <div className='w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium'>
-                    <HiUser className='text-neutral-25 text-2xl' />
+                <div
+                  className='flex items-center justify-center gap-4 mb-4 cursor-pointer group'
+                  onClick={handleHomeNavigation}
+                >
+                  <div className='w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
+                    <HiUser className='text-neutral-25 text-2xl group-hover:scale-110 transition-transform duration-300' />
                   </div>
                   <div>
-                    <h1 className='text-2xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
+                    <h1 className='text-2xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity duration-300'>
                       Homehive
                     </h1>
                     <p className='text-primary-500 font-medium text-sm'>

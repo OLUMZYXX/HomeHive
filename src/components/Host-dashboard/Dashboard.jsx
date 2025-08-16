@@ -67,15 +67,17 @@ const CurrencySelector = ({
       <button
         type='button'
         onClick={() => setIsOpen(!isOpen)}
-        className='w-full p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-all duration-300 bg-white hover:bg-primary-25 flex items-center justify-between'
+        className='w-full p-3 md:p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-all duration-300 bg-white hover:bg-primary-25 flex items-center justify-between'
       >
-        <div className='flex items-center gap-3'>
-          <span className='text-2xl'>{selectedCurrencyData?.flag}</span>
+        <div className='flex items-center gap-2 md:gap-3'>
+          <span className='text-xl md:text-2xl'>
+            {selectedCurrencyData?.flag}
+          </span>
           <div className='text-left'>
-            <div className='font-bold text-primary-800 flex items-center gap-2'>
+            <div className='font-bold text-primary-800 flex items-center gap-2 text-sm md:text-base'>
               {selectedCurrencyData?.symbol} {selectedCurrencyData?.code}
             </div>
-            <div className='text-sm text-primary-600'>
+            <div className='text-xs md:text-sm text-primary-600'>
               {selectedCurrencyData?.name}
             </div>
           </div>
@@ -99,21 +101,21 @@ const CurrencySelector = ({
                   onCurrencyChange(currency.code)
                   setIsOpen(false)
                 }}
-                className={`w-full p-4 rounded-xl transition-all duration-300 hover:bg-primary-50 flex items-center gap-3 text-left ${
+                className={`w-full p-3 md:p-4 rounded-xl transition-all duration-300 hover:bg-primary-50 flex items-center gap-2 md:gap-3 text-left ${
                   selectedCurrency === currency.code
                     ? 'bg-primary-50 border-2 border-primary-200'
                     : 'border-2 border-transparent'
                 }`}
               >
-                <span className='text-2xl'>{currency.flag}</span>
+                <span className='text-xl md:text-2xl'>{currency.flag}</span>
                 <div className='flex-1'>
-                  <div className='font-bold text-primary-800 flex items-center gap-2'>
+                  <div className='font-bold text-primary-800 flex items-center gap-2 text-sm md:text-base'>
                     {currency.symbol} {currency.code}
                     {selectedCurrency === currency.code && (
                       <FaCheck className='text-primary-500 text-sm' />
                     )}
                   </div>
-                  <div className='text-sm text-primary-600 mb-1'>
+                  <div className='text-xs md:text-sm text-primary-600 mb-1'>
                     {currency.name}
                   </div>
                   <div className='text-xs text-primary-500'>
@@ -321,12 +323,12 @@ const Dashboard = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className='space-y-8'>
+          <div className='space-y-6 md:space-y-8'>
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What type of property do you have?
               </h3>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
                 {propertyTypes.map((type) => (
                   <button
                     key={type.id}
@@ -336,24 +338,24 @@ const Dashboard = () => {
                         propertyType: type.id,
                       }))
                     }
-                    className={`p-6 border-2 rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
+                    className={`p-4 md:p-6 border-2 rounded-xl md:rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
                       formData.propertyType === type.id
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-primary-200 bg-white hover:border-primary-300'
                     }`}
                   >
-                    <div className='flex items-center gap-4'>
+                    <div className='flex items-center gap-3 md:gap-4'>
                       <div
-                        className={`p-3 rounded-xl ${
+                        className={`p-2 md:p-3 rounded-xl ${
                           formData.propertyType === type.id
                             ? 'bg-primary-500 text-white'
                             : 'bg-primary-100 text-primary-600'
                         }`}
                       >
-                        <type.icon className='text-2xl' />
+                        <type.icon className='text-xl md:text-2xl' />
                       </div>
                       <div>
-                        <h4 className='font-bold text-primary-800 text-lg'>
+                        <h4 className='font-bold text-primary-800 text-base md:text-lg'>
                           {type.name}
                         </h4>
                         <p className='text-primary-600 text-sm'>
@@ -367,34 +369,34 @@ const Dashboard = () => {
             </div>
 
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What will guests have access to?
               </h3>
-              <div className='grid grid-cols-1 gap-4'>
+              <div className='grid grid-cols-1 gap-3 md:gap-4'>
                 {placeTypes.map((place) => (
                   <button
                     key={place.id}
                     onClick={() =>
                       setFormData((prev) => ({ ...prev, placeType: place.id }))
                     }
-                    className={`p-6 border-2 rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
+                    className={`p-4 md:p-6 border-2 rounded-xl md:rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
                       formData.placeType === place.id
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-primary-200 bg-white hover:border-primary-300'
                     }`}
                   >
-                    <div className='flex items-center gap-4'>
+                    <div className='flex items-center gap-3 md:gap-4'>
                       <div
-                        className={`p-3 rounded-xl ${
+                        className={`p-2 md:p-3 rounded-xl ${
                           formData.placeType === place.id
                             ? 'bg-primary-500 text-white'
                             : 'bg-primary-100 text-primary-600'
                         }`}
                       >
-                        <place.icon className='text-2xl' />
+                        <place.icon className='text-xl md:text-2xl' />
                       </div>
                       <div>
-                        <h4 className='font-bold text-primary-800 text-lg'>
+                        <h4 className='font-bold text-primary-800 text-base md:text-lg'>
                           {place.name}
                         </h4>
                         <p className='text-primary-600 text-sm'>
@@ -407,8 +409,8 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
                 <label className='block text-sm font-bold text-primary-700 mb-2'>
                   Bedrooms
                 </label>
@@ -424,7 +426,7 @@ const Dashboard = () => {
                   >
                     <FaMinus className='text-primary-600' />
                   </button>
-                  <span className='text-2xl font-bold text-primary-800 w-8 text-center'>
+                  <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.bedrooms}
                   </span>
                   <button
@@ -441,7 +443,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
                 <label className='block text-sm font-bold text-primary-700 mb-2'>
                   Bathrooms
                 </label>
@@ -457,7 +459,7 @@ const Dashboard = () => {
                   >
                     <FaMinus className='text-primary-600' />
                   </button>
-                  <span className='text-2xl font-bold text-primary-800 w-8 text-center'>
+                  <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.bathrooms}
                   </span>
                   <button
@@ -474,7 +476,7 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
                 <label className='block text-sm font-bold text-primary-700 mb-2'>
                   Max Guests
                 </label>
@@ -490,7 +492,7 @@ const Dashboard = () => {
                   >
                     <FaMinus className='text-primary-600' />
                   </button>
-                  <span className='text-2xl font-bold text-primary-800 w-8 text-center'>
+                  <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.maxGuests}
                   </span>
                   <button
@@ -512,17 +514,17 @@ const Dashboard = () => {
 
       case 2:
         return (
-          <div className='space-y-8'>
+          <div className='space-y-6 md:space-y-8'>
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 Share photos of your space
               </h3>
-              <div className='border-2 border-dashed border-primary-300 rounded-2xl p-8 text-center bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
-                <FaCamera className='text-5xl text-primary-400 mx-auto mb-4' />
-                <h4 className='text-xl font-bold text-primary-800 mb-2'>
+              <div className='border-2 border-dashed border-primary-300 rounded-xl md:rounded-2xl p-6 md:p-8 text-center bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
+                <FaCamera className='text-4xl md:text-5xl text-primary-400 mx-auto mb-4' />
+                <h4 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
                   Upload your photos
                 </h4>
-                <p className='text-primary-600 mb-4'>
+                <p className='text-primary-600 mb-4 text-sm md:text-base'>
                   Choose at least 5 photos that showcase your space
                 </p>
                 <input
@@ -535,23 +537,23 @@ const Dashboard = () => {
                 />
                 <label
                   htmlFor='photo-upload'
-                  className='inline-block bg-primary-800 text-white px-6 py-3 rounded-xl font-semibold cursor-pointer hover:bg-primary-900 transition-colors duration-300'
+                  className='inline-block bg-primary-800 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold cursor-pointer hover:bg-primary-900 transition-colors duration-300 text-sm md:text-base'
                 >
                   Choose Photos
                 </label>
               </div>
 
               {formData.images.length > 0 && (
-                <div className='grid grid-cols-2 md:grid-cols-4 gap-4 mt-6'>
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-6'>
                   {formData.images.map((image, index) => (
                     <div key={index} className='relative group'>
                       <img
                         src={URL.createObjectURL(image)}
                         alt={`Upload ${index + 1}`}
-                        className='w-full h-32 object-cover rounded-xl'
+                        className='w-full h-24 md:h-32 object-cover rounded-xl'
                       />
-                      <button className='absolute top-2 right-2 bg-error-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                        <FaTrash className='text-sm' />
+                      <button className='absolute top-2 right-2 bg-error-500 text-white p-1 md:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                        <FaTrash className='text-xs md:text-sm' />
                       </button>
                     </div>
                   ))}
@@ -570,7 +572,7 @@ const Dashboard = () => {
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 placeholder='Give your place a catchy title'
-                className='w-full p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
+                className='w-full p-3 md:p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
               />
             </div>
 
@@ -588,7 +590,7 @@ const Dashboard = () => {
                 }
                 placeholder='Describe your space, what makes it special, and what guests can expect...'
                 rows={6}
-                className='w-full p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 resize-none'
+                className='w-full p-3 md:p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 resize-none'
               />
             </div>
           </div>
@@ -596,12 +598,12 @@ const Dashboard = () => {
 
       case 3:
         return (
-          <div className='space-y-8'>
+          <div className='space-y-6 md:space-y-8'>
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 Where is your place located?
               </h3>
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
                 <label className='block text-sm font-bold text-primary-700 mb-2'>
                   Address
                 </label>
@@ -615,16 +617,16 @@ const Dashboard = () => {
                     }))
                   }
                   placeholder='Enter your property address'
-                  className='w-full p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 mb-4'
+                  className='w-full p-3 md:p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 mb-4'
                 />
 
-                <div className='bg-primary-25 border-2 border-primary-200 rounded-xl h-64 flex items-center justify-center'>
+                <div className='bg-primary-25 border-2 border-primary-200 rounded-xl h-48 md:h-64 flex items-center justify-center'>
                   <div className='text-center'>
-                    <FaMapMarkerAlt className='text-4xl text-primary-400 mx-auto mb-2' />
-                    <p className='text-primary-600'>
+                    <FaMapMarkerAlt className='text-3xl md:text-4xl text-primary-400 mx-auto mb-2' />
+                    <p className='text-primary-600 text-sm md:text-base'>
                       Interactive map will appear here
                     </p>
-                    <p className='text-sm text-primary-500'>
+                    <p className='text-xs md:text-sm text-primary-500'>
                       Drag the pin to your exact location
                     </p>
                   </div>
@@ -633,23 +635,23 @@ const Dashboard = () => {
             </div>
 
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What amenities do you offer?
               </h3>
 
               {['Popular', 'Standout', 'Safety', 'Unique'].map((category) => (
-                <div key={category} className='mb-8'>
-                  <h4 className='text-lg font-bold text-primary-700 mb-4'>
+                <div key={category} className='mb-6 md:mb-8'>
+                  <h4 className='text-base md:text-lg font-bold text-primary-700 mb-3 md:mb-4'>
                     {category} amenities
                   </h4>
-                  <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
+                  <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4'>
                     {amenities
                       .filter((amenity) => amenity.category === category)
                       .map((amenity) => (
                         <button
                           key={amenity.id}
                           onClick={() => handleAmenityToggle(amenity.id)}
-                          className={`p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-medium ${
+                          className={`p-3 md:p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-medium ${
                             formData.amenities.includes(amenity.id)
                               ? 'border-primary-500 bg-primary-50'
                               : 'border-primary-200 bg-white hover:border-primary-300'
@@ -657,15 +659,15 @@ const Dashboard = () => {
                         >
                           <div className='flex flex-col items-center text-center'>
                             <div
-                              className={`p-3 rounded-xl mb-2 ${
+                              className={`p-2 md:p-3 rounded-xl mb-2 ${
                                 formData.amenities.includes(amenity.id)
                                   ? 'bg-primary-500 text-white'
                                   : 'bg-primary-100 text-primary-600'
                               }`}
                             >
-                              <amenity.icon className='text-xl' />
+                              <amenity.icon className='text-lg md:text-xl' />
                             </div>
-                            <span className='text-sm font-medium text-primary-800'>
+                            <span className='text-xs md:text-sm font-medium text-primary-800'>
                               {amenity.name}
                             </span>
                             {formData.amenities.includes(amenity.id) && (
@@ -683,10 +685,10 @@ const Dashboard = () => {
 
       case 4:
         return (
-          <div className='space-y-8'>
+          <div className='space-y-6 md:space-y-8'>
             {/* Enhanced Currency Selector */}
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 Choose your pricing currency
               </h3>
               <div className='max-w-md'>
@@ -699,33 +701,33 @@ const Dashboard = () => {
             </div>
 
             <div>
-              <h3 className='text-2xl font-bold text-primary-800 mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 Set your price
               </h3>
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
-                <div className='flex items-center gap-4 mb-4'>
-                  <div className='flex items-center gap-2 bg-primary-50 px-4 py-2 rounded-xl border border-primary-200'>
-                    <span className='text-2xl'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
+                <div className='flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 mb-4'>
+                  <div className='flex items-center gap-2 bg-primary-50 px-3 md:px-4 py-2 rounded-xl border border-primary-200'>
+                    <span className='text-xl md:text-2xl'>
                       {
                         currencies.find((c) => c.code === formData.currency)
                           ?.flag
                       }
                     </span>
-                    <span className='font-bold text-primary-800'>
+                    <span className='font-bold text-primary-800 text-sm md:text-base'>
                       {
                         currencies.find((c) => c.code === formData.currency)
                           ?.code
                       }
                     </span>
                   </div>
-                  <span className='text-primary-600 font-medium'>
+                  <span className='text-primary-600 font-medium text-sm md:text-base'>
                     Price per night in{' '}
                     {currencies.find((c) => c.code === formData.currency)?.name}
                   </span>
                 </div>
 
                 <div className='relative'>
-                  <span className='absolute left-4 top-1/2 transform -translate-y-1/2 text-primary-400 text-2xl font-bold'>
+                  <span className='absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-primary-400 text-xl md:text-2xl font-bold'>
                     {
                       currencies.find((c) => c.code === formData.currency)
                         ?.symbol
@@ -741,17 +743,19 @@ const Dashboard = () => {
                       }))
                     }
                     placeholder='0'
-                    className='w-full pl-16 pr-4 py-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 text-2xl font-bold'
+                    className='w-full pl-12 md:pl-16 pr-3 md:pr-4 py-3 md:py-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 text-xl md:text-2xl font-bold'
                   />
                 </div>
 
-                <div className='mt-4 p-4 bg-primary-25 rounded-xl border border-primary-200'>
-                  <div className='flex items-center gap-3'>
-                    <div className='w-8 h-8 bg-info-100 rounded-full flex items-center justify-center flex-shrink-0'>
-                      <span className='text-info-600 text-lg'>💡</span>
+                <div className='mt-4 p-3 md:p-4 bg-primary-25 rounded-xl border border-primary-200'>
+                  <div className='flex items-start gap-3'>
+                    <div className='w-6 h-6 md:w-8 md:h-8 bg-info-100 rounded-full flex items-center justify-center flex-shrink-0'>
+                      <span className='text-info-600 text-sm md:text-lg'>
+                        💡
+                      </span>
                     </div>
                     <div>
-                      <p className='text-sm font-medium text-primary-700 mb-1'>
+                      <p className='text-xs md:text-sm font-medium text-primary-700 mb-1'>
                         Pricing Tips
                       </p>
                       <p className='text-xs text-primary-600'>
@@ -763,11 +767,11 @@ const Dashboard = () => {
                 </div>
 
                 {formData.pricePerNight && (
-                  <div className='mt-4 p-4 bg-gradient-to-r from-accent-green-50 to-accent-blue-50 rounded-xl border border-primary-200'>
-                    <h5 className='font-bold text-primary-800 mb-2'>
+                  <div className='mt-4 p-3 md:p-4 bg-gradient-to-r from-accent-green-50 to-accent-blue-50 rounded-xl border border-primary-200'>
+                    <h5 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
                       Estimated Earnings
                     </h5>
-                    <div className='space-y-1 text-sm'>
+                    <div className='space-y-1 text-xs md:text-sm'>
                       <div className='flex justify-between'>
                         <span className='text-primary-600'>Per night:</span>
                         <span className='font-bold text-primary-800'>
@@ -808,35 +812,39 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
-                <h4 className='font-bold text-primary-800 mb-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
+                <h4 className='font-bold text-primary-800 mb-3 md:mb-4 text-sm md:text-base'>
                   Weekly Discount
                 </h4>
-                <div className='flex items-center gap-4'>
+                <div className='flex items-center gap-3 md:gap-4'>
                   <input
                     type='number'
                     placeholder='0'
-                    className='flex-1 p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none'
+                    className='flex-1 p-2 md:p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none text-sm md:text-base'
                   />
-                  <span className='text-primary-600 font-medium'>% off</span>
+                  <span className='text-primary-600 font-medium text-sm md:text-base'>
+                    % off
+                  </span>
                 </div>
                 <p className='text-xs text-primary-500 mt-2'>
                   Encourage longer stays with a weekly discount
                 </p>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200'>
-                <h4 className='font-bold text-primary-800 mb-4'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
+                <h4 className='font-bold text-primary-800 mb-3 md:mb-4 text-sm md:text-base'>
                   Monthly Discount
                 </h4>
-                <div className='flex items-center gap-4'>
+                <div className='flex items-center gap-3 md:gap-4'>
                   <input
                     type='number'
                     placeholder='0'
-                    className='flex-1 p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none'
+                    className='flex-1 p-2 md:p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none text-sm md:text-base'
                   />
-                  <span className='text-primary-600 font-medium'>% off</span>
+                  <span className='text-primary-600 font-medium text-sm md:text-base'>
+                    % off
+                  </span>
                 </div>
                 <p className='text-xs text-primary-500 mt-2'>
                   Attract long-term guests with monthly savings
@@ -844,16 +852,16 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className='bg-primary-25 p-6 rounded-2xl border border-primary-200'>
-              <h4 className='text-xl font-bold text-primary-800 mb-4'>
+            <div className='bg-primary-25 p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
+              <h4 className='text-lg md:text-xl font-bold text-primary-800 mb-3 md:mb-4'>
                 Review your listing
               </h4>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6'>
                 <div>
-                  <h5 className='font-semibold text-primary-700 mb-2'>
+                  <h5 className='font-semibold text-primary-700 mb-2 text-sm md:text-base'>
                     Property Details
                   </h5>
-                  <ul className='space-y-1 text-primary-600'>
+                  <ul className='space-y-1 text-primary-600 text-xs md:text-sm'>
                     <li>
                       Type:{' '}
                       {
@@ -883,7 +891,7 @@ const Dashboard = () => {
                   </ul>
                 </div>
                 <div>
-                  <h5 className='font-semibold text-primary-700 mb-2'>
+                  <h5 className='font-semibold text-primary-700 mb-2 text-sm md:text-base'>
                     Amenities ({formData.amenities.length})
                   </h5>
                   <div className='flex flex-wrap gap-2'>
@@ -906,17 +914,17 @@ const Dashboard = () => {
                   </div>
 
                   <div className='mt-4'>
-                    <h5 className='font-semibold text-primary-700 mb-2'>
+                    <h5 className='font-semibold text-primary-700 mb-2 text-sm md:text-base'>
                       Currency & Pricing
                     </h5>
                     <div className='flex items-center gap-2'>
-                      <span className='text-lg'>
+                      <span className='text-base md:text-lg'>
                         {
                           currencies.find((c) => c.code === formData.currency)
                             ?.flag
                         }
                       </span>
-                      <span className='text-sm text-primary-600'>
+                      <span className='text-xs md:text-sm text-primary-600'>
                         {
                           currencies.find((c) => c.code === formData.currency)
                             ?.name
@@ -939,66 +947,76 @@ const Dashboard = () => {
     switch (activeTab) {
       case 'overview':
         return (
-          <div className='space-y-8'>
-            <div className='bg-gradient-to-r from-primary-800 to-primary-600 rounded-2xl p-8 text-white'>
-              <h2 className='text-3xl font-bold mb-4'>Welcome back, Host!</h2>
-              <p className='text-xl opacity-90 mb-6'>
+          <div className='space-y-6 md:space-y-8'>
+            <div className='bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl md:rounded-2xl p-6 md:p-8 text-white'>
+              <h2 className='text-2xl md:text-3xl font-bold mb-3 md:mb-4'>
+                Welcome back, Host!
+              </h2>
+              <p className='text-lg md:text-xl opacity-90 mb-4 md:mb-6'>
                 Ready to share your space with the world?
               </p>
               <button
                 onClick={() => setActiveTab('create')}
-                className='bg-white text-primary-800 px-6 py-3 rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300'
+                className='bg-white text-primary-800 px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-sm md:text-base'
               >
                 Create New Listing
               </button>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-4 gap-6'>
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-sm font-medium'>
+                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
                       Total Listings
                     </p>
-                    <p className='text-3xl font-bold text-primary-800'>3</p>
+                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                      3
+                    </p>
                   </div>
-                  <FaHome className='text-2xl text-primary-400' />
+                  <FaHome className='text-lg md:text-2xl text-primary-400' />
                 </div>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-sm font-medium'>
+                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
                       Total Bookings
                     </p>
-                    <p className='text-3xl font-bold text-primary-800'>24</p>
+                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                      24
+                    </p>
                   </div>
-                  <FaCalendarAlt className='text-2xl text-primary-400' />
+                  <FaCalendarAlt className='text-lg md:text-2xl text-primary-400' />
                 </div>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-sm font-medium'>
+                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
                       Monthly Earnings
                     </p>
-                    <p className='text-3xl font-bold text-primary-800'>₦125k</p>
+                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                      ₦125k
+                    </p>
                   </div>
-                  <FaDollarSign className='text-2xl text-primary-400' />
+                  <FaDollarSign className='text-lg md:text-2xl text-primary-400' />
                 </div>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-sm font-medium'>
+                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
                       Rating
                     </p>
-                    <p className='text-3xl font-bold text-primary-800'>4.8</p>
+                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                      4.8
+                    </p>
                   </div>
-                  <FaCheck className='text-2xl text-primary-400' />
+                  <FaCheck className='text-lg md:text-2xl text-primary-400' />
                 </div>
               </div>
             </div>
@@ -1007,14 +1025,14 @@ const Dashboard = () => {
 
       case 'listings':
         return (
-          <div className='space-y-6'>
-            <div className='flex justify-between items-center'>
-              <h2 className='text-2xl font-bold text-primary-800'>
+          <div className='space-y-4 md:space-y-6'>
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
+              <h2 className='text-xl md:text-2xl font-bold text-primary-800'>
                 My Listings
               </h2>
               <button
                 onClick={() => setActiveTab('create')}
-                className='bg-primary-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300'
+                className='bg-primary-800 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-sm md:text-base'
               >
                 Add New Listing
               </button>
@@ -1023,24 +1041,24 @@ const Dashboard = () => {
             {[1, 2, 3].map((listing) => (
               <div
                 key={listing}
-                className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'
+                className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'
               >
-                <div className='flex items-center gap-6'>
-                  <div className='w-24 h-24 bg-primary-100 rounded-xl flex items-center justify-center'>
-                    <FaHome className='text-2xl text-primary-600' />
+                <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6'>
+                  <div className='w-16 h-16 md:w-24 md:h-24 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0'>
+                    <FaHome className='text-xl md:text-2xl text-primary-600' />
                   </div>
-                  <div className='flex-1'>
-                    <h3 className='text-xl font-bold text-primary-800 mb-2'>
+                  <div className='flex-1 min-w-0'>
+                    <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
                       Luxury Apartment in Victoria Island
                     </h3>
-                    <p className='text-primary-600 mb-2'>
+                    <p className='text-primary-600 mb-2 text-sm md:text-base'>
                       2 beds • 2 baths • Up to 4 guests
                     </p>
-                    <div className='flex items-center gap-4'>
-                      <span className='bg-accent-green-100 text-accent-green-700 px-3 py-1 rounded-full text-sm font-medium'>
+                    <div className='flex flex-wrap items-center gap-3 md:gap-4'>
+                      <span className='bg-accent-green-100 text-accent-green-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium'>
                         Active
                       </span>
-                      <span className='text-primary-600 text-sm'>
+                      <span className='text-primary-600 text-xs md:text-sm'>
                         {
                           currencies.find((c) => c.code === formData.currency)
                             ?.symbol
@@ -1049,15 +1067,15 @@ const Dashboard = () => {
                       </span>
                     </div>
                   </div>
-                  <div className='flex items-center gap-2'>
+                  <div className='flex items-center gap-2 self-start sm:self-center'>
                     <button className='p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                      <FaEye />
+                      <FaEye className='text-sm md:text-base' />
                     </button>
                     <button className='p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                      <FaEdit />
+                      <FaEdit className='text-sm md:text-base' />
                     </button>
                     <button className='p-2 text-error-600 hover:bg-error-50 rounded-lg'>
-                      <FaTrash />
+                      <FaTrash className='text-sm md:text-base' />
                     </button>
                   </div>
                 </div>
@@ -1068,23 +1086,27 @@ const Dashboard = () => {
 
       case 'create':
         return (
-          <div className='space-y-8'>
-            <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-              <div className='flex items-center justify-between'>
+          <div className='space-y-6 md:space-y-8'>
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft overflow-x-auto'>
+              <div className='flex items-center justify-between min-w-max pb-2'>
                 {steps.map((step, index) => (
                   <div key={step.id} className='flex items-center'>
                     <div
-                      className={`flex items-center justify-center w-12 h-12 rounded-full border-2 transition-all duration-300 ${
+                      className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 transition-all duration-300 ${
                         currentStep >= step.id
                           ? 'bg-primary-800 border-primary-800 text-white'
                           : 'border-primary-300 text-primary-400'
                       }`}
                     >
-                      {currentStep > step.id ? <FaCheck /> : <step.icon />}
+                      {currentStep > step.id ? (
+                        <FaCheck className='text-sm md:text-base' />
+                      ) : (
+                        <step.icon className='text-sm md:text-base' />
+                      )}
                     </div>
-                    <div className='ml-3 hidden md:block'>
+                    <div className='ml-2 md:ml-3 hidden sm:block'>
                       <p
-                        className={`text-sm font-medium ${
+                        className={`text-xs md:text-sm font-medium ${
                           currentStep >= step.id
                             ? 'text-primary-800'
                             : 'text-primary-400'
@@ -1104,7 +1126,7 @@ const Dashboard = () => {
                     </div>
                     {index < steps.length - 1 && (
                       <div
-                        className={`w-12 h-1 mx-4 rounded-full ${
+                        className={`w-8 md:w-12 h-1 mx-2 md:mx-4 rounded-full ${
                           currentStep > step.id
                             ? 'bg-primary-800'
                             : 'bg-primary-200'
@@ -1116,14 +1138,14 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className='bg-white p-8 rounded-2xl border border-primary-200 shadow-soft'>
+            <div className='bg-white p-6 md:p-8 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
               {renderStepContent()}
 
-              <div className='flex justify-between mt-8 pt-6 border-t border-primary-200'>
+              <div className='flex flex-col sm:flex-row sm:justify-between gap-4 mt-6 md:mt-8 pt-4 md:pt-6 border-t border-primary-200'>
                 <button
                   onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
                   disabled={currentStep === 1}
-                  className='px-6 py-3 border-2 border-primary-200 text-primary-700 rounded-xl font-semibold hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300'
+                  className='px-4 md:px-6 py-2 md:py-3 border-2 border-primary-200 text-primary-700 rounded-xl font-semibold hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm md:text-base'
                 >
                   Previous
                 </button>
@@ -1131,12 +1153,12 @@ const Dashboard = () => {
                 {currentStep < 4 ? (
                   <button
                     onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
-                    className='px-6 py-3 bg-primary-800 text-white rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300'
+                    className='px-4 md:px-6 py-2 md:py-3 bg-primary-800 text-white rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-sm md:text-base'
                   >
                     Next Step
                   </button>
                 ) : (
-                  <button className='px-8 py-3 bg-gradient-to-r from-accent-green-600 to-accent-green-500 text-white rounded-xl font-semibold hover:from-accent-green-700 hover:to-accent-green-600 transition-all duration-300 transform hover:scale-105'>
+                  <button className='px-6 md:px-8 py-2 md:py-3 bg-gradient-to-r from-accent-green-600 to-accent-green-500 text-white rounded-xl font-semibold hover:from-accent-green-700 hover:to-accent-green-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base'>
                     Publish Listing
                   </button>
                 )}
@@ -1147,52 +1169,60 @@ const Dashboard = () => {
 
       case 'analytics':
         return (
-          <div className='space-y-6'>
-            <h2 className='text-2xl font-bold text-primary-800'>
+          <div className='space-y-4 md:space-y-6'>
+            <h2 className='text-xl md:text-2xl font-bold text-primary-800'>
               Analytics & Insights
             </h2>
 
-            <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-              <h3 className='text-xl font-bold text-primary-800 mb-4'>
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-3 md:mb-4'>
                 Revenue Overview
               </h3>
-              <div className='bg-primary-25 h-64 rounded-xl flex items-center justify-center'>
+              <div className='bg-primary-25 h-48 md:h-64 rounded-xl flex items-center justify-center'>
                 <div className='text-center'>
-                  <HiOutlineChartBar className='text-4xl text-primary-400 mx-auto mb-2' />
-                  <p className='text-primary-600'>
+                  <HiOutlineChartBar className='text-3xl md:text-4xl text-primary-400 mx-auto mb-2' />
+                  <p className='text-primary-600 text-sm md:text-base'>
                     Revenue chart will be displayed here
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-                <h4 className='font-bold text-primary-800 mb-2'>
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h4 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
                   Occupancy Rate
                 </h4>
-                <p className='text-3xl font-bold text-primary-800'>78%</p>
-                <p className='text-sm text-accent-green-600'>
+                <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                  78%
+                </p>
+                <p className='text-xs md:text-sm text-accent-green-600'>
                   ↑ 12% from last month
                 </p>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-                <h4 className='font-bold text-primary-800 mb-2'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h4 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
                   Average Daily Rate
                 </h4>
-                <p className='text-3xl font-bold text-primary-800'>₦22k</p>
-                <p className='text-sm text-accent-green-600'>
+                <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                  ₦22k
+                </p>
+                <p className='text-xs md:text-sm text-accent-green-600'>
                   ↑ 5% from last month
                 </p>
               </div>
 
-              <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-                <h4 className='font-bold text-primary-800 mb-2'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h4 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
                   Guest Rating
                 </h4>
-                <p className='text-3xl font-bold text-primary-800'>4.8</p>
-                <p className='text-sm text-primary-600'>Based on 124 reviews</p>
+                <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                  4.8
+                </p>
+                <p className='text-xs md:text-sm text-primary-600'>
+                  Based on 124 reviews
+                </p>
               </div>
             </div>
           </div>
@@ -1200,16 +1230,16 @@ const Dashboard = () => {
 
       case 'settings':
         return (
-          <div className='space-y-6'>
-            <h2 className='text-2xl font-bold text-primary-800'>
+          <div className='space-y-4 md:space-y-6'>
+            <h2 className='text-xl md:text-2xl font-bold text-primary-800'>
               Account Settings
             </h2>
 
-            <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-              <h3 className='text-xl font-bold text-primary-800 mb-4'>
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-3 md:mb-4'>
                 Profile Information
               </h3>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6'>
                 <div>
                   <label className='block text-sm font-bold text-primary-700 mb-2'>
                     First Name
@@ -1217,7 +1247,7 @@ const Dashboard = () => {
                   <input
                     type='text'
                     placeholder='John'
-                    className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none'
+                    className='w-full p-2 md:p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none text-sm md:text-base'
                   />
                 </div>
                 <div>
@@ -1227,7 +1257,7 @@ const Dashboard = () => {
                   <input
                     type='text'
                     placeholder='Doe'
-                    className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none'
+                    className='w-full p-2 md:p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none text-sm md:text-base'
                   />
                 </div>
                 <div>
@@ -1237,7 +1267,7 @@ const Dashboard = () => {
                   <input
                     type='email'
                     placeholder='john@example.com'
-                    className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none'
+                    className='w-full p-2 md:p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none text-sm md:text-base'
                   />
                 </div>
                 <div>
@@ -1247,20 +1277,20 @@ const Dashboard = () => {
                   <input
                     type='tel'
                     placeholder='+234 800 000 0000'
-                    className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none'
+                    className='w-full p-2 md:p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none text-sm md:text-base'
                   />
                 </div>
               </div>
-              <button className='mt-6 bg-primary-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300'>
+              <button className='mt-4 md:mt-6 bg-primary-800 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-sm md:text-base'>
                 Update Profile
               </button>
             </div>
 
-            <div className='bg-white p-6 rounded-2xl border border-primary-200 shadow-soft'>
-              <h3 className='text-xl font-bold text-primary-800 mb-4'>
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-3 md:mb-4'>
                 Notification Preferences
               </h3>
-              <div className='space-y-4'>
+              <div className='space-y-3 md:space-y-4'>
                 {[
                   'Email notifications for new bookings',
                   'SMS alerts for urgent messages',
@@ -1269,16 +1299,18 @@ const Dashboard = () => {
                 ].map((notification, index) => (
                   <div
                     key={index}
-                    className='flex items-center justify-between'
+                    className='flex items-center justify-between gap-4'
                   >
-                    <span className='text-primary-700'>{notification}</span>
+                    <span className='text-primary-700 text-sm md:text-base flex-1'>
+                      {notification}
+                    </span>
                     <label className='relative inline-flex items-center cursor-pointer'>
                       <input
                         type='checkbox'
                         className='sr-only peer'
                         defaultChecked={index < 2}
                       />
-                      <div className="w-11 h-6 bg-primary-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+                      <div className="w-9 h-5 md:w-11 md:h-6 bg-primary-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 md:after:h-5 md:after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
                     </label>
                   </div>
                 ))}
@@ -1294,30 +1326,30 @@ const Dashboard = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100'>
-      <div className='container mx-auto px-4 py-8 max-w-[1400px]'>
-        <div className='mb-8'>
-          <h1 className='text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-2'>
+      <div className='container mx-auto px-4 py-6 md:py-8 max-w-[1400px]'>
+        <div className='mb-6 md:mb-8'>
+          <h1 className='text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 md:mb-2'>
             Host Dashboard
           </h1>
-          <p className='text-primary-600 text-lg'>
+          <p className='text-primary-600 text-sm md:text-lg'>
             Manage your properties and grow your hosting business
           </p>
         </div>
 
-        <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-primary-200 p-2 mb-8'>
-          <div className='flex space-x-2 overflow-x-auto'>
+        <div className='bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft border border-primary-200 p-1 md:p-2 mb-6 md:mb-8'>
+          <div className='flex space-x-1 md:space-x-2 overflow-x-auto scrollbar-hide'>
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold transition-all duration-300 whitespace-nowrap ${
+                className={`flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm md:text-base ${
                   activeTab === tab.id
                     ? 'bg-primary-800 text-white shadow-medium'
                     : 'text-primary-600 hover:bg-primary-50'
                 }`}
               >
-                <tab.icon className='text-lg' />
-                <span>{tab.name}</span>
+                <tab.icon className='text-sm md:text-lg' />
+                <span className='hidden sm:inline'>{tab.name}</span>
               </button>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import {
   FaRegUserCircle,
   FaStar,
@@ -17,9 +17,20 @@ import { RiEarthLine } from 'react-icons/ri'
 import { RxHamburgerMenu } from 'react-icons/rx'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import Footer from '../Footer/Footer'
+import { navigateToHome } from '../../utils/navigation'
+import useScrollToTop from '../../hooks/useScrollToTop'
 
 const Homepage = () => {
+  // Use scroll to top hook
+  useScrollToTop()
+
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Smart home navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+  }
 
   // Fetch currency rates from a free API
   useEffect(() => {
@@ -186,7 +197,7 @@ const Homepage = () => {
             {/* Logo - Mobile Optimized */}
             <div
               className='flex items-center gap-2 sm:gap-4 cursor-pointer group flex-shrink-0'
-              onClick={reloadHomepage}
+              onClick={handleHomeNavigation}
             >
               <HomeHiveLogo
                 className='w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 transition-transform duration-300 group-hover:scale-110 drop-shadow-sm'

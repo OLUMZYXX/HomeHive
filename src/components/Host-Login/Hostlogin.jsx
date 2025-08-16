@@ -1,10 +1,15 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
 import { HiHome } from 'react-icons/hi2'
+import { navigateToHome } from '../../utils/navigation'
+import useScrollToTop from '../../hooks/useScrollToTop'
 
 const Hostlogin = () => {
+  // Use scroll to top hook
+  useScrollToTop()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -15,6 +20,12 @@ const Hostlogin = () => {
   const [successMessage, setSuccessMessage] = useState('')
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Smart home navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+  }
 
   const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   const isPasswordValid = (password) =>
@@ -105,12 +116,15 @@ const Hostlogin = () => {
             <div className='hidden lg:block text-center space-y-8'>
               <div className='space-y-6'>
                 {/* Logo */}
-                <div className='flex items-center justify-center gap-4 mb-8'>
-                  <div className='w-20 h-20 bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl flex items-center justify-center shadow-medium'>
-                    <HiHome className='text-neutral-25 text-3xl' />
+                <div
+                  className='flex items-center justify-center gap-4 mb-8 cursor-pointer group'
+                  onClick={handleHomeNavigation}
+                >
+                  <div className='w-20 h-20 bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
+                    <HiHome className='text-neutral-25 text-3xl group-hover:scale-110 transition-transform duration-300' />
                   </div>
                   <div>
-                    <h1 className='text-4xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
+                    <h1 className='text-4xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity duration-300'>
                       Homehive
                     </h1>
                     <p className='text-primary-500 font-medium'>Host Portal</p>
@@ -180,12 +194,15 @@ const Hostlogin = () => {
             <div className='w-full max-w-md mx-auto lg:mx-0'>
               {/* Mobile Logo */}
               <div className='lg:hidden text-center mb-8'>
-                <div className='flex items-center justify-center gap-4 mb-4'>
-                  <div className='w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium'>
-                    <HiHome className='text-neutral-25 text-2xl' />
+                <div
+                  className='flex items-center justify-center gap-4 mb-4 cursor-pointer group'
+                  onClick={handleHomeNavigation}
+                >
+                  <div className='w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
+                    <HiHome className='text-neutral-25 text-2xl group-hover:scale-110 transition-transform duration-300' />
                   </div>
                   <div>
-                    <h1 className='text-2xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
+                    <h1 className='text-2xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity duration-300'>
                       Homehive
                     </h1>
                     <p className='text-primary-500 font-medium text-sm'>

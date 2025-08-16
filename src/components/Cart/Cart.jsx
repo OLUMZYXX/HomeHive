@@ -17,8 +17,10 @@ import 'react-toastify/dist/ReactToastify.css'
 import image from '../../assets/Apt2.webp'
 import { RxHamburgerMenu } from 'react-icons/rx'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { userAuth } from '../../../firebaseConfig'
+import { navigateToHome } from '../../utils/navigation'
+import useScrollToTop from '../../hooks/useScrollToTop'
 
 const countries = [
   'United States',
@@ -31,7 +33,16 @@ const countries = [
 ]
 
 const Cart = () => {
+  // Use scroll to top hook
+  useScrollToTop()
+
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Smart navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+  }
   const [open, setOpen] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState({
     name: 'PayPal',
@@ -51,9 +62,119 @@ const Cart = () => {
   })
 
   const [guest, setGuest] = useState(1)
-  const [date, setDate] = useState('')
+  const [checkIn, setCheckIn] = useState('')
+  const [checkOut, setCheckOut] = useState('')
   const [editOpt, setEditOpt] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('full')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleBooking = async () => {
+    // Validation
+    if (!checkIn || !checkOut) {
+      toast.error('Please select check-in and check-out dates', {
+        position: 'top-right',
+      })
+      return
+    }
+
+    const checkInDate = new Date(checkIn)
+    const checkOutDate = new Date(checkOut)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    if (checkInDate < today) {
+      toast.error('Check-in date cannot be in the past', {
+        position: 'top-right',
+      })
+      return
+    }
+
+    if (checkOutDate <= checkInDate) {
+      toast.error('Check-out date must be after check-in date', {
+        position: 'top-right',
+      })
+      return
+    }
+
+    if (!guest || guest < 1) {
+      toast.error('Please specify the number of guests', {
+        position: 'top-right',
+      })
+      return
+    }
+
+    if (guest > 10) {
+      toast.error('Maximum 10 guests allowed', {
+        position: 'top-right',
+      })
+      return
+    }
+
+    if (selectedPayment.name === 'Mastercard' && showCardDetails) {
+      // Validate card details
+      if (
+        !billingDetails.cardNumber ||
+        !billingDetails.expiryDate ||
+        !billingDetails.cvv
+      ) {
+        toast.error('Please fill in all card details', {
+          position: 'top-right',
+        })
+        return
+      }
+
+      if (
+        !billingDetails.name ||
+        !billingDetails.address ||
+        !billingDetails.city
+      ) {
+        toast.error('Please fill in all billing information', {
+          position: 'top-right',
+        })
+        return
+      }
+    }
+
+    // Start loading
+    setIsLoading(true)
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 2000))
+
+      // Process booking
+      toast.success('Booking request submitted successfully! 🎉', {
+        position: 'top-right',
+        autoClose: 3000,
+        onClose: () => {
+          // Reset form or navigate to confirmation page
+          setCheckIn('')
+          setCheckOut('')
+          setGuest(1)
+          setBillingDetails({
+            cardNumber: '',
+            expiryDate: '',
+            cvv: '',
+            name: '',
+            address: '',
+            city: '',
+            state: '',
+            zip: '',
+            country: '',
+          })
+          // You could navigate to a booking confirmation page
+          // navigate('/booking-confirmation')
+        },
+      })
+    } catch (err) {
+      console.error('Booking error:', err)
+      toast.error('Booking failed. Please try again.', {
+        position: 'top-right',
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const paymentOption = (method) => {
     setSelectedPayment(method)
@@ -91,11 +212,74 @@ const Cart = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
-    setBillingDetails((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+
+    // Format card number with spaces
+    if (name === 'cardNumber') {
+      const formatted = value
+        .replace(/\D/g, '')
+        .replace(/(\d{4})(?=\d)/g, '$1 ')
+        .trim()
+      setBillingDetails((prev) => ({
+        ...prev,
+        [name]: formatted,
+      }))
+    }
+    // Format expiry date as MM/YY
+    else if (name === 'expiryDate') {
+      const formatted = value
+        .replace(/\D/g, '')
+        .replace(/(\d{2})(\d)/, '$1/$2')
+        .substr(0, 5)
+      setBillingDetails((prev) => ({
+        ...prev,
+        [name]: formatted,
+      }))
+    }
+    // Format CVV (numbers only)
+    else if (name === 'cvv') {
+      const formatted = value.replace(/\D/g, '').substr(0, 4)
+      setBillingDetails((prev) => ({
+        ...prev,
+        [name]: formatted,
+      }))
+    } else {
+      setBillingDetails((prev) => ({
+        ...prev,
+        [name]: value,
+      }))
+    }
   }
+
+  // Calculate number of nights and pricing
+  const calculatePricing = () => {
+    if (!checkIn || !checkOut) return { nights: 0, basePrice: 0, total: 0 }
+
+    const checkInDate = new Date(checkIn)
+    const checkOutDate = new Date(checkOut)
+    const timeDiff = checkOutDate.getTime() - checkInDate.getTime()
+    const nights = Math.ceil(timeDiff / (1000 * 3600 * 24))
+
+    if (nights <= 0) return { nights: 0, basePrice: 0, total: 0 }
+
+    const pricePerNight = 20000 // ₦20,000 per night
+    const basePrice = pricePerNight * nights
+    const cleaningFee = 5000
+    const serviceFee = 15000
+    const taxes = 210
+    const total = basePrice + cleaningFee + serviceFee + taxes
+
+    return {
+      nights,
+      basePrice,
+      cleaningFee,
+      serviceFee,
+      taxes,
+      total,
+      pricePerNight,
+    }
+  }
+
+  const pricing = calculatePricing()
 
   const paymentOptions = [
     {
@@ -136,20 +320,24 @@ const Cart = () => {
             <HomeHiveLogo
               className='cursor-pointer w-16 h-16 md:w-20 md:h-20 transition-transform duration-300 hover:scale-110'
               alt='Homehive Logo'
+              onClick={handleHomeNavigation}
             />
-            <h1 className='font-NotoSans text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 bg-clip-text text-transparent'>
+            <h1
+              className='font-NotoSans text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity duration-300'
+              onClick={handleHomeNavigation}
+            >
               Homehive
             </h1>
           </div>
 
           {/* Right Section */}
-          <div className='hidden md:flex items-center gap-6'>
-            <h1 className='text-lg font-semibold text-primary-700 hover:text-primary-900 cursor-pointer transition-colors duration-300'>
+          <div className='flex items-center gap-3 md:gap-6'>
+            <h1 className='hidden md:block text-lg font-semibold text-primary-700 hover:text-primary-900 cursor-pointer transition-colors duration-300'>
               Become a Host
             </h1>
-            <div className='flex items-center gap-3'>
-              <button className='p-3 hover:bg-primary-50 rounded-full transition-all duration-300'>
-                <RxHamburgerMenu className='text-xl text-primary-600' />
+            <div className='flex items-center gap-2 md:gap-3'>
+              <button className='p-2 md:p-3 hover:bg-primary-50 rounded-full transition-all duration-300'>
+                <RxHamburgerMenu className='text-lg md:text-xl text-primary-600' />
               </button>
 
               {user ? (
@@ -157,13 +345,13 @@ const Cart = () => {
                   <img
                     src={user.photoURL}
                     alt='User'
-                    className='w-12 h-12 rounded-full object-cover ring-2 ring-primary-200 hover:ring-primary-300 transition-all duration-300'
+                    className='w-8 h-8 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-primary-200 hover:ring-primary-300 transition-all duration-300'
                   />
-                  <div className='absolute -top-1 -right-1 w-4 h-4 bg-accent-green-500 rounded-full border-2 border-white'></div>
+                  <div className='absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-accent-green-500 rounded-full border-2 border-white'></div>
                 </div>
               ) : (
-                <button className='p-3 hover:bg-primary-50 rounded-full transition-all duration-300'>
-                  <FaRegUserCircle className='text-2xl text-primary-600' />
+                <button className='p-2 md:p-3 hover:bg-primary-50 rounded-full transition-all duration-300'>
+                  <FaRegUserCircle className='text-xl md:text-2xl text-primary-600' />
                 </button>
               )}
             </div>
@@ -211,7 +399,9 @@ const Cart = () => {
                         Dates
                       </p>
                       <p className='font-bold text-primary-800'>
-                        {date || 'Select a date'}
+                        {checkIn && checkOut
+                          ? `${checkIn} - ${checkOut}`
+                          : 'Select dates'}
                       </p>
                     </div>
                   </div>
@@ -257,12 +447,36 @@ const Cart = () => {
                     >
                       <div>
                         <label className='block text-sm font-bold text-primary-700 mb-2 uppercase tracking-wide'>
-                          Select Date
+                          Check-in Date
                         </label>
                         <input
                           type='date'
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
+                          value={checkIn}
+                          onChange={(e) => setCheckIn(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
+                        />
+                      </div>
+                      <div>
+                        <label className='block text-sm font-bold text-primary-700 mb-2 uppercase tracking-wide'>
+                          Check-out Date
+                        </label>
+                        <input
+                          type='date'
+                          value={checkOut}
+                          onChange={(e) => setCheckOut(e.target.value)}
+                          min={
+                            checkIn || new Date().toISOString().split('T')[0]
+                          }
+                          max={
+                            new Date(
+                              new Date().setFullYear(
+                                new Date().getFullYear() + 1
+                              )
+                            )
+                              .toISOString()
+                              .split('T')[0]
+                          }
                           className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
                         />
                       </div>
@@ -273,9 +487,17 @@ const Cart = () => {
                         <input
                           type='number'
                           value={guest}
-                          onChange={(e) => setGuest(e.target.value)}
+                          onChange={(e) =>
+                            setGuest(
+                              Math.max(
+                                1,
+                                Math.min(10, parseInt(e.target.value) || 1)
+                              )
+                            )
+                          }
                           className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
                           min={1}
+                          max={10}
                         />
                       </div>
                     </motion.div>
@@ -316,7 +538,7 @@ const Cart = () => {
                         )}
                       </div>
                       <span className='font-bold text-primary-800'>
-                        Pay ₦241,210 now
+                        Pay ₦{pricing.total?.toLocaleString()} now
                       </span>
                     </div>
                     <FaShieldAlt className='text-accent-green-500' />
@@ -353,7 +575,9 @@ const Cart = () => {
                     </span>
                   </div>
                   <p className='text-sm text-primary-600 ml-7'>
-                    ₦129,760 due today, ₦111,450 due next month
+                    ₦{Math.floor(pricing.total * 0.6)?.toLocaleString()} due
+                    today, ₦{Math.floor(pricing.total * 0.4)?.toLocaleString()}{' '}
+                    due next month
                   </p>
                 </div>
               </div>
@@ -473,6 +697,7 @@ const Cart = () => {
                           placeholder='1234 5678 9012 3456'
                           value={billingDetails.cardNumber}
                           onChange={handleInputChange}
+                          maxLength={19}
                           className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
                         />
                       </div>
@@ -499,6 +724,7 @@ const Cart = () => {
                           placeholder='123'
                           value={billingDetails.cvv}
                           onChange={handleInputChange}
+                          maxLength={4}
                           className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
                         />
                       </div>
@@ -599,9 +825,22 @@ const Cart = () => {
             </div>
 
             {/* Enhanced Book Button */}
-            <button className='w-full bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-5 rounded-2xl font-bold text-lg shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3'>
-              <FaShieldAlt />
-              Request to Book
+            <button
+              className='w-full bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 disabled:from-primary-300 disabled:to-primary-300 text-white py-5 rounded-2xl font-bold text-lg shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:scale-100 disabled:cursor-not-allowed'
+              onClick={handleBooking}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <FaShieldAlt />
+                  Request to Book
+                </>
+              )}
             </button>
           </div>
 
@@ -645,28 +884,38 @@ const Cart = () => {
                 <div className='space-y-3'>
                   <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
                     <span className='text-primary-700 underline'>
-                      ₦20,000 × 5 nights
+                      ₦{pricing.pricePerNight?.toLocaleString()} ×{' '}
+                      {pricing.nights}{' '}
+                      {pricing.nights === 1 ? 'night' : 'nights'}
                     </span>
-                    <span className='font-bold text-primary-800'>₦100,000</span>
+                    <span className='font-bold text-primary-800'>
+                      ₦{pricing.basePrice?.toLocaleString()}
+                    </span>
                   </div>
 
                   <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
                     <span className='text-primary-700 underline'>
                       Cleaning fee
                     </span>
-                    <span className='font-bold text-primary-800'>₦5,000</span>
+                    <span className='font-bold text-primary-800'>
+                      ₦{pricing.cleaningFee?.toLocaleString()}
+                    </span>
                   </div>
 
                   <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
                     <span className='text-primary-700 underline'>
                       Service fee
                     </span>
-                    <span className='font-bold text-primary-800'>₦15,000</span>
+                    <span className='font-bold text-primary-800'>
+                      ₦{pricing.serviceFee?.toLocaleString()}
+                    </span>
                   </div>
 
                   <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
                     <span className='text-primary-700 underline'>Taxes</span>
-                    <span className='font-bold text-primary-800'>₦210</span>
+                    <span className='font-bold text-primary-800'>
+                      ₦{pricing.taxes?.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -680,11 +929,16 @@ const Cart = () => {
                     Total (NGN)
                   </span>
                   <span className='text-2xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
-                    ₦120,210
+                    ₦{pricing.total?.toLocaleString()}
                   </span>
                 </div>
                 <p className='text-sm text-primary-600 mt-2'>
                   Includes all fees and taxes
+                  {pricing.nights > 0
+                    ? ` for ${pricing.nights} ${
+                        pricing.nights === 1 ? 'night' : 'nights'
+                      }`
+                    : ''}
                 </p>
               </div>
 
@@ -707,8 +961,8 @@ const Cart = () => {
           </div>
         </div>
 
-        {/* Additional Security Section */}
-        <div className='bg-white/70 backdrop-blur-sm rounded-2xl shadow-soft p-8 border border-primary-200 mb-8'>
+        {/* Additional Security Section - Hidden on mobile */}
+        <div className='hidden md:block bg-white/70 backdrop-blur-sm rounded-2xl shadow-soft p-8 border border-primary-200 mb-8'>
           <div className='text-center'>
             <h3 className='text-2xl font-bold text-primary-800 mb-4'>
               Secure & Protected Booking

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import { CiSearch } from 'react-icons/ci'
 import { RxHamburgerMenu } from 'react-icons/rx'
 import { IoClose } from 'react-icons/io5'
 import { onAuthStateChanged } from 'firebase/auth'
 import { userAuth } from '../../../firebaseConfig'
+import { navigateToHome } from '../../utils/navigation'
 
 const Navbar = () => {
   const [user, setUser] = useState(null)
@@ -16,6 +17,13 @@ const Navbar = () => {
   const [visible, setVisible] = useState(true)
 
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Smart home navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+    setMenuOpen(false)
+  }
 
   // Authentication listener
   useEffect(() => {
@@ -88,7 +96,7 @@ const Navbar = () => {
   const navLinks = [
     {
       name: 'Home',
-      action: () => window.scrollTo({ top: 0, behavior: 'smooth' }),
+      action: handleHomeNavigation,
     },
     { name: 'Accommodations', action: () => scrollToSection('accomodation') },
     { name: 'Testimonials', action: () => scrollToSection('testimonial') },
@@ -106,7 +114,7 @@ const Navbar = () => {
           {/* Logo Section */}
           <div
             className='flex items-center gap-3 cursor-pointer group'
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={handleHomeNavigation}
           >
             <div className='flex-shrink-0'>
               <HomeHiveLogo

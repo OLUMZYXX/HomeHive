@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import { FcGoogle } from 'react-icons/fc'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
@@ -8,8 +8,13 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
 import { userAuth, userProvider } from '../../../firebaseConfig'
+import { navigateToHome } from '../../utils/navigation'
+import useScrollToTop from '../../hooks/useScrollToTop'
 
 const Login = () => {
+  // Use scroll to top hook
+  useScrollToTop()
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -17,6 +22,12 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Smart home navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
+  }
 
   const isPasswordValid = (password) =>
     password.length >= 8 && /[A-Z]/.test(password)
