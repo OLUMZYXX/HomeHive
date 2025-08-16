@@ -12,11 +12,11 @@ const PageLoader = ({ children, duration = 3000 }) => {
     // Pages to exclude from loading
     const excludedPaths = [
       '/login',
-      '/create-account', 
+      '/create-account',
       '/host-login',
-      '/host-create-account'
+      '/host-create-account',
     ]
-    
+
     // Check if current page should be excluded
     if (excludedPaths.includes(location.pathname)) {
       setIsLoading(false)
@@ -119,14 +119,14 @@ const PageLoader = ({ children, duration = 3000 }) => {
           transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
           className='w-14 h-14 border-4 border-primary-200 border-t-primary-600 rounded-full'
         />
-        
+
         {/* Inner Glow - Enhanced */}
         <motion.div
           animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.4, 0.8, 0.4] }}
           transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
           className='absolute inset-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full opacity-20 blur-sm'
         />
-        
+
         {/* Center dot for better visibility */}
         <motion.div
           animate={{ scale: [0.8, 1.2, 0.8] }}

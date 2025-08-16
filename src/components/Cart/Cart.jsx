@@ -356,7 +356,7 @@ const Cart = () => {
       </div>
 
       {/* Enhanced Header */}
-      <div className='container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'>
+      <div className='container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]'>
         <div className='bg-white/70 backdrop-blur-sm rounded-xl lg:rounded-2xl shadow-soft p-4 sm:p-6 mt-4 sm:mt-8 mb-4 sm:mb-8'>
           <div className='flex items-center space-x-3 sm:space-x-4'>
             <button
