@@ -220,7 +220,7 @@ const Host = () => {
                 className='flex items-center gap-3 cursor-pointer'
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
               >
-                <HomeHiveLogo className='w-12 h-12' />
+                <HomeHiveLogo className='w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 group-hover:scale-105' />
                 <h1 className='font-NotoSans text-2xl lg:text-3xl font-bold text-white'>
                   Homehive
                 </h1>

@@ -202,7 +202,7 @@ const ListingDetails = () => {
           {/* Mobile: Logo and Title */}
           <div className='flex items-center gap-2 md:gap-4'>
             <HomeHiveLogo
-              className='cursor-pointer w-10 h-10 md:w-16 md:h-16 lg:w-20 lg:h-20 transition-transform duration-300 hover:scale-110'
+              className='w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 group-hover:scale-105 cursor-pointer'
               alt='Homehive Logo'
               onClick={handleHomeNavigation}
             />

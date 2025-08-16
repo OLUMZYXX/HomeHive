@@ -200,7 +200,7 @@ const Homepage = () => {
               onClick={handleHomeNavigation}
             >
               <HomeHiveLogo
-                className='w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20 transition-transform duration-300 group-hover:scale-110 drop-shadow-sm'
+                className='w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 group-hover:scale-105'
                 alt='Homehive Logo'
               />
               <h1 className='font-NotoSans text-xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 bg-clip-text text-transparent'>
