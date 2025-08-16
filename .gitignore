@@ -1,0 +1,66 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment files (keep examples untracked exception below)
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Vite/Tooling caches
+.vite
+.cache/
+.parcel-cache/
+
+# Coverage outputs
+coverage/
+.nyc_output/
+
+# Firebase (local/emulator logs & service creds)
+.firebase/
+firebase-debug.log
+firestore-debug.log
+storage-debug.log
+firebase-service-account*.json
+
+# Deployment/platform local state
+.vercel/
+.netlify/state.json
+
+# Key/cert files
+*.pem
+*.key
+*.p12
+*.cer
+*.crt
+*.der
+*.pfx
+
+# Misc
+tmp/
