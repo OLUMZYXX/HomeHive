@@ -1,27 +1,26 @@
 // eslint-disable-next-line no-unused-vars
 import React from 'react'
-import image1 from '../../assets/customercare1.webp'
-import image2 from '../../assets/customercare2.webp'
-import image3 from '../../assets/customercare3.webp'
 import { HiPhone, HiChat, HiMail } from 'react-icons/hi'
-import { motion } from 'framer-motion'
 
 const CustomerCare = () => {
   const representatives = [
     {
-      image: image1,
+      image:
+        'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
       name: 'Sarah Johnson',
       role: 'Senior Support Specialist',
       contact: 'Available 24/7',
     },
     {
-      image: image2,
+      image:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
       name: 'Michael Chen',
       role: 'Guest Experience Manager',
       contact: 'Booking Assistance',
     },
     {
-      image: image3,
+      image:
+        'https://images.unsplash.com/photo-1580489944761-15a19d654956?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
       name: 'Emily Rodriguez',
       role: 'Customer Success Lead',
       contact: 'Property Support',
@@ -30,16 +29,10 @@ const CustomerCare = () => {
 
   return (
     <section
-      className='py-10 lg:py-14 bg-gradient-to-br from-primary-50 via-white to-neutral-50 [content-visibility:auto] [contain-intrinsic-size:1px_1000px]'
+      className='py-10 lg:py-14 bg-gradient-to-br from-primary-50 via-white to-neutral-50'
       id='support'
     >
-      <motion.div
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.3 }}
-        transition={{ duration: 0.7 }}
-        className='container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl'
-      >
+      <div className='container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl'>
         {/* Header */}
         <div className='text-center mb-16'>
           <div className='inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-primary-200 rounded-full px-4 py-2 mb-6 shadow-soft'>
@@ -62,6 +55,7 @@ const CustomerCare = () => {
             concerns, making your experience smooth and enjoyable.
           </p>
         </div>
+
         {/* Representatives Grid */}
         <div className='grid grid-cols-1 md:grid-cols-3 gap-8 mb-16'>
           {representatives.map((rep, index) => (
@@ -77,8 +71,8 @@ const CustomerCare = () => {
                   className='w-full h-80 object-cover transition-transform duration-700 group-hover:scale-105'
                   loading='lazy'
                   decoding='async'
-                  width={600}
-                  height={640}
+                  width={400}
+                  height={320}
                 />
                 {/* Overlay */}
                 <div className='absolute inset-0 bg-gradient-to-t from-primary-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
@@ -112,6 +106,7 @@ const CustomerCare = () => {
             </div>
           ))}
         </div>
+
         {/* Contact Methods */}
         <div className='bg-white/80 backdrop-blur-sm border-2 border-primary-200 rounded-3xl p-8 lg:p-12 shadow-medium'>
           <div className='text-center mb-8'>
@@ -167,7 +162,7 @@ const CustomerCare = () => {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </section>
   )
 }
