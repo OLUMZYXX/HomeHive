@@ -12,7 +12,7 @@ import {
 import { IoIosArrowBack } from 'react-icons/io'
 import { RiArrowDropDownLine, RiSecurePaymentLine } from 'react-icons/ri'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from '../../utils/toastUtils'
+import { toast } from 'sonner'
 import image from '../../assets/Apt2.webp'
 import { RxHamburgerMenu } from 'react-icons/rx'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
@@ -70,8 +70,9 @@ const Cart = () => {
   const handleBooking = async () => {
     // Validation
     if (!checkIn || !checkOut) {
-      toast.error('Please select check-in and check-out dates', {
-        position: 'top-right',
+      toast.error('Missing Dates', {
+        description: 'Please select check-in and check-out dates',
+        duration: 4000,
       })
       return
     }
@@ -82,28 +83,34 @@ const Cart = () => {
     today.setHours(0, 0, 0, 0)
 
     if (checkInDate < today) {
-      toast.error('Check-in date cannot be in the past', 'Invalid Date')
+      toast.error('Invalid Date', {
+        description: 'Check-in date cannot be in the past',
+        duration: 4000,
+      })
       return
     }
 
     if (checkOutDate <= checkInDate) {
-      toast.error(
-        'Check-out date must be after check-in date',
-        'Invalid Date Range'
-      )
+      toast.error('Invalid Date Range', {
+        description: 'Check-out date must be after check-in date',
+        duration: 4000,
+      })
       return
     }
 
     if (!guest || guest < 1) {
-      toast.error(
-        'Please specify the number of guests',
-        'Guest Information Required'
-      )
+      toast.error('Guest Information Required', {
+        description: 'Please specify the number of guests',
+        duration: 4000,
+      })
       return
     }
 
     if (guest > 10) {
-      toast.error('Maximum 10 guests allowed', 'Guest Limit Exceeded')
+      toast.error('Guest Limit Exceeded', {
+        description: 'Maximum 10 guests allowed',
+        duration: 4000,
+      })
       return
     }
 
@@ -114,10 +121,10 @@ const Cart = () => {
         !billingDetails.expiryDate ||
         !billingDetails.cvv
       ) {
-        toast.error(
-          'Please fill in all card details',
-          'Card Information Required'
-        )
+        toast.error('Card Information Required', {
+          description: 'Please fill in all card details',
+          duration: 4000,
+        })
         return
       }
 
@@ -126,10 +133,10 @@ const Cart = () => {
         !billingDetails.address ||
         !billingDetails.city
       ) {
-        toast.error(
-          'Please fill in all billing information',
-          'Billing Information Required'
-        )
+        toast.error('Billing Information Required', {
+          description: 'Please fill in all billing information',
+          duration: 4000,
+        })
         return
       }
     }
@@ -142,33 +149,36 @@ const Cart = () => {
       await new Promise((resolve) => setTimeout(resolve, 2000))
 
       // Process booking
-      toast.success('Booking request submitted successfully! 🎉', {
-        position: 'top-right',
-        autoClose: 3000,
-        onClose: () => {
-          // Reset form or navigate to confirmation page
-          setCheckIn('')
-          setCheckOut('')
-          setGuest(1)
-          setBillingDetails({
-            cardNumber: '',
-            expiryDate: '',
-            cvv: '',
-            name: '',
-            address: '',
-            city: '',
-            state: '',
-            zip: '',
-            country: '',
-          })
-          // You could navigate to a booking confirmation page
-          // navigate('/booking-confirmation')
-        },
+      toast.success('Booking Confirmed! 🎉', {
+        description: 'Your booking request has been submitted successfully',
+        duration: 4000,
+        action: {
+          label: 'View Details',
+          onClick: () => console.log('View booking details')
+        }
       })
+      
+      // Reset form after success
+      setCheckIn('')
+      setCheckOut('')
+      setGuest(1)
+      setBillingDetails({
+        cardNumber: '',
+        expiryDate: '',
+        cvv: '',
+        name: '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+        country: '',
+      })
+      
     } catch (err) {
       console.error('Booking error:', err)
-      toast.error('Booking failed. Please try again.', {
-        position: 'top-right',
+      toast.error('Booking Failed', {
+        description: 'Unable to process your booking. Please try again.',
+        duration: 4000,
       })
     } finally {
       setIsLoading(false)
@@ -178,10 +188,18 @@ const Cart = () => {
   const paymentOption = (method) => {
     setSelectedPayment(method)
     setShowCardDetails(method === 'Mastercard')
-    if (method === 'PayPal')
-      toast.info('Redirecting to PayPal...', 'Payment Method')
-    if (method === 'Paystack')
-      toast.info('Redirecting to Paystack...', 'Payment Method')
+    if (method === 'PayPal') {
+      toast.info('Payment Method', {
+        description: 'Redirecting to PayPal...',
+        duration: 3000,
+      })
+    }
+    if (method === 'Paystack') {
+      toast.info('Payment Method', {
+        description: 'Redirecting to Paystack...',
+        duration: 3000,
+      })
+    }
   }
 
   const auth = userAuth
@@ -339,45 +357,45 @@ const Cart = () => {
       </div>
 
       {/* Enhanced Header */}
-      <div className='container mx-auto px-4 md:px-8'>
-        <div className='bg-white/70 backdrop-blur-sm rounded-2xl shadow-soft p-6 mt-8 mb-8'>
-          <div className='flex items-center space-x-4'>
+      <div className='container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl'>
+        <div className='bg-white/70 backdrop-blur-sm rounded-xl lg:rounded-2xl shadow-soft p-4 sm:p-6 mt-4 sm:mt-8 mb-4 sm:mb-8'>
+          <div className='flex items-center space-x-3 sm:space-x-4'>
             <button
               onClick={() => navigate(-1)}
-              className='p-3 hover:bg-primary-100 rounded-full transition-all duration-300 border border-primary-200'
+              className='p-2 sm:p-3 hover:bg-primary-100 rounded-full transition-all duration-300 border border-primary-200 flex-shrink-0'
             >
-              <IoIosArrowBack className='text-2xl text-primary-700' />
+              <IoIosArrowBack className='text-lg sm:text-2xl text-primary-700' />
             </button>
-            <h1 className='text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
+            <h1 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
               Complete Your Booking
             </h1>
           </div>
         </div>
 
         {/* Enhanced Grid Layout */}
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12'>
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pb-8 sm:pb-12'>
           {/* Left Side: Booking Details - Takes 2 columns */}
-          <div className='lg:col-span-2 space-y-8'>
+          <div className='lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8'>
             {/* Trip Details Card */}
-            <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft p-8 border border-primary-200'>
-              <div className='flex items-center gap-3 mb-6'>
-                <FaCalendarAlt className='text-2xl text-primary-600' />
-                <h2 className='text-2xl font-bold text-primary-800'>
+            <div className='bg-white/80 backdrop-blur-sm rounded-xl lg:rounded-2xl shadow-soft p-4 sm:p-6 lg:p-8 border border-primary-200'>
+              <div className='flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6'>
+                <FaCalendarAlt className='text-lg sm:text-xl lg:text-2xl text-primary-600' />
+                <h2 className='text-lg sm:text-xl lg:text-2xl font-bold text-primary-800'>
                   Your Trip Details
                 </h2>
               </div>
 
-              <div className='space-y-6'>
-                <div className='flex items-center justify-between p-4 bg-primary-25 rounded-xl border border-primary-200'>
-                  <div className='flex items-center gap-4'>
-                    <div className='p-3 bg-white rounded-xl shadow-soft'>
-                      <FaCalendarAlt className='text-primary-600' />
+              <div className='space-y-4 sm:space-y-6'>
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-primary-25 rounded-xl border border-primary-200 gap-3 sm:gap-4'>
+                  <div className='flex items-center gap-3 sm:gap-4'>
+                    <div className='p-2 sm:p-3 bg-white rounded-lg sm:rounded-xl shadow-soft flex-shrink-0'>
+                      <FaCalendarAlt className='text-sm sm:text-base text-primary-600' />
                     </div>
                     <div>
-                      <p className='text-sm font-semibold text-primary-700 uppercase tracking-wide'>
+                      <p className='text-xs sm:text-sm font-semibold text-primary-700 uppercase tracking-wide'>
                         Dates
                       </p>
-                      <p className='font-bold text-primary-800'>
+                      <p className='text-sm sm:text-base font-bold text-primary-800'>
                         {checkIn && checkOut
                           ? `${checkIn} - ${checkOut}`
                           : 'Select dates'}
@@ -385,7 +403,7 @@ const Cart = () => {
                     </div>
                   </div>
                   <button
-                    className='text-primary-600 hover:text-primary-800 font-semibold underline transition-colors duration-300'
+                    className='text-primary-600 hover:text-primary-800 font-semibold underline transition-colors duration-300 text-sm sm:text-base self-start sm:self-center'
                     onClick={() => setEditOpt(!editOpt)}
                   >
                     Edit

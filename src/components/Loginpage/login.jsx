@@ -4,7 +4,7 @@ import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import { FcGoogle } from 'react-icons/fc'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
 import loginImg from '../../assets/login.jpg'
-import { toast } from '../../utils/toastUtils'
+import { toast } from 'sonner'
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
 import { userAuth, userProvider } from '../../../firebaseConfig'
 import { navigateToHome } from '../../utils/navigation'
@@ -53,19 +53,19 @@ const Login = () => {
         email,
         password
       )
-      toast.success(
-        `Welcome back, ${userCredentials.user.email}!`,
-        'Login Successful'
-      )
+      toast.success(`Welcome back, ${userCredentials.user.email}!`, {
+        description: 'Login successful! Redirecting you now...',
+        duration: 3000,
+      })
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
     } catch {
       setError('Invalid email or password. Please try again.')
-      toast.error(
-        'Login failed. Check your credentials.',
-        'Authentication Error'
-      )
+      toast.error('Authentication Error', {
+        description: 'Login failed. Please check your credentials.',
+        duration: 4000,
+      })
     } finally {
       setIsLoading(false)
     }
@@ -75,12 +75,18 @@ const Login = () => {
     setIsGoogleLoading(true)
     try {
       const result = await signInWithPopup(userAuth, userProvider)
-      toast.success(`Welcome ${result.user.displayName}!`, 'Login Successful')
+      toast.success(`Welcome ${result.user.displayName}!`, {
+        description: 'Google login successful! Redirecting you now...',
+        duration: 3000,
+      })
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
     } catch {
-      toast.error('Google login failed. Try again.', 'Authentication Error')
+      toast.error('Authentication Error', {
+        description: 'Google login failed. Please try again.',
+        duration: 4000,
+      })
     } finally {
       setIsGoogleLoading(false)
     }

@@ -5,6 +5,7 @@ import { HiMail, HiLockClosed } from 'react-icons/hi'
 import { HiHome } from 'react-icons/hi2'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
+import { toast } from 'sonner'
 
 const Hostlogin = () => {
   // Use scroll to top hook
@@ -13,11 +14,9 @@ const Hostlogin = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
   const location = useLocation()
@@ -35,7 +34,6 @@ const Hostlogin = () => {
     e.preventDefault()
     setIsLoading(true)
     setErrors({})
-    setError('')
 
     // Basic validation
     const newErrors = {}
@@ -62,12 +60,18 @@ const Hostlogin = () => {
     try {
       console.log('Host login:', { email, password })
       await new Promise((resolve) => setTimeout(resolve, 1500))
-      setSuccessMessage('Login successful! Redirecting...')
+      toast.success('Login successful! Redirecting to host dashboard...', {
+        duration: 2000,
+        className: 'text-sm font-medium',
+      })
       setTimeout(() => {
         navigate('/host-dashboard')
       }, 1000)
     } catch {
-      setError('Login failed. Please check your credentials.')
+      toast.error('Login failed. Please check your credentials.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
     } finally {
       setIsLoading(false)
     }
@@ -78,14 +82,20 @@ const Hostlogin = () => {
     try {
       console.log('Google host login')
       await new Promise((resolve) => setTimeout(resolve, 1500))
-      setSuccessMessage('Google login successful! Redirecting...')
+      toast.success('Google login successful! Welcome back!', {
+        duration: 2000,
+        className: 'text-sm font-medium',
+      })
       setTimeout(() => {
         setIsGoogleLoading(false)
         navigate('/host-dashboard')
       }, 1000)
     } catch {
       console.error('Google login failed')
-      setError('Google login failed. Please try again.')
+      toast.error('Google login failed. Please try again.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
     } finally {
       setIsGoogleLoading(false)
     }
@@ -422,24 +432,6 @@ const Hostlogin = () => {
                     <p className='text-error-700 text-sm flex items-center gap-2'>
                       <span className='text-lg'>❌</span>
                       {errors.submit}
-                    </p>
-                  </div>
-                )}
-
-                {error && (
-                  <div className='mt-4 p-4 bg-error-50 border border-error-200 rounded-xl'>
-                    <p className='text-error-700 text-sm flex items-center gap-2'>
-                      <span className='text-lg'>❌</span>
-                      {error}
-                    </p>
-                  </div>
-                )}
-
-                {successMessage && (
-                  <div className='mt-4 p-4 bg-success-50 border border-success-200 rounded-xl'>
-                    <p className='text-success-700 text-sm flex items-center gap-2'>
-                      <span className='text-lg'>✅</span>
-                      {successMessage}
                     </p>
                   </div>
                 )}

@@ -5,6 +5,7 @@ import { HiMail, HiLockClosed } from 'react-icons/hi'
 import { HiUser } from 'react-icons/hi2'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
+import { toast } from 'sonner'
 
 const Createacct = () => {
   // Use scroll to top hook
@@ -81,12 +82,18 @@ const Createacct = () => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000))
-      setSuccessMessage('Account created successfully! Redirecting...')
+      toast.success('Host account created successfully! Welcome to HomeHive!', {
+        duration: 4000,
+        className: 'text-sm font-medium',
+      })
       setTimeout(() => {
         navigate('/host-dashboard')
       }, 1000)
     } catch {
-      setErrors({ submit: 'Failed to create account. Please try again.' })
+      toast.error('Failed to create account. Please try again.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
     } finally {
       setIsLoading(false)
     }

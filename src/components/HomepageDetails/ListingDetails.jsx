@@ -30,7 +30,7 @@ import { MdOutlineCalendarToday } from 'react-icons/md'
 import { RiArrowDropDownLine } from 'react-icons/ri'
 import { FaRegFlag } from 'react-icons/fa6'
 import Footer from '../Footer/Footer'
-import { toast } from '../../utils/toastUtils'
+import { toast } from 'sonner'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { IoIosArrowBack } from 'react-icons/io'
 import { AiFillHeart } from 'react-icons/ai'
@@ -148,27 +148,26 @@ const ListingDetails = () => {
 
   const handleReservation = () => {
     if (!checkIn || !checkout || !guest) {
-      toast.error('Please fill in check-in, check-out, and number of guests.', {
-        position: 'top-right',
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-        progress: undefined,
+      toast.error('Missing Information', {
+        description: 'Please fill in check-in, check-out, and number of guests.',
+        duration: 4000,
       })
       return
     }
-    toast.success(`Reservation successful! 🎉 `, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      onClose: () => navigate('/cart'),
+    
+    toast.success('Booking Successful! 🎉', {
+      description: 'Your accommodation has been added to cart. Redirecting you now...',
+      duration: 3000,
+      action: {
+        label: 'View Cart',
+        onClick: () => navigate('/cart')
+      }
     })
+    
+    setTimeout(() => {
+      navigate('/cart')
+    }, 1000)
+    
     setCheckIn('')
     setCheckOut('')
     setGuest('')
@@ -595,7 +594,7 @@ const ListingDetails = () => {
                 className='w-full bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] mb-3 md:mb-4'
                 onClick={handleReservation}
               >
-                Reserve
+                Book Now
               </button>
 
               <p className='text-sm text-primary-600 text-center mb-4 md:mb-6'>

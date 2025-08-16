@@ -2,6 +2,7 @@
 import React from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
+import { Toaster } from 'sonner'
 import { PageWrapper } from './components/common/AnimatedComponents'
 
 import Home from './Home'
@@ -15,7 +16,6 @@ import Host from './components/Become a Host/Host'
 import Hostlogin from './components/Host-Login/Hostlogin'
 import Dashboard from './components/Host-dashboard/Dashboard'
 import ScrollToTop from './components/ScrollToTop'
-import AppToastContainer from './components/common/ToastContainer'
 
 const AnimatedRoutes = () => {
   const location = useLocation()
@@ -128,7 +128,25 @@ function App() {
     <>
       <ScrollToTop />
       <AnimatedRoutes />
-      <AppToastContainer />
+      <Toaster 
+        position="top-right"
+        richColors
+        closeButton
+        expand={true}
+        duration={4000}
+        toastOptions={{
+          style: {
+            background: 'white',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '14px',
+            fontWeight: '500',
+            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+          },
+          className: 'sonner-toast',
+        }}
+      />
     </>
   )
 }

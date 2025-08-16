@@ -2,6 +2,7 @@
 import React, { useState } from 'react'
 import { FaArrowLeft, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa'
 import { HiUser, HiMail, HiLockClosed } from 'react-icons/hi'
+import { toast } from 'sonner'
 
 const Createacct = () => {
   const [firstName, setFirstName] = useState('')
@@ -9,7 +10,6 @@ const Createacct = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -21,35 +21,53 @@ const Createacct = () => {
 
   const handleCreateAccount = async (e) => {
     e.preventDefault()
-    setError('')
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      setError('Please fill in all fields.')
+      toast.error('Please fill in all fields.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
       return
     }
     if (!isEmailValid(email)) {
-      setError('Please enter a valid email address.')
+      toast.error('Please enter a valid email address.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
       return
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.')
+      toast.error('Passwords do not match.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
       return
     }
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.')
+      toast.error('Password must be at least 6 characters.', {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
       return
     }
     setIsLoading(true)
     setTimeout(() => {
       console.log('Account created successfully!')
+      toast.success('Account created successfully! Welcome to HomeHive!', {
+        duration: 4000,
+        className: 'text-sm font-medium',
+      })
       setIsLoading(false)
     }, 2000)
   }
 
   const handleGoogleSignUp = async () => {
-    setError('')
     setIsGoogleLoading(true)
     setTimeout(() => {
       console.log('Account created with Google!')
+      toast.success('Account created with Google! Welcome to HomeHive!', {
+        duration: 4000,
+        className: 'text-sm font-medium',
+      })
       setIsGoogleLoading(false)
     }, 2000)
   }

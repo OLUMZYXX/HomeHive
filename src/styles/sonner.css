@@ -1,0 +1,256 @@
+/* Custom Sonner Toast Styles */
+
+/* Base toast styling */
+[data-sonner-toaster] {
+  --toast-bg: theme('colors.white');
+  --toast-border: theme('colors.gray.200');
+  --toast-text: theme('colors.gray.900');
+  --toast-description: theme('colors.gray.600');
+  --toast-close-button: theme('colors.gray.400');
+  --toast-close-button-hover: theme('colors.gray.600');
+  
+  /* Success toast */
+  --success-bg: theme('colors.green.50');
+  --success-border: theme('colors.green.200');
+  --success-text: theme('colors.green.800');
+  --success-description: theme('colors.green.600');
+  
+  /* Error toast */
+  --error-bg: theme('colors.red.50');
+  --error-border: theme('colors.red.200');
+  --error-text: theme('colors.red.800');
+  --error-description: theme('colors.red.600');
+  
+  /* Warning toast */
+  --warning-bg: theme('colors.amber.50');
+  --warning-border: theme('colors.amber.200');
+  --warning-text: theme('colors.amber.800');
+  --warning-description: theme('colors.amber.600');
+  
+  /* Info toast */
+  --info-bg: theme('colors.blue.50');
+  --info-border: theme('colors.blue.200');
+  --info-text: theme('colors.blue.800');
+  --info-description: theme('colors.blue.600');
+}
+
+/* Toast container positioning for different screen sizes */
+[data-sonner-toaster] {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 9999;
+  max-width: 20rem;
+  width: 100%;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+  }
+}
+
+/* Individual toast styling */
+[data-sonner-toast] {
+  background: var(--toast-bg);
+  border: 1px solid var(--toast-border);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(8px);
+  font-family: theme('fontFamily.sans');
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-sonner-toast]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Toast variants */
+[data-sonner-toast][data-type="success"] {
+  background: var(--success-bg);
+  border-color: var(--success-border);
+  color: var(--success-text);
+}
+
+[data-sonner-toast][data-type="error"] {
+  background: var(--error-bg);
+  border-color: var(--error-border);
+  color: var(--error-text);
+}
+
+[data-sonner-toast][data-type="warning"] {
+  background: var(--warning-bg);
+  border-color: var(--warning-border);
+  color: var(--warning-text);
+}
+
+[data-sonner-toast][data-type="info"] {
+  background: var(--info-bg);
+  border-color: var(--info-border);
+  color: var(--info-text);
+}
+
+/* Toast content */
+[data-sonner-toast] [data-title] {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  margin-bottom: 0.25rem;
+}
+
+[data-sonner-toast] [data-description] {
+  font-size: 0.75rem;
+  line-height: 1.25;
+  opacity: 0.8;
+}
+
+/* Close button */
+[data-sonner-toast] [data-close-button] {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--toast-close-button);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--toast-close-button-hover);
+}
+
+/* Loading state */
+[data-sonner-toast] [data-loader] {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Action buttons */
+[data-sonner-toast] [data-button] {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  border: 1px solid;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+[data-sonner-toast] [data-button]:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-sonner-toast][data-type="success"] [data-button] {
+  color: var(--success-text);
+  border-color: var(--success-border);
+}
+
+[data-sonner-toast][data-type="error"] [data-button] {
+  color: var(--error-text);
+  border-color: var(--error-border);
+}
+
+[data-sonner-toast][data-type="warning"] [data-button] {
+  color: var(--warning-text);
+  border-color: var(--warning-border);
+}
+
+[data-sonner-toast][data-type="info"] [data-button] {
+  color: var(--info-text);
+  border-color: var(--info-border);
+}
+
+/* Animation enter/exit */
+[data-sonner-toast][data-mounted] {
+  animation: toast-in 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-sonner-toast][data-removed] {
+  animation: toast-out 0.2s cubic-bezier(0.4, 0, 1, 1);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  [data-sonner-toaster] {
+    --toast-bg: theme('colors.gray.800');
+    --toast-border: theme('colors.gray.700');
+    --toast-text: theme('colors.gray.100');
+    --toast-description: theme('colors.gray.300');
+    --toast-close-button: theme('colors.gray.400');
+    --toast-close-button-hover: theme('colors.gray.200');
+    
+    --success-bg: theme('colors.green.900');
+    --success-border: theme('colors.green.700');
+    --success-text: theme('colors.green.100');
+    --success-description: theme('colors.green.200');
+    
+    --error-bg: theme('colors.red.900');
+    --error-border: theme('colors.red.700');
+    --error-text: theme('colors.red.100');
+    --error-description: theme('colors.red.200');
+    
+    --warning-bg: theme('colors.amber.900');
+    --warning-border: theme('colors.amber.700');
+    --warning-text: theme('colors.amber.100');
+    --warning-description: theme('colors.amber.200');
+    
+    --info-bg: theme('colors.blue.900');
+    --info-border: theme('colors.blue.700');
+    --info-text: theme('colors.blue.100');
+    --info-description: theme('colors.blue.200');
+  }
+}

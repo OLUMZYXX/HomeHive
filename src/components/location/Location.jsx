@@ -5,7 +5,7 @@ import { FaSearch, FaMoneyBillAlt } from 'react-icons/fa'
 import { FaLocationDot } from 'react-icons/fa6'
 import { AiFillPropertySafety } from 'react-icons/ai'
 import { HiChevronDown } from 'react-icons/hi'
-import { toast, ToastContainer } from 'react-toastify'
+import { toast } from 'sonner'
 
 const Location = () => {
   const navigate = useNavigate()
@@ -31,7 +31,10 @@ const Location = () => {
 
   const handleSearch = async () => {
     if (!location || !propertyType || !priceRange) {
-      toast.error('Please fill all fields to search')
+      toast.error('Missing Information', {
+        description: 'Please fill all fields to search',
+        duration: 4000,
+      })
       return
     }
 
@@ -53,8 +56,6 @@ const Location = () => {
       className='py-2 lg:py-4 bg-gradient-to-br from-primary-50 via-white to-neutral-50'
       id='accomodation'
     >
-      <ToastContainer position='top-right' autoClose={3000} />
-
       <div className='container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl'>
         <div className='grid grid-cols-1 gap-6 items-start'>
           {/* Header */}
