@@ -97,7 +97,7 @@ const Login = () => {
       <div className='w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100'>
         <div className='grid grid-cols-1 lg:grid-cols-2 min-h-[600px]'>
           {/* Left Side: Image & Branding */}
-          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white'>
+          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white hidden lg:flex'>
             {/* Background Pattern */}
             <div className='absolute inset-0 opacity-10'>
               <img

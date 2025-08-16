@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   FaRegUserCircle,
   FaStar,
@@ -15,11 +16,11 @@ import { HiLocationMarker, HiHome, HiSparkles } from 'react-icons/hi'
 import { RiEarthLine } from 'react-icons/ri'
 import { RxHamburgerMenu } from 'react-icons/rx'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
-import { useNavigate } from 'react-router-dom'
 import Footer from '../Footer/Footer'
 
 const Homepage = () => {
   const navigate = useNavigate()
+
   // Fetch currency rates from a free API
   useEffect(() => {
     async function fetchRates() {

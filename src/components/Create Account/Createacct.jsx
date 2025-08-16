@@ -1,12 +1,9 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FcGoogle } from 'react-icons/fc'
 import { FaArrowLeft, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa'
 import { HiUser, HiMail, HiLockClosed } from 'react-icons/hi'
 
 const Createacct = () => {
-  const navigate = useNavigate()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -43,8 +40,8 @@ const Createacct = () => {
     }
     setIsLoading(true)
     setTimeout(() => {
+      console.log('Account created successfully!')
       setIsLoading(false)
-      navigate('/homepage')
     }, 2000)
   }
 
@@ -61,7 +58,7 @@ const Createacct = () => {
     <div className='min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 flex items-center justify-center p-4'>
       {/* Back to Login Button */}
       <button
-        onClick={() => navigate('/signin')}
+        onClick={() => console.log('Navigate to signin')}
         className='absolute top-6 left-6 flex items-center gap-2 text-primary-700 hover:text-primary-900 bg-white hover:bg-primary-25 px-4 py-3 rounded-xl border border-primary-200 hover:border-primary-300 transition-all duration-300 font-medium shadow-soft hover:shadow-medium'
       >
         <FaArrowLeft className='text-sm' />
@@ -72,9 +69,9 @@ const Createacct = () => {
       <div className='w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100'>
         <div className='grid grid-cols-1 lg:grid-cols-2 min-h-[600px]'>
           {/* Left Side: Image & Branding */}
-          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white lg:flex'>
+          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white lg:flex hidden'>
             <div className='absolute inset-0 opacity-20'>
-              <div className='w-full h-full from-primary-700/50 to-primary-900/50 bg-[url("https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center'></div>
+              <div className='w-full h-full bg-gradient-to-br from-primary-700/50 to-primary-900/50 bg-[url("https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center'></div>
             </div>
 
             <div className='relative z-10 text-center space-y-8'>
@@ -248,7 +245,7 @@ const Createacct = () => {
                 <button
                   type='submit'
                   disabled={isLoading}
-                  className='w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3'
+                  className='w-full bg-neutral-800 hover:bg-neutral-900 disabled:bg-neutral-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3'
                 >
                   {isLoading ? (
                     <>
@@ -280,7 +277,7 @@ const Createacct = () => {
               <button
                 onClick={handleGoogleSignUp}
                 disabled={isGoogleLoading}
-                className='w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3 shadow-soft hover:shadow-medium'
+                className='w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium'
               >
                 {isGoogleLoading ? (
                   <>
@@ -289,7 +286,7 @@ const Createacct = () => {
                   </>
                 ) : (
                   <>
-                    <FcGoogle className='text-xl' />
+                    <div className='w-6 h-6 border-2 border-primary-600 border-r-transparent rounded-full'></div>
                     <span>Continue with Google</span>
                   </>
                 )}
@@ -300,7 +297,7 @@ const Createacct = () => {
                 <p className='text-primary-600'>
                   Already have an account?{' '}
                   <button
-                    onClick={() => navigate('/signin')}
+                    onClick={() => console.log('Navigate to signin')}
                     className='text-primary-800 hover:text-primary-900 font-semibold transition-colors duration-300 underline decoration-2 underline-offset-2'
                   >
                     Sign In
