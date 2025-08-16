@@ -544,27 +544,103 @@ const ListingDetails = () => {
               {/* Enhanced Check-in Form */}
               <div className='space-y-3 md:space-y-4 mb-4 md:mb-6'>
                 <div className='grid grid-cols-2 gap-1 md:gap-2 border-2 border-primary-200 rounded-xl overflow-hidden hover:border-primary-300 transition-colors duration-300'>
-                  <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
+                  <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300 relative'>
                     <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
                       Check-in
                     </label>
-                    <input
-                      type='date'
-                      className='w-full mt-1 bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base'
-                      value={checkIn}
-                      onChange={(e) => setCheckIn(e.target.value)}
-                    />
+                    <div className='relative mt-1'>
+                      <input
+                        type='date'
+                        className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base appearance-none border-none focus:ring-0 focus:outline-none relative z-10'
+                        style={{
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'textfield',
+                          fontSize: '16px', // Prevents zoom on iOS
+                          minHeight: '44px', // iOS touch target minimum
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          outline: 'none',
+                        }}
+                        value={checkIn}
+                        onChange={(e) => setCheckIn(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]} // Prevent past dates
+                        onFocus={(e) => {
+                          // iOS Safari focus fix
+                          if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                            e.target.blur()
+                            setTimeout(() => e.target.focus(), 100)
+                          }
+                        }}
+                      />
+                      {/* Custom overlay for better iOS handling */}
+                      <div
+                        className='absolute inset-0 cursor-pointer z-20'
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling
+                          if (input && input.type === 'date') {
+                            input.focus()
+                            input.click()
+                            // Force show date picker on iOS
+                            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                              input.showPicker?.()
+                            }
+                          }
+                        }}
+                        style={{
+                          backgroundColor: 'transparent',
+                          pointerEvents: checkIn ? 'none' : 'auto',
+                        }}
+                      />
+                    </div>
                   </div>
-                  <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300'>
+                  <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300 relative'>
                     <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
                       Check-out
                     </label>
-                    <input
-                      type='date'
-                      className='w-full mt-1 bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base'
-                      value={checkout}
-                      onChange={(e) => setCheckOut(e.target.value)}
-                    />
+                    <div className='relative mt-1'>
+                      <input
+                        type='date'
+                        className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base appearance-none border-none focus:ring-0 focus:outline-none relative z-10'
+                        style={{
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'textfield',
+                          fontSize: '16px', // Prevents zoom on iOS
+                          minHeight: '44px', // iOS touch target minimum
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          outline: 'none',
+                        }}
+                        value={checkout}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                        min={checkIn || new Date().toISOString().split('T')[0]} // Prevent past dates and dates before check-in
+                        onFocus={(e) => {
+                          // iOS Safari focus fix
+                          if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                            e.target.blur()
+                            setTimeout(() => e.target.focus(), 100)
+                          }
+                        }}
+                      />
+                      {/* Custom overlay for better iOS handling */}
+                      <div
+                        className='absolute inset-0 cursor-pointer z-20'
+                        onClick={(e) => {
+                          const input = e.currentTarget.previousElementSibling
+                          if (input && input.type === 'date') {
+                            input.focus()
+                            input.click()
+                            // Force show date picker on iOS
+                            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                              input.showPicker?.()
+                            }
+                          }
+                        }}
+                        style={{
+                          backgroundColor: 'transparent',
+                          pointerEvents: checkout ? 'none' : 'auto',
+                        }}
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -600,14 +676,14 @@ const ListingDetails = () => {
               </button>
 
               <p className='text-sm text-primary-600 text-center mb-4 md:mb-6'>
-                You won't be charged yet
+                You won&apos;t be charged yet
               </p>
 
               {/* Enhanced Amenities */}
               {home && (
                 <div>
                   <h3 className='font-bold text-primary-800 mb-3 md:mb-4 text-sm md:text-base'>
-                    What's included
+                    What&apos;s included
                   </h3>
                   <div className='flex flex-wrap gap-2'>
                     {home.amenities.map((amenity, idx) => (
@@ -638,7 +714,7 @@ const ListingDetails = () => {
         {/* Enhanced Bedroom Section */}
         <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-6 md:p-8 mb-8 md:mb-10'>
           <h2 className='font-NotoSans text-2xl md:text-3xl font-bold text-primary-800 mb-4 md:mb-6'>
-            Where you'll sleep
+            Where you&apos;ll sleep
           </h2>
           <div className='flex flex-col md:flex-row gap-4 md:gap-6 items-start'>
             <img
