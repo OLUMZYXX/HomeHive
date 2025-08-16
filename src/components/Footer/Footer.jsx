@@ -10,6 +10,13 @@ import {
   FaMapMarkerAlt,
 } from 'react-icons/fa'
 import { HiArrowUp } from 'react-icons/hi'
+import {
+  ScrollReveal,
+  StaggerContainer,
+  StaggerItem,
+  AnimatedButton,
+  FloatingElement,
+} from '../common/AnimatedComponents'
 
 const Footer = () => {
   const currentYear = new Date().getFullYear()
@@ -68,7 +75,12 @@ const Footer = () => {
     <footer className='bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 text-white relative overflow-hidden [content-visibility:auto] [contain-intrinsic-size:1px_600px]'>
       {/* Background Pattern */}
       <div className='absolute inset-0 opacity-5'>
-        <div className='absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent transform -skew-y-1'></div>
+        <FloatingElement
+          direction='x'
+          distance={50}
+          duration={20}
+          className='absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent transform -skew-y-1'
+        />
       </div>
 
       {/* Main Footer Content */}
@@ -76,7 +88,11 @@ const Footer = () => {
         {/* Top Section */}
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8'>
           {/* Company Info */}
-          <div className='lg:col-span-5 space-y-6'>
+          <ScrollReveal
+            direction='left'
+            delay={0.2}
+            className='lg:col-span-5 space-y-6'
+          >
             <div>
               <h2 className='font-NotoSans text-3xl font-bold mb-4'>
                 <span className='text-white'>Home</span>
@@ -91,58 +107,65 @@ const Footer = () => {
             </div>
 
             {/* Contact Info */}
-            <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
-              <div className='flex items-center gap-3'>
+            <StaggerContainer
+              staggerDelay={0.1}
+              className='grid grid-cols-1 sm:grid-cols-3 gap-4'
+            >
+              <StaggerItem className='flex items-center gap-3'>
                 <FaMapMarkerAlt className='text-primary-200 text-lg' />
                 <div>
                   <p className='text-primary-100 text-sm'>Lagos, Nigeria</p>
                 </div>
-              </div>
+              </StaggerItem>
 
-              <div className='flex items-center gap-3'>
+              <StaggerItem className='flex items-center gap-3'>
                 <FaPhone className='text-primary-200 text-lg' />
                 <div>
                   <p className='text-primary-100 text-sm'>+234 800 123 4567</p>
                 </div>
-              </div>
+              </StaggerItem>
 
-              <div className='flex items-center gap-3'>
+              <StaggerItem className='flex items-center gap-3'>
                 <FaEnvelope className='text-primary-200 text-lg' />
                 <div>
                   <p className='text-primary-100 text-sm'>hello@homehive.com</p>
                 </div>
-              </div>
-            </div>
-          </div>
+              </StaggerItem>
+            </StaggerContainer>
+          </ScrollReveal>
 
           {/* Links Sections */}
-          <div className='lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-8'>
+          <ScrollReveal
+            direction='right'
+            delay={0.3}
+            className='lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-8'
+          >
             {/* Company Links */}
             <div>
               <h3 className='text-lg font-bold text-white mb-4'>Company</h3>
-              <ul className='space-y-2'>
+              <StaggerContainer staggerDelay={0.05}>
                 {footerLinks.company.slice(0, 4).map((link) => (
-                  <li key={link.id}>
+                  <StaggerItem key={link.id}>
                     <a
                       href={link.link}
-                      className='text-primary-100 hover:text-white transition-colors duration-300 text-sm'
+                      className='text-primary-100 hover:text-white transition-colors duration-300 text-sm block py-1'
                     >
                       {link.name}
                     </a>
-                  </li>
+                  </StaggerItem>
                 ))}
-              </ul>
+              </StaggerContainer>
             </div>
 
             {/* Services Links */}
             <div>
               <h3 className='text-lg font-bold text-white mb-4'>Services</h3>
-              <ul className='space-y-2'>
+              <StaggerContainer staggerDelay={0.05}>
                 {footerLinks.services.slice(0, 4).map((link) => (
-                  <li key={link.id}>
+                  <StaggerItem key={link.id}>
                     <a
                       href={link.link}
-                      className='text-primary-100 hover:text-white transition-colors duration-300 text-sm'
+                      className='text-primary-100 hover:text-white transition-colors duration-300 text-sm block py-1'
                       onClick={
                         link.link.startsWith('#')
                           ? (e) => {
@@ -156,62 +179,63 @@ const Footer = () => {
                     >
                       {link.name}
                     </a>
-                  </li>
+                  </StaggerItem>
                 ))}
-              </ul>
+              </StaggerContainer>
             </div>
 
             {/* Support Links */}
             <div>
               <h3 className='text-lg font-bold text-white mb-4'>Support</h3>
-              <ul className='space-y-2'>
+              <StaggerContainer staggerDelay={0.05}>
                 {footerLinks.support.slice(0, 4).map((link) => (
-                  <li key={link.id}>
+                  <StaggerItem key={link.id}>
                     <a
                       href={link.link}
-                      className='text-primary-100 hover:text-white transition-colors duration-300 text-sm'
+                      className='text-primary-100 hover:text-white transition-colors duration-300 text-sm block py-1'
                     >
                       {link.name}
                     </a>
-                  </li>
+                  </StaggerItem>
                 ))}
-              </ul>
+              </StaggerContainer>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
 
         {/* Bottom Section */}
-        <div className='border-t border-primary-600/30 pt-6'>
-          <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
-            <div className='flex flex-col md:flex-row items-center gap-4'>
-              <p className='text-primary-100 text-sm'>
-                © {currentYear} Homehive. All rights reserved.
-              </p>
-              <div className='flex gap-4'>
-                {socialLinks.map((social, index) => (
-                  <a
-                    key={index}
-                    href={social.href}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    aria-label={social.label}
-                    className='w-8 h-8 bg-primary-700/50 hover:bg-white/10 rounded-lg flex items-center justify-center transition-all duration-300 transform hover:scale-110'
-                  >
-                    <social.icon className='text-sm text-primary-100 hover:text-white transition-colors duration-300' />
-                  </a>
-                ))}
+        <ScrollReveal direction='up' delay={0.4}>
+          <div className='border-t border-primary-600/30 pt-6'>
+            <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
+              <div className='flex flex-col md:flex-row items-center gap-4'>
+                <p className='text-primary-100 text-sm'>
+                  © {currentYear} Homehive. All rights reserved.
+                </p>
+                <StaggerContainer staggerDelay={0.05} className='flex gap-4'>
+                  {socialLinks.map((social, index) => (
+                    <StaggerItem key={index}>
+                      <AnimatedButton
+                        onClick={() => window.open(social.href, '_blank')}
+                        className='w-8 h-8 bg-primary-700/50 hover:bg-white/10 rounded-lg flex items-center justify-center transition-all duration-300'
+                        aria-label={social.label}
+                      >
+                        <social.icon className='text-sm text-primary-100 hover:text-white transition-colors duration-300' />
+                      </AnimatedButton>
+                    </StaggerItem>
+                  ))}
+                </StaggerContainer>
               </div>
-            </div>
 
-            <button
-              onClick={scrollToTop}
-              className='bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-2 transition-all duration-300 transform hover:scale-110'
-              aria-label='Back to top'
-            >
-              <HiArrowUp className='text-lg text-white' />
-            </button>
+              <AnimatedButton
+                onClick={scrollToTop}
+                className='bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-2 transition-all duration-300'
+                aria-label='Back to top'
+              >
+                <HiArrowUp className='text-lg text-white' />
+              </AnimatedButton>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </footer>
   )

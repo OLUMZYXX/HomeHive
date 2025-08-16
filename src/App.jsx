@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 import React from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence, motion } from 'framer-motion'
-import PropTypes from 'prop-types'
+import { AnimatePresence } from 'framer-motion'
+import { PageWrapper } from './components/common/AnimatedComponents'
 
 import Home from './Home'
 import Login from './components/Loginpage/login'
@@ -17,14 +17,23 @@ import Dashboard from './components/Host-dashboard/Dashboard'
 import ScrollToTop from './components/ScrollToTop'
 import AppToastContainer from './components/common/ToastContainer'
 
-const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-  exit: { opacity: 0, y: -20, transition: { duration: 0.3 } },
-}
-
 const AnimatedRoutes = () => {
   const location = useLocation()
+
+  const getPageVariant = (pathname) => {
+    switch (pathname) {
+      case '/':
+        return 'fadeInUp'
+      case '/signin':
+      case '/signup':
+        return 'scaleIn'
+      case '/homepage':
+      case '/listing':
+        return 'slideInRight'
+      default:
+        return 'fadeInUp'
+    }
+  }
 
   return (
     <AnimatePresence mode='wait'>
@@ -32,102 +41,86 @@ const AnimatedRoutes = () => {
         <Route
           path='/'
           element={
-            <MotionWrapper>
+            <PageWrapper variant={getPageVariant(location.pathname)}>
               <Home />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/signin'
           element={
-            <MotionWrapper>
+            <PageWrapper variant={getPageVariant(location.pathname)}>
               <Login />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/signup'
           element={
-            <MotionWrapper>
+            <PageWrapper variant={getPageVariant(location.pathname)}>
               <Createacct />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/homepage'
           element={
-            <MotionWrapper>
+            <PageWrapper variant={getPageVariant(location.pathname)}>
               <Homepage />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/listing/:id'
           element={
-            <MotionWrapper>
+            <PageWrapper variant={getPageVariant(location.pathname)}>
               <ListingDetails />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/cart'
           element={
-            <MotionWrapper>
+            <PageWrapper variant='fadeInUp'>
               <Cart />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/host'
           element={
-            <MotionWrapper>
+            <PageWrapper variant='scaleIn'>
               <Host />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/hostlogin'
           element={
-            <MotionWrapper>
+            <PageWrapper variant='scaleIn'>
               <Hostlogin />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/host-dashboard'
           element={
-            <MotionWrapper>
+            <PageWrapper variant='slideInRight'>
               <Dashboard />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
         <Route
           path='/host-signup'
           element={
-            <MotionWrapper>
+            <PageWrapper variant='scaleIn'>
               <CreateAccount />
-            </MotionWrapper>
+            </PageWrapper>
           }
         />
       </Routes>
     </AnimatePresence>
   )
-}
-
-const MotionWrapper = ({ children }) => {
-  return (
-    <motion.div
-      variants={pageVariants}
-      initial='initial'
-      animate='animate'
-      exit='exit'
-    >
-      {children}
-    </motion.div>
-  )
-}
-MotionWrapper.propTypes = {
-  children: PropTypes.node.isRequired,
 }
 
 function App() {

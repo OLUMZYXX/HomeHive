@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import { CiSearch } from 'react-icons/ci'
 import { RxHamburgerMenu } from 'react-icons/rx'
@@ -7,6 +8,7 @@ import { IoClose } from 'react-icons/io5'
 import { onAuthStateChanged } from 'firebase/auth'
 import { userAuth } from '../../../firebaseConfig'
 import { navigateToHome } from '../../utils/navigation'
+import { AnimatedButton } from '../common/AnimatedComponents'
 
 const Navbar = () => {
   const [user, setUser] = useState(null)
@@ -192,12 +194,12 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className='hidden lg:flex items-center gap-4'>
-            <button
+            <AnimatedButton
               onClick={navigateToHost}
-              className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200 hover:scale-105'
+              className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200'
             >
               Become a Host
-            </button>
+            </AnimatedButton>
 
             {user ? (
               <div className='flex items-center gap-4'>
@@ -208,26 +210,24 @@ const Navbar = () => {
                     className='w-full h-full object-cover'
                   />
                 </div>
-                <button
+                <AnimatedButton
                   onClick={handleLogout}
-                  className='px-6 py-2.5 text-base font-medium bg-gray-800 text-white rounded-full hover:bg-gray-900 transition-all duration-200 hover:scale-105'
+                  className='px-6 py-2.5 text-base font-medium bg-gray-800 text-white rounded-full hover:bg-gray-900 transition-all duration-200'
                 >
                   Logout
-                </button>
+                </AnimatedButton>
               </div>
             ) : (
               <div className='flex items-center gap-3'>
-                <Link
-                  to='/signin'
-                  className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-800 rounded-full transition-all duration-200 hover:scale-105'
-                >
-                  Login
+                <Link to='/signin' className='inline-block'>
+                  <AnimatedButton className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-800 rounded-full transition-all duration-200'>
+                    Login
+                  </AnimatedButton>
                 </Link>
-                <Link
-                  to='/signup'
-                  className='px-6 py-2.5 text-base font-medium bg-gray-800 text-white rounded-full hover:bg-gray-900 transition-all duration-200 hover:scale-105'
-                >
-                  Sign Up
+                <Link to='/signup' className='inline-block'>
+                  <AnimatedButton className='px-6 py-2.5 text-base font-medium bg-gray-800 text-white rounded-full hover:bg-gray-900 transition-all duration-200'>
+                    Sign Up
+                  </AnimatedButton>
                 </Link>
               </div>
             )}
@@ -235,95 +235,113 @@ const Navbar = () => {
         </div>
 
         {/* Mobile Menu */}
-        {menuOpen && (
-          <div className='lg:hidden absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg'>
-            <div className='p-6'>
-              {/* Mobile Search */}
-              <form onSubmit={handleSearch} className='mb-6'>
-                <div className='flex items-center bg-gray-50 rounded-full border-2 border-gray-200 px-4 py-3'>
-                  <input
-                    type='text'
-                    placeholder='Search accommodations...'
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className='flex-1 bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none'
-                  />
-                  <button type='submit' className='ml-2 p-1'>
-                    <CiSearch className='text-xl text-gray-600' />
-                  </button>
-                </div>
-              </form>
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className='lg:hidden overflow-hidden absolute top-full left-0 w-full bg-white border-t border-gray-200 shadow-lg'
+            >
+              <motion.div
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -20, opacity: 0 }}
+                transition={{ duration: 0.3, delay: 0.1 }}
+                className='p-6'
+              >
+                {/* Mobile Search */}
+                <form onSubmit={handleSearch} className='mb-6'>
+                  <div className='flex items-center bg-gray-50 rounded-full border-2 border-gray-200 px-4 py-3'>
+                    <input
+                      type='text'
+                      placeholder='Search accommodations...'
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className='flex-1 bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none'
+                    />
+                    <button type='submit' className='ml-2 p-1'>
+                      <CiSearch className='text-xl text-gray-600' />
+                    </button>
+                  </div>
+                </form>
 
-              {/* Mobile Navigation Links */}
-              <ul className='space-y-4 mb-6'>
-                {navLinks.map((link) => (
-                  <li key={link.name}>
+                {/* Mobile Navigation Links */}
+                <ul className='space-y-4 mb-6'>
+                  {navLinks.map((link) => (
+                    <li key={link.name}>
+                      <button
+                        onClick={link.action}
+                        className='block w-full text-left text-lg font-medium text-gray-700 hover:text-gray-900 py-2'
+                      >
+                        {link.name}
+                      </button>
+                    </li>
+                  ))}
+                  <li>
                     <button
-                      onClick={link.action}
+                      onClick={() => {
+                        navigateToHost()
+                        setMenuOpen(false)
+                      }}
                       className='block w-full text-left text-lg font-medium text-gray-700 hover:text-gray-900 py-2'
                     >
-                      {link.name}
+                      Become a Host
                     </button>
                   </li>
-                ))}
-                <li>
-                  <button
-                    onClick={() => {
-                      navigateToHost()
-                      setMenuOpen(false)
-                    }}
-                    className='block w-full text-left text-lg font-medium text-gray-700 hover:text-gray-900 py-2'
-                  >
-                    Become a Host
-                  </button>
-                </li>
-              </ul>
+                </ul>
 
-              {/* Mobile Auth Buttons */}
-              <div className='space-y-3 pt-4 border-t border-gray-200'>
-                {user ? (
-                  <div className='space-y-3'>
-                    <div className='flex items-center gap-3 py-2'>
-                      <div className='w-10 h-10 rounded-full border-2 border-gray-200 overflow-hidden'>
-                        <img
-                          src={user.photoURL}
-                          alt='User'
-                          className='w-full h-full object-cover'
-                        />
+                {/* Mobile Auth Buttons */}
+                <div className='space-y-3 pt-4 border-t border-gray-200'>
+                  {user ? (
+                    <div className='space-y-3'>
+                      <div className='flex items-center gap-3 py-2'>
+                        <div className='w-10 h-10 rounded-full border-2 border-gray-200 overflow-hidden'>
+                          <img
+                            src={user.photoURL}
+                            alt='User'
+                            className='w-full h-full object-cover'
+                          />
+                        </div>
+                        <span className='text-gray-700 font-medium'>
+                          Welcome back!
+                        </span>
                       </div>
-                      <span className='text-gray-700 font-medium'>
-                        Welcome back!
-                      </span>
+                      <AnimatedButton
+                        onClick={handleLogout}
+                        className='w-full text-center text-lg font-medium bg-gray-800 text-white py-3 px-6 rounded-full hover:bg-gray-900 transition-colors duration-200'
+                      >
+                        Logout
+                      </AnimatedButton>
                     </div>
-                    <button
-                      onClick={handleLogout}
-                      className='w-full text-center text-lg font-medium bg-gray-800 text-white py-3 px-6 rounded-full hover:bg-gray-900 transition-colors duration-200'
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <div className='space-y-3'>
-                    <Link
-                      to='/signin'
-                      onClick={() => setMenuOpen(false)}
-                      className='block w-full text-center text-lg font-medium text-gray-700 border-2 border-gray-800 py-3 px-6 rounded-full hover:bg-gray-50 transition-colors duration-200'
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      to='/signup'
-                      onClick={() => setMenuOpen(false)}
-                      className='block w-full text-center text-lg font-medium bg-gray-800 text-white py-3 px-6 rounded-full hover:bg-gray-900 transition-colors duration-200'
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+                  ) : (
+                    <div className='space-y-3'>
+                      <Link
+                        to='/signin'
+                        onClick={() => setMenuOpen(false)}
+                        className='block w-full'
+                      >
+                        <AnimatedButton className='w-full text-center text-lg font-medium text-gray-700 border-2 border-gray-800 py-3 px-6 rounded-full hover:bg-gray-50 transition-colors duration-200'>
+                          Login
+                        </AnimatedButton>
+                      </Link>
+                      <Link
+                        to='/signup'
+                        onClick={() => setMenuOpen(false)}
+                        className='block w-full'
+                      >
+                        <AnimatedButton className='w-full text-center text-lg font-medium bg-gray-800 text-white py-3 px-6 rounded-full hover:bg-gray-900 transition-colors duration-200'>
+                          Sign Up
+                        </AnimatedButton>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   )

@@ -64,3 +64,8 @@ firebase-service-account*.json
 
 # Misc
 tmp/
+
+# Documentation (if you want to keep README files private)
+README.md
+README*.md
+ANIMATION_GUIDE.md
