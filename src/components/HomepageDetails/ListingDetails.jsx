@@ -149,25 +149,27 @@ const ListingDetails = () => {
   const handleReservation = () => {
     if (!checkIn || !checkout || !guest) {
       toast.error('Missing Information', {
-        description: 'Please fill in check-in, check-out, and number of guests.',
+        description:
+          'Please fill in check-in, check-out, and number of guests.',
         duration: 4000,
       })
       return
     }
-    
+
     toast.success('Booking Successful! 🎉', {
-      description: 'Your accommodation has been added to cart. Redirecting you now...',
+      description:
+        'Your accommodation has been added to cart. Redirecting you now...',
       duration: 3000,
       action: {
         label: 'View Cart',
-        onClick: () => navigate('/cart')
-      }
+        onClick: () => navigate('/cart'),
+      },
     })
-    
+
     setTimeout(() => {
       navigate('/cart')
     }, 1000)
-    
+
     setCheckIn('')
     setCheckOut('')
     setGuest('')

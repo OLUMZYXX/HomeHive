@@ -128,8 +128,8 @@ function App() {
     <>
       <ScrollToTop />
       <AnimatedRoutes />
-      <Toaster 
-        position="top-right"
+      <Toaster
+        position='top-right'
         richColors
         closeButton
         expand={true}

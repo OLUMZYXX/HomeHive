@@ -154,10 +154,10 @@ const Cart = () => {
         duration: 4000,
         action: {
           label: 'View Details',
-          onClick: () => console.log('View booking details')
-        }
+          onClick: () => console.log('View booking details'),
+        },
       })
-      
+
       // Reset form after success
       setCheckIn('')
       setCheckOut('')
@@ -173,7 +173,6 @@ const Cart = () => {
         zip: '',
         country: '',
       })
-      
     } catch (err) {
       console.error('Booking error:', err)
       toast.error('Booking Failed', {

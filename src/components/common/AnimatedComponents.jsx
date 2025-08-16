@@ -1,9 +1,15 @@
 import { motion, useInView } from 'framer-motion'
 import { useRef } from 'react'
 import PropTypes from 'prop-types'
+import PageLoader from './PageLoader'
 
-// Page Wrapper Component for consistent page transitions
-export const PageWrapper = ({ children, variant = 'fadeInUp' }) => {
+// Page Wrapper Component for consistent page transitions with loading
+export const PageWrapper = ({
+  children,
+  variant = 'fadeInUp',
+  showLoader = true,
+  loaderDuration = 3000,
+}) => {
   const variants = {
     fadeInUp: {
       initial: { opacity: 0, y: 60 },
@@ -64,7 +70,7 @@ export const PageWrapper = ({ children, variant = 'fadeInUp' }) => {
     },
   }
 
-  return (
+  const content = (
     <motion.div
       variants={variants[variant]}
       initial='initial'
@@ -74,6 +80,12 @@ export const PageWrapper = ({ children, variant = 'fadeInUp' }) => {
     >
       {children}
     </motion.div>
+  )
+
+  return showLoader ? (
+    <PageLoader duration={loaderDuration}>{content}</PageLoader>
+  ) : (
+    content
   )
 }
 
@@ -462,6 +474,8 @@ export const PulseElement = ({
 PageWrapper.propTypes = {
   children: PropTypes.node.isRequired,
   variant: PropTypes.oneOf(['fadeInUp', 'slideInRight', 'scaleIn']),
+  showLoader: PropTypes.bool,
+  loaderDuration: PropTypes.number,
 }
 
 ScrollReveal.propTypes = {
