@@ -15,6 +15,7 @@ import Host from './components/Become a Host/Host'
 import Hostlogin from './components/Host-Login/Hostlogin'
 import Dashboard from './components/Host-dashboard/Dashboard'
 import ScrollToTop from './components/ScrollToTop'
+import AppToastContainer from './components/common/ToastContainer'
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -134,6 +135,7 @@ function App() {
     <>
       <ScrollToTop />
       <AnimatedRoutes />
+      <AppToastContainer />
     </>
   )
 }

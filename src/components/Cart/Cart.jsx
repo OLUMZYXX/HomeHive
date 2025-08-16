@@ -12,8 +12,7 @@ import {
 import { IoIosArrowBack } from 'react-icons/io'
 import { RiArrowDropDownLine, RiSecurePaymentLine } from 'react-icons/ri'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { toast } from '../../utils/toastUtils'
 import image from '../../assets/Apt2.webp'
 import { RxHamburgerMenu } from 'react-icons/rx'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
@@ -83,30 +82,28 @@ const Cart = () => {
     today.setHours(0, 0, 0, 0)
 
     if (checkInDate < today) {
-      toast.error('Check-in date cannot be in the past', {
-        position: 'top-right',
-      })
+      toast.error('Check-in date cannot be in the past', 'Invalid Date')
       return
     }
 
     if (checkOutDate <= checkInDate) {
-      toast.error('Check-out date must be after check-in date', {
-        position: 'top-right',
-      })
+      toast.error(
+        'Check-out date must be after check-in date',
+        'Invalid Date Range'
+      )
       return
     }
 
     if (!guest || guest < 1) {
-      toast.error('Please specify the number of guests', {
-        position: 'top-right',
-      })
+      toast.error(
+        'Please specify the number of guests',
+        'Guest Information Required'
+      )
       return
     }
 
     if (guest > 10) {
-      toast.error('Maximum 10 guests allowed', {
-        position: 'top-right',
-      })
+      toast.error('Maximum 10 guests allowed', 'Guest Limit Exceeded')
       return
     }
 
@@ -117,9 +114,10 @@ const Cart = () => {
         !billingDetails.expiryDate ||
         !billingDetails.cvv
       ) {
-        toast.error('Please fill in all card details', {
-          position: 'top-right',
-        })
+        toast.error(
+          'Please fill in all card details',
+          'Card Information Required'
+        )
         return
       }
 
@@ -128,9 +126,10 @@ const Cart = () => {
         !billingDetails.address ||
         !billingDetails.city
       ) {
-        toast.error('Please fill in all billing information', {
-          position: 'top-right',
-        })
+        toast.error(
+          'Please fill in all billing information',
+          'Billing Information Required'
+        )
         return
       }
     }
@@ -180,15 +179,9 @@ const Cart = () => {
     setSelectedPayment(method)
     setShowCardDetails(method === 'Mastercard')
     if (method === 'PayPal')
-      toast.info('Redirecting to PayPal...', {
-        position: 'top-right',
-        className: 'bg-info-50 text-info-800',
-      })
+      toast.info('Redirecting to PayPal...', 'Payment Method')
     if (method === 'Paystack')
-      toast.info('Redirecting to Paystack...', {
-        position: 'top-right',
-        className: 'bg-info-50 text-info-800',
-      })
+      toast.info('Redirecting to Paystack...', 'Payment Method')
   }
 
   const auth = userAuth
@@ -298,20 +291,6 @@ const Cart = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100'>
-      <ToastContainer
-        position='top-right'
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme='light'
-        className='mt-16'
-      />
-
       {/* Enhanced Navbar */}
       <div className='bg-white/80 backdrop-blur-md shadow-medium border-b border-primary-200 sticky top-0 z-50'>
         <div className='flex items-center justify-between mx-auto relative px-4 py-4 md:px-16'>

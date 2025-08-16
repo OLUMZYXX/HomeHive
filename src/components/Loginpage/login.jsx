@@ -1,11 +1,10 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import { FcGoogle } from 'react-icons/fc'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
 import loginImg from '../../assets/login.jpg'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { toast } from '../../utils/toastUtils'
 import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
 import { userAuth, userProvider } from '../../../firebaseConfig'
 import { navigateToHome } from '../../utils/navigation'
@@ -54,13 +53,19 @@ const Login = () => {
         email,
         password
       )
-      toast.success(`Welcome back, ${userCredentials.user.email}!`)
+      toast.success(
+        `Welcome back, ${userCredentials.user.email}!`,
+        'Login Successful'
+      )
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
     } catch {
       setError('Invalid email or password. Please try again.')
-      toast.error('Login failed. Check your credentials.')
+      toast.error(
+        'Login failed. Check your credentials.',
+        'Authentication Error'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -70,12 +75,12 @@ const Login = () => {
     setIsGoogleLoading(true)
     try {
       const result = await signInWithPopup(userAuth, userProvider)
-      toast.success(`Welcome ${result.user.displayName}!`)
+      toast.success(`Welcome ${result.user.displayName}!`, 'Login Successful')
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
     } catch {
-      toast.error('Google login failed. Try again.')
+      toast.error('Google login failed. Try again.', 'Authentication Error')
     } finally {
       setIsGoogleLoading(false)
     }
@@ -83,18 +88,6 @@ const Login = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 flex items-center justify-center p-4'>
-      <ToastContainer
-        position='top-right'
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-
       {/* Back Button */}
       <button
         onClick={() => navigate('/')}
@@ -108,7 +101,7 @@ const Login = () => {
       <div className='w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100'>
         <div className='grid grid-cols-1 lg:grid-cols-2 min-h-[600px]'>
           {/* Left Side: Image & Branding */}
-          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white hidden lg:flex'>
+          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 hidden lg:flex flex-col justify-center items-center text-white'>
             {/* Background Pattern */}
             <div className='absolute inset-0 opacity-10'>
               <img

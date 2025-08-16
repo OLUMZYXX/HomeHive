@@ -30,8 +30,7 @@ import { MdOutlineCalendarToday } from 'react-icons/md'
 import { RiArrowDropDownLine } from 'react-icons/ri'
 import { FaRegFlag } from 'react-icons/fa6'
 import Footer from '../Footer/Footer'
-import { toast, ToastContainer } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
+import { toast } from '../../utils/toastUtils'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import { IoIosArrowBack } from 'react-icons/io'
 import { AiFillHeart } from 'react-icons/ai'
@@ -750,21 +749,6 @@ const ListingDetails = () => {
           </div>
         </div>
       </div>
-
-      {/* Enhanced Toast Container */}
-      <ToastContainer
-        position='top-right'
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme='light'
-        className='mt-16 md:mt-20'
-      />
 
       <Footer />
     </div>

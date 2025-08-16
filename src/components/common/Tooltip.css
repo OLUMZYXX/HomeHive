@@ -1,0 +1,46 @@
+/* Enhanced Tooltip Styles */
+.custom-tooltip {
+  font-family: system-ui, -apple-system, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  z-index: 10000 !important;
+}
+
+/* Responsive tooltip adjustments */
+@media (max-width: 768px) {
+  .custom-tooltip {
+    max-width: 280px !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-tooltip {
+    max-width: 240px !important;
+    font-size: 11px !important;
+    padding: 5px 8px !important;
+  }
+}
+
+/* Tooltip arrow customization */
+.react-tooltip-arrow {
+  border-width: 6px !important;
+}
+
+/* Animation improvements */
+.react-tooltip {
+  opacity: 0 !important;
+  transition: opacity 0.2s ease-in-out !important;
+}
+
+.react-tooltip.show {
+  opacity: 1 !important;
+}
+
+/* Dark mode tooltip adjustments */
+@media (prefers-color-scheme: dark) {
+  .custom-tooltip {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3) !important;
+  }
+}

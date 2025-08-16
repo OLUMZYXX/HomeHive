@@ -41,6 +41,7 @@ import {
   HiCog,
   HiOutlineChartBar,
 } from 'react-icons/hi'
+import { ButtonTooltip, InfoTooltip } from '../common/Tooltip'
 
 import PropTypes from 'prop-types'
 
@@ -415,31 +416,35 @@ const Dashboard = () => {
                   Bedrooms
                 </label>
                 <div className='flex items-center gap-4'>
-                  <button
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        bedrooms: Math.max(1, prev.bedrooms - 1),
-                      }))
-                    }
-                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
-                  >
-                    <FaMinus className='text-primary-600 text-lg' />
-                  </button>
+                  <ButtonTooltip content='Decrease bedrooms'>
+                    <button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          bedrooms: Math.max(1, prev.bedrooms - 1),
+                        }))
+                      }
+                      className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    >
+                      <FaMinus className='text-primary-600 text-lg' />
+                    </button>
+                  </ButtonTooltip>
                   <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
                     {formData.bedrooms}
                   </span>
-                  <button
-                    onClick={() =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        bedrooms: prev.bedrooms + 1,
-                      }))
-                    }
-                    className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
-                  >
-                    <FaPlus className='text-primary-600 text-lg' />
-                  </button>
+                  <ButtonTooltip content='Increase bedrooms'>
+                    <button
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          bedrooms: prev.bedrooms + 1,
+                        }))
+                      }
+                      className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                    >
+                      <FaPlus className='text-primary-600 text-lg' />
+                    </button>
+                  </ButtonTooltip>
                 </div>
               </div>
 
@@ -701,8 +706,11 @@ const Dashboard = () => {
             </div>
 
             <div>
-              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
+              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6 flex items-center gap-2'>
                 Set your price
+                <InfoTooltip content='Set a competitive price based on similar properties in your area. You can always adjust this later.'>
+                  <span className='text-primary-400 cursor-help'>ℹ️</span>
+                </InfoTooltip>
               </h3>
               <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
                 <div className='flex flex-col sm:flex-row sm:items-center gap-3 md:gap-4 mb-4'>
@@ -955,12 +963,14 @@ const Dashboard = () => {
               <p className='text-lg md:text-xl opacity-90 mb-4 md:mb-6'>
                 Ready to share your space with the world?
               </p>
-              <button
-                onClick={() => setActiveTab('create')}
-                className='bg-white text-primary-800 px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-sm md:text-base'
-              >
-                Create New Listing
-              </button>
+              <ButtonTooltip content='Start creating your first property listing'>
+                <button
+                  onClick={() => setActiveTab('create')}
+                  className='bg-white text-primary-800 px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-sm md:text-base'
+                >
+                  Create New Listing
+                </button>
+              </ButtonTooltip>
             </div>
 
             <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6'>
@@ -1068,15 +1078,21 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className='flex items-center gap-2 self-start sm:self-center'>
-                    <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                      <FaEye className='text-base md:text-lg' />
-                    </button>
-                    <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                      <FaEdit className='text-base md:text-lg' />
-                    </button>
-                    <button className='p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg'>
-                      <FaTrash className='text-base md:text-lg' />
-                    </button>
+                    <ButtonTooltip content='View listing details'>
+                      <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                        <FaEye className='text-base md:text-lg' />
+                      </button>
+                    </ButtonTooltip>
+                    <ButtonTooltip content='Edit listing'>
+                      <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                        <FaEdit className='text-base md:text-lg' />
+                      </button>
+                    </ButtonTooltip>
+                    <ButtonTooltip content='Delete listing' variant='error'>
+                      <button className='p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg'>
+                        <FaTrash className='text-base md:text-lg' />
+                      </button>
+                    </ButtonTooltip>
                   </div>
                 </div>
               </div>
