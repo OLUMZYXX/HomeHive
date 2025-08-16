@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react'
-import HomeHiveLogo from '../../assets/HomeHiveLogo'
-import listing1 from '../../assets/apartment1.jpg'
 import {
   FaRegUserCircle,
   FaStar,
@@ -14,28 +12,57 @@ import {
   FaCalendarAlt,
 } from 'react-icons/fa'
 import { HiLocationMarker, HiHome, HiSparkles } from 'react-icons/hi'
-import { useNavigate } from 'react-router-dom'
 import { RiEarthLine } from 'react-icons/ri'
 import { RxHamburgerMenu } from 'react-icons/rx'
+import HomeHiveLogo from '../../assets/HomeHiveLogo'
+import { useNavigate } from 'react-router-dom'
 import Footer from '../Footer/Footer'
-import { userAuth } from '../../../firebaseConfig'
-import { signOut } from 'firebase/auth'
 
 const Homepage = () => {
-  const auth = userAuth
+  const navigate = useNavigate()
+  // Fetch currency rates from a free API
+  useEffect(() => {
+    async function fetchRates() {
+      try {
+        // Using ExchangeRate.host (free, no API key required)
+        const res = await fetch(
+          'https://api.exchangerate.host/latest?base=USD&symbols=USD,NGN,GBP'
+        )
+        const data = await res.json()
+        if (data && data.rates) {
+          setExchangeRates({
+            USD: data.rates.USD,
+            NGN: data.rates.NGN,
+            GBP: data.rates.GBP,
+          })
+        }
+      } catch (err) {
+        console.error('Failed to fetch currency rates', err)
+      }
+    }
+    fetchRates()
+  }, [])
   const [user, setUser] = useState(null)
+
+  // Simulate user sign-in for demo
+  const handleSignIn = () => {
+    setUser({
+      displayName: 'Akinwumi',
+      photoURL: 'https://randomuser.me/api/portraits/men/32.jpg',
+    })
+  }
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [favorites, setFavorites] = useState(new Set())
   const [selectedCurrency, setSelectedCurrency] = useState('NGN')
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false)
 
-  // Currency conversion rates (base: USD)
-  const exchangeRates = {
+  // Currency conversion rates
+  const [exchangeRates, setExchangeRates] = useState({
     USD: 1,
-    NGN: 1650, // 1 USD = ~1650 NGN (approximate)
-    GBP: 0.79, // 1 USD = 0.79 GBP (approximate)
-  }
+    NGN: 1650,
+    GBP: 0.79,
+  })
 
   const currencies = [
     { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
@@ -55,13 +82,6 @@ const Homepage = () => {
     return converted.toString()
   }
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((u) => {
-      setUser(u)
-    })
-    return () => unsubscribe()
-  }, [auth])
-
   // Close currency dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -73,8 +93,6 @@ const Homepage = () => {
     return () => document.removeEventListener('click', handleClickOutside)
   }, [showCurrencyDropdown])
 
-  const navigate = useNavigate()
-
   const listingData = [
     {
       id: 1,
@@ -84,8 +102,9 @@ const Homepage = () => {
       amenities: ['Wifi', 'Kitchen', 'Free Parking', 'Pool', 'Security'],
       rating: 4.9,
       reviewCount: 312,
-      priceUSD: 325, // Base price in USD
-      image: listing1,
+      priceUSD: 325,
+      image:
+        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
       badge: 'Superhost',
       category: 'luxury',
     },
@@ -97,8 +116,9 @@ const Homepage = () => {
       amenities: ['Wifi', 'Kitchen', 'Gym', 'Security'],
       rating: 4.8,
       reviewCount: 156,
-      priceUSD: 180, // Base price in USD
-      image: listing1,
+      priceUSD: 180,
+      image:
+        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
       badge: 'Popular',
       category: 'apartment',
     },
@@ -110,8 +130,9 @@ const Homepage = () => {
       amenities: ['Wifi', 'Kitchen', 'AC'],
       rating: 4.7,
       reviewCount: 89,
-      priceUSD: 120, // Base price in USD
-      image: listing1,
+      priceUSD: 120,
+      image:
+        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
       badge: 'Great Value',
       category: 'studio',
     },
@@ -125,23 +146,19 @@ const Homepage = () => {
   ]
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth)
-    } catch {
-      // no-op
-    }
+    console.log('Logout clicked')
   }
 
   const handleClick = (listingId) => {
-    navigate(`/listingDetails/${listingId}`)
+    navigate(`/listing/${listingId}`)
   }
 
   const hostNav = () => {
-    navigate('/host')
+    console.log('Navigate to host page')
   }
 
   const reloadHomepage = () => {
-    window.location.href = '/'
+    console.log('Reload homepage')
   }
 
   const toggleFavorite = (listingId) => {
@@ -160,8 +177,8 @@ const Homepage = () => {
       : listingData.filter((listing) => listing.category === activeFilter)
 
   return (
-    <div className='bg-white min-h-screen'>
-      {/* Enhanced Navbar */}
+    <div className='bg-white min-h-screen overflow-x-hidden'>
+      {/* Enhanced Mobile-First Navbar */}
       <nav className='bg-white/80 backdrop-blur-md shadow-medium border-b border-primary-200 sticky top-0 z-50'>
         <div className='container mx-auto px-3 sm:px-6 lg:px-8 py-3 lg:py-4'>
           <div className='flex items-center justify-between gap-2 sm:gap-6'>
@@ -335,12 +352,15 @@ const Homepage = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className='flex items-center gap-2 sm:gap-3 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full px-2 sm:px-4 py-2 sm:py-3 transition-all duration-300 cursor-pointer border border-primary-200 hover:border-primary-300 shadow-soft hover:shadow-medium'>
+                  <button
+                    onClick={handleSignIn}
+                    className='flex items-center gap-2 sm:gap-3 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full px-2 sm:px-4 py-2 sm:py-3 transition-all duration-300 cursor-pointer border border-primary-200 hover:border-primary-300 shadow-soft hover:shadow-medium'
+                  >
                     <FaRegUserCircle className='text-lg sm:text-2xl text-primary-600' />
                     <span className='hidden sm:block text-sm font-semibold text-primary-700'>
                       Sign in
                     </span>
-                  </div>
+                  </button>
                 )}
               </div>
             </div>
@@ -407,53 +427,53 @@ const Homepage = () => {
       </nav>
 
       {/* Main Content */}
-      <div className='container mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='flex flex-col xl:flex-row gap-8'>
+      <div className='w-full max-w-[1400px] mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8'>
+        <div className='flex flex-col xl:flex-row gap-6 lg:gap-8'>
           {/* Left Content */}
-          <div className='flex-1'>
+          <div className='flex-1 min-w-0'>
             {/* Header with Filters */}
-            <div className='mb-8'>
-              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6'>
+            <div className='mb-6'>
+              <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4'>
                 <div>
-                  <h1 className='text-3xl font-bold text-primary-900 mb-2'>
+                  <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-primary-900 mb-1'>
                     Available Properties
                   </h1>
-                  <p className='text-primary-600'>
+                  <p className='text-sm sm:text-base text-primary-600'>
                     {filteredListings.length} amazing places to stay
                   </p>
                 </div>
 
-                <button className='flex items-center gap-2 border-2 border-primary-200 rounded-xl px-4 py-2 hover:border-primary-300 transition-colors duration-300'>
-                  <FaFilter className='text-primary-600' />
+                <button className='flex items-center gap-2 border border-primary-200 rounded-full px-3 py-2 hover:border-primary-300 transition-colors duration-300 text-sm'>
+                  <FaFilter className='text-primary-600 text-xs' />
                   <span className='font-medium text-primary-700'>Filters</span>
                 </button>
               </div>
 
-              {/* Category Filters */}
-              <div className='flex gap-4 overflow-x-auto pb-2'>
+              {/* Category Filters - No Horizontal Scroll */}
+              <div className='grid grid-cols-2 sm:flex sm:flex-wrap gap-2'>
                 {filters.map((filter) => (
                   <button
                     key={filter.id}
                     onClick={() => setActiveFilter(filter.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full whitespace-nowrap transition-all duration-300 ${
+                    className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-full transition-all duration-300 text-xs sm:text-sm font-medium min-w-0 ${
                       activeFilter === filter.id
-                        ? 'bg-primary-800 text-white shadow-medium'
+                        ? 'bg-primary-800 text-white shadow-md'
                         : 'bg-primary-50 text-primary-700 hover:bg-primary-100'
                     }`}
                   >
-                    <filter.icon className='text-lg' />
-                    <span className='font-medium'>{filter.name}</span>
+                    <filter.icon className='text-sm flex-shrink-0' />
+                    <span className='truncate'>{filter.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Listings Grid */}
-            <div className='space-y-6'>
+            <div className='space-y-4 sm:space-y-6'>
               {filteredListings.map((listing) => (
                 <div
                   key={listing.id}
-                  className='bg-white border-2 border-primary-100 rounded-3xl overflow-hidden shadow-soft hover:shadow-strong transition-all duration-500 transform hover:-translate-y-1'
+                  className='bg-white border border-primary-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-soft hover:shadow-strong transition-all duration-500 transform hover:-translate-y-1'
                 >
                   <div className='flex flex-col lg:flex-row'>
                     {/* Image */}
@@ -461,88 +481,97 @@ const Homepage = () => {
                       <img
                         src={listing.image}
                         alt={listing.name}
-                        className='w-full h-64 lg:h-80 object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105'
+                        className='w-full h-48 sm:h-56 lg:h-72 object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105'
                         onClick={() => handleClick(listing.id)}
                       />
 
                       {/* Badge */}
-                      <div className='absolute top-4 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-semibold text-primary-800 shadow-medium'>
+                      <div className='absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold text-primary-800 shadow-md'>
                         {listing.badge}
                       </div>
 
                       {/* Action Buttons */}
-                      <div className='absolute top-4 right-4 flex gap-2'>
+                      <div className='absolute top-3 right-3 flex gap-2'>
                         <button
                           onClick={() => toggleFavorite(listing.id)}
-                          className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300 ${
+                          className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300 ${
                             favorites.has(listing.id)
-                              ? 'bg-error-500 text-white'
+                              ? 'bg-red-500 text-white'
                               : 'bg-white/90 text-primary-600 hover:bg-white'
                           }`}
                         >
-                          <FaHeart className='text-lg' />
+                          <FaHeart className='text-sm' />
                         </button>
-                        <button className='w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary-600 hover:bg-white transition-all duration-300'>
-                          <FaShare className='text-lg' />
+                        <button className='w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary-600 hover:bg-white transition-all duration-300'>
+                          <FaShare className='text-sm' />
                         </button>
                       </div>
                     </div>
 
                     {/* Content */}
-                    <div className='lg:w-3/5 p-6 lg:p-8 flex flex-col justify-between'>
-                      <div className='space-y-4'>
+                    <div className='lg:w-3/5 p-4 sm:p-6 lg:p-8 flex flex-col justify-between'>
+                      <div className='space-y-3'>
                         <div>
-                          <div className='flex items-center gap-2 mb-2'>
-                            <HiLocationMarker className='text-primary-500' />
-                            <span className='text-primary-600 font-medium'>
+                          <div className='flex items-center gap-1.5 mb-2'>
+                            <HiLocationMarker className='text-primary-500 text-sm' />
+                            <span className='text-primary-600 font-medium text-sm'>
                               {listing.location}
                             </span>
                           </div>
                           <h2
-                            className='text-2xl lg:text-3xl font-bold text-primary-900 cursor-pointer hover:text-primary-800 transition-colors duration-300'
+                            className='text-lg sm:text-xl lg:text-2xl font-bold text-primary-900 cursor-pointer hover:text-primary-800 transition-colors duration-300 leading-tight'
                             onClick={() => handleClick(listing.id)}
                           >
                             {listing.name}
                           </h2>
                         </div>
 
-                        <p className='text-primary-600 leading-relaxed'>
+                        <p className='text-primary-600 text-sm sm:text-base leading-relaxed'>
                           {listing.text}
                         </p>
 
                         {/* Amenities */}
-                        <div className='flex flex-wrap gap-2'>
-                          {listing.amenities.map((amenity, index) => (
-                            <span
-                              key={index}
-                              className='bg-primary-100 text-primary-700 px-3 py-1 rounded-full text-sm font-medium'
-                            >
-                              {amenity}
+                        <div className='flex flex-wrap gap-1.5'>
+                          {listing.amenities
+                            .slice(0, 4)
+                            .map((amenity, index) => (
+                              <span
+                                key={index}
+                                className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'
+                              >
+                                {amenity}
+                              </span>
+                            ))}
+                          {listing.amenities.length > 4 && (
+                            <span className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'>
+                              +{listing.amenities.length - 4} more
                             </span>
-                          ))}
+                          )}
                         </div>
                       </div>
 
                       {/* Bottom Row */}
-                      <div className='flex items-center justify-between mt-6 pt-4 border-t border-primary-100'>
-                        <div className='flex items-center gap-3'>
+                      <div className='flex items-center justify-between mt-4 pt-3 border-t border-primary-100'>
+                        <div className='flex items-center gap-2 sm:gap-3'>
                           <div className='flex items-center gap-1'>
-                            <FaStar className='text-amber-400 text-lg' />
-                            <span className='font-bold text-primary-900'>
+                            <FaStar className='text-amber-400 text-sm' />
+                            <span className='font-bold text-primary-900 text-sm'>
                               {listing.rating}
                             </span>
                           </div>
-                          <span className='text-primary-600'>
+                          <span className='text-primary-600 text-xs sm:text-sm'>
                             ({listing.reviewCount} reviews)
                           </span>
                         </div>
 
                         <div className='text-right'>
-                          <div className='text-2xl lg:text-3xl font-black text-primary-900'>
+                          <div className='text-lg sm:text-xl lg:text-2xl font-black text-primary-900'>
                             {selectedCurrencyData?.symbol}
                             {convertPrice(listing.priceUSD)}
                           </div>
-                          <div className='text-primary-600'>per night</div>
+                          <div className='text-primary-600 text-xs sm:text-sm'>
+                            per night
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -552,8 +581,8 @@ const Homepage = () => {
             </div>
 
             {/* Load More Button */}
-            <div className='text-center mt-12'>
-              <button className='bg-primary-800 hover:bg-primary-900 text-white font-bold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105'>
+            <div className='text-center mt-8 sm:mt-12'>
+              <button className='bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 text-sm sm:text-base'>
                 Load More Properties
               </button>
             </div>
@@ -562,7 +591,7 @@ const Homepage = () => {
           {/* Right Sidebar - Map */}
           <div className='xl:w-2/5'>
             <div className='sticky top-24'>
-              <div className='bg-white border-2 border-primary-100 rounded-3xl overflow-hidden shadow-soft'>
+              <div className='bg-white border border-primary-100 rounded-2xl overflow-hidden shadow-soft'>
                 <div className='p-6 border-b border-primary-100'>
                   <h3 className='text-xl font-bold text-primary-900 mb-2'>
                     Explore the Area
@@ -583,12 +612,11 @@ const Homepage = () => {
                     className='w-full'
                   ></iframe>
 
-                  {/* Map Overlay Controls */}
                   <div className='absolute top-4 left-4 right-4 flex justify-between'>
-                    <button className='bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full text-primary-800 font-semibold shadow-medium hover:bg-white transition-all duration-300'>
+                    <button className='bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full text-primary-800 font-semibold shadow-md hover:bg-white transition-all duration-300'>
                       Show list
                     </button>
-                    <button className='bg-primary-800 hover:bg-primary-900 text-white px-4 py-2 rounded-full font-semibold shadow-medium transition-all duration-300'>
+                    <button className='bg-primary-800 hover:bg-primary-900 text-white px-4 py-2 rounded-full font-semibold shadow-md transition-all duration-300'>
                       Search this area
                     </button>
                   </div>
@@ -599,6 +627,7 @@ const Homepage = () => {
         </div>
       </div>
 
+      {/* Footer */}
       <Footer />
     </div>
   )

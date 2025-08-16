@@ -14,7 +14,6 @@ import Cart from './components/Cart/Cart'
 import Host from './components/Become a Host/Host'
 import Hostlogin from './components/Host-Login/Hostlogin'
 import Dashboard from './components/Host-dashboard/Dashboard'
-// ...existing code...
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -61,7 +60,7 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/listingDetails/:id'
+          path='/listing/:id'
           element={
             <MotionWrapper>
               <ListingDetails />
