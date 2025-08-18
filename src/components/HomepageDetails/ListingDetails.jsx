@@ -32,7 +32,7 @@ import { FaRegFlag } from 'react-icons/fa6'
 import Footer from '../Footer/Footer'
 import { toast } from 'sonner'
 import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { IoIosArrowBack } from 'react-icons/io'
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
 import { AiFillHeart } from 'react-icons/ai'
 import { userAuth } from '../../../firebaseConfig'
 import { navigateToHome } from '../../utils/navigation'
@@ -103,6 +103,18 @@ const ListingDetails = () => {
   // Parse id safely
   const homeId = parseInt(id, 10)
   const home = listingData.find((l) => l.id === homeId)
+
+  // Create image gallery array
+  const imageGallery = home
+    ? [
+        { src: home.image, alt: home.name },
+        { src: bedroom, alt: 'Bedroom' },
+        { src: dining, alt: 'Dining Room' },
+        { src: kitchen, alt: 'Kitchen' },
+        { src: livingroom, alt: 'Living Room' },
+        { src: home, alt: 'Exterior' },
+      ]
+    : []
   // Host info (for demo)
   const hostInfo = home
     ? {
@@ -134,6 +146,10 @@ const ListingDetails = () => {
   const [error, setError] = useState('')
   const [isFilled, setIsFilled] = useState(false)
   const [animating, setIsAnimating] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [touchStartX, setTouchStartX] = useState(0)
+  const [touchEndX, setTouchEndX] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const handleClick = () => {
     if (!isFilled) {
       setIsAnimating(true)
@@ -144,6 +160,66 @@ const ListingDetails = () => {
     } else {
       setIsFilled(false)
     }
+  }
+
+  // Image carousel functions with smooth animations
+  const nextImage = () => {
+    if (imageGallery.length > 0 && !isTransitioning) {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % imageGallery.length)
+        setIsTransitioning(false)
+      }, 150)
+    }
+  }
+
+  const prevImage = () => {
+    if (imageGallery.length > 0 && !isTransitioning) {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentImageIndex(
+          (prev) => (prev - 1 + imageGallery.length) % imageGallery.length
+        )
+        setIsTransitioning(false)
+      }, 150)
+    }
+  }
+
+  const goToImage = (index) => {
+    if (index !== currentImageIndex && !isTransitioning) {
+      setIsTransitioning(true)
+      setTimeout(() => {
+        setCurrentImageIndex(index)
+        setIsTransitioning(false)
+      }, 150)
+    }
+  }
+
+  // Touch handlers for swipe functionality
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchMove = (e) => {
+    setTouchEndX(e.targetTouches[0].clientX)
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStartX || !touchEndX) return
+
+    const distance = touchStartX - touchEndX
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      nextImage()
+    }
+    if (isRightSwipe) {
+      prevImage()
+    }
+
+    setTouchStartX(0)
+    setTouchEndX(0)
   }
 
   const handleReservation = () => {
@@ -368,41 +444,178 @@ const ListingDetails = () => {
           </div>
         </div>
 
-        {/* Enhanced Listing Images */}
-        {home && (
+        {/* Enhanced Animated Image Carousel */}
+        {home && imageGallery.length > 0 && (
           <div className='mb-8 md:mb-10'>
-            <div className='flex flex-col md:flex-row gap-2 md:gap-4 rounded-xl md:rounded-2xl overflow-hidden shadow-strong'>
-              {/* Large Image on the Left */}
-              <div className='flex-1'>
-                <img
-                  src={home.image}
-                  alt={home.name}
-                  className='w-full h-64 md:h-full object-cover min-h-[300px] md:min-h-[400px] hover:scale-105 transition-transform duration-500'
-                />
+            <div className='relative rounded-xl md:rounded-2xl overflow-hidden shadow-strong group'>
+              {/* Main Image Display with Smooth Animations */}
+              <div
+                className='relative w-full h-64 md:h-96 lg:h-[500px] overflow-hidden bg-neutral-100'
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                {/* Image Container with Slide Effect */}
+                <div
+                  className='flex transition-transform duration-700 ease-in-out h-full'
+                  style={{
+                    transform: `translateX(-${currentImageIndex * 100}%)`,
+                  }}
+                >
+                  {imageGallery.map((image, index) => (
+                    <div
+                      key={index}
+                      className='w-full h-full flex-shrink-0 relative'
+                    >
+                      <img
+                        src={image.src}
+                        alt={image.alt}
+                        className={`w-full h-full object-cover transition-all duration-700 ease-in-out ${
+                          index === currentImageIndex
+                            ? 'scale-100 opacity-100'
+                            : 'scale-105 opacity-90'
+                        }`}
+                      />
+                      {/* Smooth fade overlay for non-active images */}
+                      <div
+                        className={`absolute inset-0 bg-black transition-opacity duration-500 ease-in-out ${
+                          index === currentImageIndex
+                            ? 'opacity-0'
+                            : 'opacity-20'
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Enhanced Navigation Arrows with Animations */}
+                <button
+                  onClick={prevImage}
+                  disabled={isTransitioning}
+                  className='absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-primary-800 p-2 md:p-3 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 opacity-0 md:opacity-70 hover:opacity-100 group-hover:opacity-100 z-20 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95'
+                  aria-label='Previous image'
+                >
+                  <IoIosArrowBack className='text-lg md:text-xl transition-transform duration-200' />
+                </button>
+
+                <button
+                  onClick={nextImage}
+                  disabled={isTransitioning}
+                  className='absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-primary-800 p-2 md:p-3 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 opacity-0 md:opacity-70 hover:opacity-100 group-hover:opacity-100 z-20 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95'
+                  aria-label='Next image'
+                >
+                  <IoIosArrowForward className='text-lg md:text-xl transition-transform duration-200' />
+                </button>
+
+                {/* Mobile Navigation Arrows with Enhanced Animations */}
+                <div className='md:hidden'>
+                  <button
+                    onClick={prevImage}
+                    disabled={isTransitioning}
+                    className='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 text-primary-800 p-2 rounded-full shadow-medium transition-all duration-300 z-20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 hover:bg-white'
+                    aria-label='Previous image'
+                  >
+                    <IoIosArrowBack className='text-lg transition-transform duration-200' />
+                  </button>
+
+                  <button
+                    onClick={nextImage}
+                    disabled={isTransitioning}
+                    className='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 text-primary-800 p-2 rounded-full shadow-medium transition-all duration-300 z-20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 hover:bg-white'
+                    aria-label='Next image'
+                  >
+                    <IoIosArrowForward className='text-lg transition-transform duration-200' />
+                  </button>
+                </div>
+
+                {/* Animated Image Counter */}
+                <div className='absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 hover:bg-black/80'>
+                  <span className='transition-all duration-300'>
+                    {currentImageIndex + 1}
+                  </span>{' '}
+                  / {imageGallery.length}
+                </div>
+
+                {/* Animated Swipe Indicator for Mobile */}
+                <div className='md:hidden absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs transition-all duration-300 animate-pulse'>
+                  Swipe for more
+                </div>
+
+                {/* Loading indicator during transitions */}
+                {isTransitioning && (
+                  <div className='absolute inset-0 bg-black/10 flex items-center justify-center z-30'>
+                    <div className='w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                  </div>
+                )}
               </div>
-              {/* Grid of 4 demo images on the Right - Hidden on small mobile */}
-              <div className='hidden sm:grid flex-1 grid-cols-2 gap-2'>
-                <img
-                  src={bedroom}
-                  alt='Bedroom'
-                  className='w-full h-full object-cover hover:scale-105 transition-transform duration-500'
-                />
-                <img
-                  src={dining}
-                  alt='Dining'
-                  className='w-full h-full object-cover hover:scale-105 transition-transform duration-500'
-                />
-                <img
-                  src={kitchen}
-                  alt='Kitchen'
-                  className='w-full h-full object-cover hover:scale-105 transition-transform duration-500'
-                />
-                <img
-                  src={home.image}
-                  alt={home.name}
-                  className='w-full h-full object-cover hover:scale-105 transition-transform duration-500'
-                />
+
+              {/* Enhanced Animated Dots Navigation */}
+              <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20'>
+                {imageGallery.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToImage(index)}
+                    disabled={isTransitioning}
+                    className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-500 ease-in-out disabled:cursor-not-allowed hover:scale-125 active:scale-95 ${
+                      index === currentImageIndex
+                        ? 'bg-white shadow-medium transform scale-125'
+                        : 'bg-white/50 hover:bg-white/80 transform scale-100'
+                    }`}
+                    aria-label={`Go to image ${index + 1}`}
+                  />
+                ))}
               </div>
+
+              {/* Enhanced Animated Thumbnail Strip - Desktop Only */}
+              <div className='hidden lg:block absolute bottom-4 left-4 flex space-x-2 bg-black/50 backdrop-blur-sm rounded-lg p-2 transition-all duration-300 hover:bg-black/60'>
+                {imageGallery.slice(0, 4).map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToImage(index)}
+                    disabled={isTransitioning}
+                    className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-all duration-300 hover:scale-110 active:scale-95 disabled:cursor-not-allowed ${
+                      index === currentImageIndex
+                        ? 'border-white shadow-medium transform scale-110'
+                        : 'border-transparent hover:border-white/70 transform scale-100'
+                    }`}
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      className='w-full h-full object-cover transition-transform duration-300'
+                    />
+                  </button>
+                ))}
+                {imageGallery.length > 4 && (
+                  <div className='w-12 h-12 bg-black/70 rounded-md flex items-center justify-center transition-all duration-300 hover:bg-black/80'>
+                    <span className='text-white text-xs font-bold transition-transform duration-300 hover:scale-110'>
+                      +{imageGallery.length - 4}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Enhanced Mobile Thumbnail Strip with Animations */}
+            <div className='lg:hidden mt-4 flex space-x-2 overflow-x-auto pb-2 scrollbar-hide'>
+              {imageGallery.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToImage(index)}
+                  disabled={isTransitioning}
+                  className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 hover:scale-105 active:scale-95 disabled:cursor-not-allowed ${
+                    index === currentImageIndex
+                      ? 'border-primary-600 shadow-medium transform scale-105'
+                      : 'border-primary-200 hover:border-primary-400 transform scale-100'
+                  }`}
+                >
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className='w-full h-full object-cover transition-all duration-300'
+                  />
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -548,47 +761,40 @@ const ListingDetails = () => {
                     <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
                       Check-in
                     </label>
-                    <div className='relative mt-1'>
+                    <div className='mt-1'>
                       <input
                         type='date'
-                        className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base appearance-none border-none focus:ring-0 focus:outline-none relative z-10'
+                        className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base border-none focus:ring-0 focus:outline-none cursor-pointer'
                         style={{
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'textfield',
                           fontSize: '16px', // Prevents zoom on iOS
                           minHeight: '44px', // iOS touch target minimum
                           backgroundColor: 'transparent',
                           border: 'none',
                           outline: 'none',
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'textfield',
+                          appearance: 'none',
                         }}
                         value={checkIn}
                         onChange={(e) => setCheckIn(e.target.value)}
-                        min={new Date().toISOString().split('T')[0]} // Prevent past dates
-                        onFocus={(e) => {
-                          // iOS Safari focus fix
-                          if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                            e.target.blur()
-                            setTimeout(() => e.target.focus(), 100)
-                          }
+                        min={new Date().toISOString().split('T')[0]}
+                        placeholder='Add date'
+                        onTouchStart={(e) => {
+                          // Prevent iOS from auto-selecting on touch
+                          e.preventDefault()
+                          e.currentTarget.focus()
                         }}
-                      />
-                      {/* Custom overlay for better iOS handling */}
-                      <div
-                        className='absolute inset-0 cursor-pointer z-20'
                         onClick={(e) => {
-                          const input = e.currentTarget.previousElementSibling
-                          if (input && input.type === 'date') {
-                            input.focus()
-                            input.click()
-                            // Force show date picker on iOS
-                            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                              input.showPicker?.()
+                          // Ensure proper focus and picker opening
+                          e.currentTarget.focus()
+                          if (e.currentTarget.showPicker) {
+                            try {
+                              e.currentTarget.showPicker()
+                            } catch (err) {
+                              // Fallback for older browsers
+                              console.log('showPicker not supported')
                             }
                           }
-                        }}
-                        style={{
-                          backgroundColor: 'transparent',
-                          pointerEvents: checkIn ? 'none' : 'auto',
                         }}
                       />
                     </div>
@@ -597,47 +803,40 @@ const ListingDetails = () => {
                     <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
                       Check-out
                     </label>
-                    <div className='relative mt-1'>
+                    <div className='mt-1'>
                       <input
                         type='date'
-                        className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base appearance-none border-none focus:ring-0 focus:outline-none relative z-10'
+                        className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base border-none focus:ring-0 focus:outline-none cursor-pointer'
                         style={{
-                          WebkitAppearance: 'none',
-                          MozAppearance: 'textfield',
                           fontSize: '16px', // Prevents zoom on iOS
                           minHeight: '44px', // iOS touch target minimum
                           backgroundColor: 'transparent',
                           border: 'none',
                           outline: 'none',
+                          WebkitAppearance: 'none',
+                          MozAppearance: 'textfield',
+                          appearance: 'none',
                         }}
                         value={checkout}
                         onChange={(e) => setCheckOut(e.target.value)}
-                        min={checkIn || new Date().toISOString().split('T')[0]} // Prevent past dates and dates before check-in
-                        onFocus={(e) => {
-                          // iOS Safari focus fix
-                          if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                            e.target.blur()
-                            setTimeout(() => e.target.focus(), 100)
-                          }
+                        min={checkIn || new Date().toISOString().split('T')[0]}
+                        placeholder='Add date'
+                        onTouchStart={(e) => {
+                          // Prevent iOS from auto-selecting on touch
+                          e.preventDefault()
+                          e.currentTarget.focus()
                         }}
-                      />
-                      {/* Custom overlay for better iOS handling */}
-                      <div
-                        className='absolute inset-0 cursor-pointer z-20'
                         onClick={(e) => {
-                          const input = e.currentTarget.previousElementSibling
-                          if (input && input.type === 'date') {
-                            input.focus()
-                            input.click()
-                            // Force show date picker on iOS
-                            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-                              input.showPicker?.()
+                          // Ensure proper focus and picker opening
+                          e.currentTarget.focus()
+                          if (e.currentTarget.showPicker) {
+                            try {
+                              e.currentTarget.showPicker()
+                            } catch (err) {
+                              // Fallback for older browsers
+                              console.log('showPicker not supported')
                             }
                           }
-                        }}
-                        style={{
-                          backgroundColor: 'transparent',
-                          pointerEvents: checkout ? 'none' : 'auto',
                         }}
                       />
                     </div>

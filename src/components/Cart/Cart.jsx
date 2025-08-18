@@ -375,7 +375,7 @@ const Cart = () => {
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 pb-8 sm:pb-12'>
           {/* Left Side: Booking Details - Takes 2 columns */}
           <div className='lg:col-span-2 space-y-4 sm:space-y-6 lg:space-y-8'>
-            {/* Trip Details Card */}
+            {/* Trip Details Card - Reorganized with Dates First */}
             <div className='bg-white/80 backdrop-blur-sm rounded-xl lg:rounded-2xl shadow-soft p-4 sm:p-6 lg:p-8 border border-primary-200'>
               <div className='flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6'>
                 <FaCalendarAlt className='text-lg sm:text-xl lg:text-2xl text-primary-600' />
@@ -385,30 +385,41 @@ const Cart = () => {
               </div>
 
               <div className='space-y-4 sm:space-y-6'>
-                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-primary-25 rounded-xl border border-primary-200 gap-3 sm:gap-4'>
-                  <div className='flex items-center gap-3 sm:gap-4'>
-                    <div className='p-2 sm:p-3 bg-white rounded-lg sm:rounded-xl shadow-soft flex-shrink-0'>
-                      <FaCalendarAlt className='text-sm sm:text-base text-primary-600' />
+                {/* Dates Section - Now First and Matching Guest Layout */}
+                <div className='flex items-center justify-between p-4 bg-primary-25 rounded-xl border border-primary-200'>
+                  <div className='flex items-center gap-4'>
+                    <div className='p-3 bg-white rounded-xl shadow-soft'>
+                      <FaCalendarAlt className='text-primary-600' />
                     </div>
                     <div>
-                      <p className='text-xs sm:text-sm font-semibold text-primary-700 uppercase tracking-wide'>
+                      <p className='text-sm font-semibold text-primary-700 uppercase tracking-wide'>
                         Dates
                       </p>
-                      <p className='text-sm sm:text-base font-bold text-primary-800'>
+                      <p className='font-bold text-primary-800'>
                         {checkIn && checkOut
-                          ? `${checkIn} - ${checkOut}`
+                          ? `${new Date(checkIn).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                            })} - ${new Date(checkOut).toLocaleDateString(
+                              'en-US',
+                              {
+                                month: 'short',
+                                day: 'numeric',
+                              }
+                            )}`
                           : 'Select dates'}
                       </p>
                     </div>
                   </div>
                   <button
-                    className='text-primary-600 hover:text-primary-800 font-semibold underline transition-colors duration-300 text-sm sm:text-base self-start sm:self-center'
+                    className='text-primary-600 hover:text-primary-800 font-semibold underline transition-colors duration-300'
                     onClick={() => setEditOpt(!editOpt)}
                   >
                     Edit
                   </button>
                 </div>
 
+                {/* Guests Section - Now Matching Dates Layout */}
                 <div className='flex items-center justify-between p-4 bg-primary-25 rounded-xl border border-primary-200'>
                   <div className='flex items-center gap-4'>
                     <div className='p-3 bg-white rounded-xl shadow-soft'>
@@ -451,6 +462,10 @@ const Cart = () => {
                           onChange={(e) => setCheckIn(e.target.value)}
                           min={new Date().toISOString().split('T')[0]}
                           className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
+                          style={{
+                            fontSize: '16px',
+                            minHeight: '44px',
+                          }}
                         />
                       </div>
                       <div>
@@ -474,6 +489,10 @@ const Cart = () => {
                               .split('T')[0]
                           }
                           className='w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300'
+                          style={{
+                            fontSize: '16px',
+                            minHeight: '44px',
+                          }}
                         />
                       </div>
                       <div>
@@ -499,6 +518,81 @@ const Cart = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Property Image Card - Now Second */}
+            <div className='bg-white/80 backdrop-blur-sm rounded-xl lg:rounded-2xl shadow-soft p-4 sm:p-6 lg:p-8 border border-primary-200'>
+              <div className='flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6'>
+                <div className='p-2 bg-primary-100 rounded-lg'>
+                  <svg
+                    className='w-5 h-5 text-primary-600'
+                    fill='currentColor'
+                    viewBox='0 0 20 20'
+                  >
+                    <path
+                      fillRule='evenodd'
+                      d='M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z'
+                      clipRule='evenodd'
+                    />
+                  </svg>
+                </div>
+                <h2 className='text-lg sm:text-xl lg:text-2xl font-bold text-primary-800'>
+                  Your Accommodation
+                </h2>
+              </div>
+
+              <div className='flex flex-col sm:flex-row gap-4 sm:gap-6'>
+                <div className='flex-shrink-0'>
+                  <img
+                    src={image}
+                    alt='Luxury Banana Island Villa'
+                    className='w-full sm:w-48 h-48 sm:h-32 object-cover rounded-xl shadow-medium hover:shadow-strong transition-all duration-300'
+                  />
+                </div>
+                <div className='flex-1 space-y-3'>
+                  <div>
+                    <h3 className='text-xl font-bold text-primary-800 mb-1'>
+                      Luxury Banana Island Villa
+                    </h3>
+                    <p className='text-primary-600 font-medium'>
+                      Entire villa in Lagos, Nigeria
+                    </p>
+                    <p className='text-sm text-primary-500'>
+                      4-6 guests · 5 beds · 3 baths
+                    </p>
+                  </div>
+
+                  <div className='flex flex-wrap items-center gap-2'>
+                    <span className='bg-accent-blue-100 text-accent-blue-700 px-3 py-1 rounded-full text-sm font-bold'>
+                      Superhost
+                    </span>
+                    <div className='flex items-center gap-1 bg-accent-amber-50 px-3 py-1 rounded-full'>
+                      <span className='text-accent-amber-500 text-sm'>★</span>
+                      <span className='font-bold text-primary-800 text-sm'>
+                        4.9
+                      </span>
+                      <span className='text-xs text-primary-600'>
+                        (312 reviews)
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className='flex flex-wrap gap-2 mt-3'>
+                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
+                      WiFi
+                    </span>
+                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
+                      Kitchen
+                    </span>
+                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
+                      Pool
+                    </span>
+                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
+                      Free Parking
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -840,10 +934,45 @@ const Cart = () => {
             </button>
           </div>
 
-          {/* Right Side: Enhanced Cart Summary */}
+          {/* Right Side: Enhanced Cart Summary - Mobile First Order */}
           <div className='lg:col-span-1'>
             <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-strong p-6 border border-primary-200 sticky top-24'>
-              {/* Property Image and Info */}
+              {/* Dates Section - First on Mobile */}
+              <div className='mb-6 lg:hidden'>
+                <div className='flex items-center gap-3 mb-4'>
+                  <FaCalendarAlt className='text-lg text-primary-600' />
+                  <h3 className='text-lg font-bold text-primary-800'>
+                    Trip Dates
+                  </h3>
+                </div>
+                <div className='bg-primary-25 p-4 rounded-xl'>
+                  <p className='text-sm font-semibold text-primary-700 uppercase tracking-wide mb-1'>
+                    Your Stay
+                  </p>
+                  <p className='font-bold text-primary-800'>
+                    {checkIn && checkOut
+                      ? `${new Date(checkIn).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })} - ${new Date(checkOut).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        })}`
+                      : 'Select your dates'}
+                  </p>
+                  {pricing.nights > 0 && (
+                    <p className='text-sm text-primary-600 mt-1'>
+                      {pricing.nights}{' '}
+                      {pricing.nights === 1 ? 'night' : 'nights'} · {guest}{' '}
+                      {guest === 1 ? 'guest' : 'guests'}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Property Image and Info - Second on Mobile, First on Desktop */}
               <div className='mb-6'>
                 <img
                   src={image}
@@ -867,53 +996,89 @@ const Cart = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Dates Section - Hidden on Mobile, Shown on Desktop */}
+                <div className='hidden lg:block mt-4 bg-primary-25 p-4 rounded-xl'>
+                  <div className='flex items-center gap-2 mb-2'>
+                    <FaCalendarAlt className='text-primary-600' />
+                    <p className='text-sm font-semibold text-primary-700 uppercase tracking-wide'>
+                      Trip Dates
+                    </p>
+                  </div>
+                  <p className='font-bold text-primary-800'>
+                    {checkIn && checkOut
+                      ? `${new Date(checkIn).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })} - ${new Date(checkOut).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}`
+                      : 'Select your dates'}
+                  </p>
+                  {pricing.nights > 0 && (
+                    <p className='text-sm text-primary-600 mt-1'>
+                      {pricing.nights}{' '}
+                      {pricing.nights === 1 ? 'night' : 'nights'} · {guest}{' '}
+                      {guest === 1 ? 'guest' : 'guests'}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <hr className='border-primary-200 mb-6' />
 
-              {/* Enhanced Price Breakdown */}
+              {/* Enhanced Price Breakdown - Last */}
               <div className='space-y-4 mb-6'>
                 <h3 className='text-xl font-bold text-primary-800'>
                   Price Details
                 </h3>
 
-                <div className='space-y-3'>
-                  <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
-                    <span className='text-primary-700 underline'>
-                      ₦{pricing.pricePerNight?.toLocaleString()} ×{' '}
-                      {pricing.nights}{' '}
-                      {pricing.nights === 1 ? 'night' : 'nights'}
-                    </span>
-                    <span className='font-bold text-primary-800'>
-                      ₦{pricing.basePrice?.toLocaleString()}
-                    </span>
-                  </div>
+                {pricing.nights > 0 ? (
+                  <div className='space-y-3'>
+                    <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
+                      <span className='text-primary-700 underline'>
+                        ₦{pricing.pricePerNight?.toLocaleString()} ×{' '}
+                        {pricing.nights}{' '}
+                        {pricing.nights === 1 ? 'night' : 'nights'}
+                      </span>
+                      <span className='font-bold text-primary-800'>
+                        ₦{pricing.basePrice?.toLocaleString()}
+                      </span>
+                    </div>
 
-                  <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
-                    <span className='text-primary-700 underline'>
-                      Cleaning fee
-                    </span>
-                    <span className='font-bold text-primary-800'>
-                      ₦{pricing.cleaningFee?.toLocaleString()}
-                    </span>
-                  </div>
+                    <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
+                      <span className='text-primary-700 underline'>
+                        Cleaning fee
+                      </span>
+                      <span className='font-bold text-primary-800'>
+                        ₦{pricing.cleaningFee?.toLocaleString()}
+                      </span>
+                    </div>
 
-                  <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
-                    <span className='text-primary-700 underline'>
-                      Service fee
-                    </span>
-                    <span className='font-bold text-primary-800'>
-                      ₦{pricing.serviceFee?.toLocaleString()}
-                    </span>
-                  </div>
+                    <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
+                      <span className='text-primary-700 underline'>
+                        Service fee
+                      </span>
+                      <span className='font-bold text-primary-800'>
+                        ₦{pricing.serviceFee?.toLocaleString()}
+                      </span>
+                    </div>
 
-                  <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
-                    <span className='text-primary-700 underline'>Taxes</span>
-                    <span className='font-bold text-primary-800'>
-                      ₦{pricing.taxes?.toLocaleString()}
-                    </span>
+                    <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
+                      <span className='text-primary-700 underline'>Taxes</span>
+                      <span className='font-bold text-primary-800'>
+                        ₦{pricing.taxes?.toLocaleString()}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className='bg-primary-25 p-4 rounded-xl text-center'>
+                    <p className='text-primary-600'>
+                      Select dates to see pricing details
+                    </p>
+                  </div>
+                )}
               </div>
 
               <hr className='border-primary-200 mb-6' />
@@ -925,11 +1090,15 @@ const Cart = () => {
                     Total (NGN)
                   </span>
                   <span className='text-2xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
-                    ₦{pricing.total?.toLocaleString()}
+                    {pricing.total > 0
+                      ? `₦${pricing.total?.toLocaleString()}`
+                      : '₦0'}
                   </span>
                 </div>
                 <p className='text-sm text-primary-600 mt-2'>
-                  Includes all fees and taxes
+                  {pricing.total > 0
+                    ? 'Includes all fees and taxes'
+                    : 'Select dates to calculate total'}
                   {pricing.nights > 0
                     ? ` for ${pricing.nights} ${
                         pricing.nights === 1 ? 'night' : 'nights'

@@ -109,19 +109,22 @@ const Hostlogin = () => {
         <div className='absolute top-0 left-0 w-full h-full bg-[url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23475569" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")] opacity-30'></div>
       </div>
 
-      {/* Back Button */}
+      {/* Back Button - Improved Text Size */}
       <button
         onClick={() => navigate('/host')}
-        className='absolute top-6 left-6 flex items-center gap-3 text-primary-600 hover:text-primary-800 bg-neutral-25/80 backdrop-blur-md px-4 py-3 rounded-3xl shadow-soft hover:shadow-medium transition-all duration-300 font-medium z-10 border border-neutral-200/20'
+        className='absolute top-4 left-4 md:top-6 md:left-6 flex items-center gap-2 md:gap-3 text-primary-600 hover:text-primary-800 bg-neutral-25/80 backdrop-blur-md px-3 py-2.5 md:px-4 md:py-3 rounded-2xl md:rounded-3xl shadow-soft hover:shadow-medium transition-all duration-300 font-medium z-10 border border-neutral-200/20 text-sm md:text-base'
       >
-        <FaArrowLeft className='text-sm' />
-        <span>Back to Host</span>
+        <FaArrowLeft className='text-sm md:text-sm' />
+        <span className='hidden sm:inline text-sm md:text-base'>
+          Back to Host
+        </span>
+        <span className='sm:hidden text-sm'>Back</span>
       </button>
 
-      {/* Main Container */}
-      <div className='min-h-screen flex items-center justify-center p-4 relative z-10'>
+      {/* Main Container - Improved Mobile Spacing */}
+      <div className='min-h-screen flex items-center justify-center p-4 pt-20 md:pt-4 relative z-10'>
         <div className='w-full max-w-6xl mx-auto'>
-          <div className='grid lg:grid-cols-2 gap-12 items-center'>
+          <div className='grid lg:grid-cols-2 gap-8 md:gap-12 items-center'>
             {/* Left Side - Branding */}
             <div className='hidden lg:block text-center space-y-8'>
               <div className='space-y-6'>
@@ -202,53 +205,66 @@ const Hostlogin = () => {
 
             {/* Right Side - Login Form */}
             <div className='w-full max-w-md mx-auto lg:mx-0'>
-              {/* Mobile Logo */}
-              <div className='lg:hidden text-center mb-8'>
+              {/* Mobile Logo - Better Text Sizing */}
+              <div className='lg:hidden text-center mb-6 md:mb-8'>
                 <div
-                  className='flex items-center justify-center gap-4 mb-4 cursor-pointer group'
+                  className='flex flex-col items-center gap-3 mb-4 cursor-pointer group'
                   onClick={handleHomeNavigation}
                 >
-                  <div className='w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
-                    <HiHome className='text-neutral-25 text-2xl group-hover:scale-110 transition-transform duration-300' />
+                  <div className='w-16 h-16 sm:w-18 sm:h-18 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
+                    <HiHome className='text-neutral-25 text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300' />
                   </div>
-                  <div>
-                    <h1 className='text-2xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity duration-300'>
+                  <div className='text-center'>
+                    <h1 className='text-2xl sm:text-3xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity duration-300'>
                       Homehive
                     </h1>
-                    <p className='text-primary-500 font-medium text-sm'>
+                    <p className='text-primary-500 font-medium text-sm sm:text-base mt-1'>
                       Host Portal
                     </p>
                   </div>
                 </div>
+
+                {/* Mobile Welcome Text - Larger */}
+                <div className='mt-4 mb-6'>
+                  <h2 className='text-xl sm:text-2xl font-semibold text-primary-800 mb-2'>
+                    Welcome Back, Host!
+                  </h2>
+                  <p className='text-base sm:text-lg text-primary-600'>
+                    Sign in to manage your properties
+                  </p>
+                </div>
               </div>
 
-              {/* Login Card */}
-              <div className='bg-neutral-25/95 backdrop-blur-xl rounded-3xl shadow-strong border border-neutral-200/20 p-8 relative'>
-                {/* Card Header */}
-                <div className='text-center mb-8'>
-                  <div className='inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-accent-blue-50 border border-primary-200 rounded-full px-4 py-2 mb-4'>
-                    <HiHome className='text-primary-600 text-sm' />
-                    <span className='text-sm font-medium text-primary-700'>
+              {/* Login Card - Balanced Form Sizing */}
+              <div className='bg-neutral-25/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-strong border border-neutral-200/20 p-6 md:p-8 relative'>
+                {/* Card Header - Better Text Sizing */}
+                <div className='text-center mb-6 md:mb-8'>
+                  <div className='inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-accent-blue-50 border border-primary-200 rounded-full px-4 py-2 md:px-5 md:py-2.5 mb-4 md:mb-5'>
+                    <HiHome className='text-primary-600 text-sm md:text-base' />
+                    <span className='text-sm md:text-base font-medium text-primary-700'>
                       Host Login
                     </span>
                   </div>
-                  <h2 className='text-2xl font-NotoSans font-bold text-primary-800 mb-2'>
+                  <h2 className='text-2xl md:text-3xl font-NotoSans font-bold text-primary-800 mb-3 lg:block hidden'>
                     Welcome Back
                   </h2>
-                  <p className='text-primary-600'>
+                  <p className='text-primary-600 text-base md:text-lg lg:block hidden'>
                     Sign in to your host dashboard
                   </p>
                 </div>
 
-                {/* Login Form */}
-                <form onSubmit={handleSubmit} className='space-y-6'>
-                  {/* Email Field */}
+                {/* Login Form - Balanced Form and Text Sizes */}
+                <form
+                  onSubmit={handleSubmit}
+                  className='space-y-5 md:space-y-6'
+                >
+                  {/* Email Field - Better Proportions */}
                   <div className='space-y-2'>
                     <label
                       htmlFor='email'
-                      className='text-sm font-semibold text-primary-700 flex items-center gap-2'
+                      className='text-base md:text-lg font-semibold text-primary-700 flex items-center gap-2'
                     >
-                      <HiMail className='text-primary-500' />
+                      <HiMail className='text-primary-500 text-base md:text-lg' />
                       Email Address
                     </label>
                     <input
@@ -256,28 +272,32 @@ const Hostlogin = () => {
                       id='email'
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full px-4 py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
+                      className={`w-full px-4 py-3.5 md:py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 text-base md:text-lg ${
                         errors.email
                           ? 'border-error-300 focus:border-error-500 bg-error-50/50'
                           : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
                       }`}
                       placeholder='Enter your email address'
+                      style={{
+                        fontSize: '16px', // Prevents zoom on iOS
+                        minHeight: '50px', // Better touch target
+                      }}
                     />
                     {errors.email && (
-                      <p className='text-error-600 text-sm flex items-center gap-2 mt-2'>
-                        <span className='text-xs'>⚠️</span>
+                      <p className='text-error-600 text-sm md:text-base flex items-center gap-2 mt-2'>
+                        <span className='text-sm'>⚠️</span>
                         {errors.email}
                       </p>
                     )}
                   </div>
 
-                  {/* Password Field */}
+                  {/* Password Field - Better Proportions */}
                   <div className='space-y-2'>
                     <label
                       htmlFor='password'
-                      className='text-sm font-semibold text-primary-700 flex items-center gap-2'
+                      className='text-base md:text-lg font-semibold text-primary-700 flex items-center gap-2'
                     >
-                      <HiLockClosed className='text-primary-500' />
+                      <HiLockClosed className='text-primary-500 text-base md:text-lg' />
                       Password
                     </label>
                     <div className='relative'>
@@ -286,36 +306,40 @@ const Hostlogin = () => {
                         id='password'
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className={`w-full px-4 py-4 pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
+                        className={`w-full px-4 py-3.5 md:py-4 pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 text-base md:text-lg ${
                           errors.password
                             ? 'border-error-300 focus:border-error-500 bg-error-50/50'
                             : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
                         }`}
                         placeholder='Enter your password'
+                        style={{
+                          fontSize: '16px', // Prevents zoom on iOS
+                          minHeight: '50px', // Better touch target
+                        }}
                       />
                       <button
                         type='button'
                         onClick={() => setShowPassword(!showPassword)}
-                        className='absolute right-4 top-1/2 transform -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors duration-200'
+                        className='absolute right-4 top-1/2 transform -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors duration-200 p-1'
                       >
                         {showPassword ? (
-                          <FaEyeSlash className='text-xl' />
+                          <FaEyeSlash className='text-xl md:text-2xl' />
                         ) : (
-                          <FaEye className='text-xl' />
+                          <FaEye className='text-xl md:text-2xl' />
                         )}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className='text-error-600 text-sm flex items-center gap-2 mt-2'>
-                        <span className='text-xs'>⚠️</span>
+                      <p className='text-error-600 text-sm md:text-base flex items-center gap-2 mt-2'>
+                        <span className='text-sm'>⚠️</span>
                         {errors.password}
                       </p>
                     )}
                   </div>
 
-                  {/* Remember Me & Forgot Password */}
-                  <div className='flex items-center justify-between pt-2'>
-                    <label className='flex items-center gap-3 cursor-pointer group'>
+                  {/* Remember Me & Forgot Password - Fixed Flexbox Layout */}
+                  <div className='flex items-center justify-between pt-3 gap-4'>
+                    <label className='flex items-center gap-3 cursor-pointer group flex-shrink-0'>
                       <div className='relative'>
                         <input
                           type='checkbox'
@@ -339,23 +363,23 @@ const Hostlogin = () => {
                           )}
                         </div>
                       </div>
-                      <span className='text-sm text-primary-600 group-hover:text-primary-800 transition-colors duration-200 font-medium'>
+                      <span className='text-base md:text-lg text-primary-600 group-hover:text-primary-800 transition-colors duration-200 font-medium whitespace-nowrap'>
                         Remember me
                       </span>
                     </label>
                     <button
                       type='button'
-                      className='text-sm text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline'
+                      className='text-base md:text-lg text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline flex-shrink-0'
                     >
                       Forgot Password?
                     </button>
                   </div>
 
-                  {/* Submit Button */}
+                  {/* Submit Button - Better Proportions */}
                   <button
                     type='submit'
                     disabled={isLoading}
-                    className={`w-full py-4 rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden ${
+                    className={`w-full py-4 md:py-5 rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden text-base md:text-lg ${
                       isLoading
                         ? 'bg-neutral-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-primary-600 to-primary-800 hover:from-primary-700 hover:to-primary-900 hover:scale-[1.02] active:scale-[0.98] shadow-medium hover:shadow-strong'
@@ -366,38 +390,38 @@ const Hostlogin = () => {
                         isLoading ? 'opacity-0' : 'opacity-100'
                       } transition-opacity duration-300`}
                     >
-                      <HiHome className='text-lg' />
+                      <HiHome className='text-lg md:text-xl' />
                       <span>Sign In to Dashboard</span>
                     </div>
                     {isLoading && (
                       <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
+                        <div className='w-6 h-6 md:w-7 md:h-7 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
                       </div>
                     )}
                   </button>
 
-                  {/* Divider */}
-                  <div className='relative my-8'>
+                  {/* Divider - Better Spacing */}
+                  <div className='relative my-7 md:my-8'>
                     <div className='absolute inset-0 flex items-center'>
                       <div className='w-full border-t border-primary-200'></div>
                     </div>
-                    <div className='relative flex justify-center text-sm'>
+                    <div className='relative flex justify-center text-base md:text-lg'>
                       <span className='px-4 bg-neutral-25 text-primary-500 font-medium'>
                         Or continue with
                       </span>
                     </div>
                   </div>
 
-                  {/* Google Login */}
+                  {/* Google Login - Better Button Size */}
                   <button
                     type='button'
                     onClick={handleGoogleLogin}
                     disabled={isGoogleLoading}
-                    className='w-full py-4 px-4 border-2 border-primary-200 hover:border-primary-300 rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium'
+                    className='w-full py-4 md:py-5 px-4 border-2 border-primary-200 hover:border-primary-300 rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium text-base md:text-lg'
                   >
                     {isGoogleLoading ? (
                       <>
-                        <div className='w-5 h-5 border-2 border-slate-600 border-t-transparent rounded-full animate-spin'></div>
+                        <div className='w-5 h-5 md:w-6 md:h-6 border-2 border-slate-600 border-t-transparent rounded-full animate-spin'></div>
                         <span>Connecting...</span>
                       </>
                     ) : (
@@ -405,7 +429,7 @@ const Hostlogin = () => {
                         <img
                           src='https://www.google.com/favicon.ico'
                           alt='Google'
-                          className='w-5 h-5'
+                          className='w-5 h-5 md:w-6 md:h-6'
                         />
                         <span>Sign in with Google</span>
                       </>
@@ -413,14 +437,14 @@ const Hostlogin = () => {
                   </button>
                 </form>
 
-                {/* Sign Up Link */}
-                <div className='mt-8 text-center p-6 bg-primary-50/80 rounded-2xl border border-primary-100'>
-                  <p className='text-primary-600 mb-3'>
+                {/* Sign Up Link - Better Text Size */}
+                <div className='mt-7 md:mt-8 text-center p-5 md:p-6 bg-primary-50/80 rounded-2xl border border-primary-100'>
+                  <p className='text-primary-600 mb-3 text-base md:text-lg'>
                     New to hosting with us?
                   </p>
                   <button
                     onClick={() => navigate('/host-signup')}
-                    className='text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline'
+                    className='text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline text-base md:text-lg'
                   >
                     Create your host account →
                   </button>
@@ -437,23 +461,23 @@ const Hostlogin = () => {
                 )}
               </div>
 
-              {/* Footer Links */}
-              <div className='mt-8 text-center space-y-4'>
-                <div className='flex items-center justify-center gap-6 text-sm text-primary-500'>
+              {/* Footer Links - Better Text Size */}
+              <div className='mt-6 md:mt-8 text-center space-y-3 md:space-y-4'>
+                <div className='flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm md:text-base text-primary-500'>
                   <a
                     href='/privacy'
                     className='hover:text-primary-700 transition-colors duration-200'
                   >
                     Privacy Policy
                   </a>
-                  <span className='text-primary-300'>•</span>
+                  <span className='text-primary-300 hidden sm:inline'>•</span>
                   <a
                     href='/terms'
                     className='hover:text-primary-700 transition-colors duration-200'
                   >
                     Terms of Service
                   </a>
-                  <span className='text-primary-300'>•</span>
+                  <span className='text-primary-300 hidden sm:inline'>•</span>
                   <a
                     href='/partner-help'
                     className='hover:text-primary-700 transition-colors duration-200'
@@ -461,7 +485,7 @@ const Hostlogin = () => {
                     Help Center
                   </a>
                 </div>
-                <p className='text-xs text-primary-400'>
+                <p className='text-xs md:text-sm text-primary-400'>
                   © 2024 Homehive. All rights reserved.
                 </p>
               </div>
