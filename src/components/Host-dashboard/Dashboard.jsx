@@ -31,6 +31,7 @@ import {
   FaEye,
   FaChevronDown,
   FaGlobe,
+  FaArrowUp,
 } from 'react-icons/fa'
 import {
   HiHome,
@@ -41,6 +42,22 @@ import {
   HiCog,
   HiOutlineChartBar,
 } from 'react-icons/hi'
+import {
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  ComposedChart,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  Line,
+  Bar,
+} from 'recharts'
 import { ButtonTooltip, InfoTooltip } from '../common/Tooltip'
 
 import PropTypes from 'prop-types'
@@ -168,6 +185,79 @@ const Dashboard = () => {
     pricePerNight: '',
     currency: 'NGN',
   })
+
+  // Sample revenue and transaction data for charts
+  const revenueData = [
+    { month: 'Jan', revenue: 85000, bookings: 12, avgRate: 22000 },
+    { month: 'Feb', revenue: 95000, bookings: 15, avgRate: 24000 },
+    { month: 'Mar', revenue: 120000, bookings: 18, avgRate: 25000 },
+    { month: 'Apr', revenue: 110000, bookings: 16, avgRate: 23000 },
+    { month: 'May', revenue: 140000, bookings: 20, avgRate: 26000 },
+    { month: 'Jun', revenue: 165000, bookings: 24, avgRate: 28000 },
+    { month: 'Jul', revenue: 180000, bookings: 28, avgRate: 30000 },
+    { month: 'Aug', revenue: 195000, bookings: 32, avgRate: 31000 },
+    { month: 'Sep', revenue: 175000, bookings: 29, avgRate: 29000 },
+    { month: 'Oct', revenue: 160000, bookings: 25, avgRate: 27000 },
+    { month: 'Nov', revenue: 145000, bookings: 22, avgRate: 25000 },
+    { month: 'Dec', revenue: 125000, bookings: 19, avgRate: 24000 },
+  ]
+
+  const transactionData = [
+    {
+      date: 'Aug 1',
+      amount: 25000,
+      property: 'Cozy Apartment',
+      status: 'completed',
+    },
+    {
+      date: 'Aug 3',
+      amount: 32000,
+      property: 'Modern Villa',
+      status: 'completed',
+    },
+    {
+      date: 'Aug 5',
+      amount: 28000,
+      property: 'Beach House',
+      status: 'completed',
+    },
+    { date: 'Aug 8', amount: 30000, property: 'City Loft', status: 'pending' },
+    {
+      date: 'Aug 10',
+      amount: 26000,
+      property: 'Garden Suite',
+      status: 'completed',
+    },
+    {
+      date: 'Aug 12',
+      amount: 35000,
+      property: 'Luxury Condo',
+      status: 'completed',
+    },
+    {
+      date: 'Aug 15',
+      amount: 29000,
+      property: 'Riverside Cabin',
+      status: 'completed',
+    },
+  ]
+
+  const propertyRevenueData = [
+    { name: 'Cozy Apartment', revenue: 450000, percentage: 28 },
+    { name: 'Modern Villa', revenue: 380000, percentage: 24 },
+    { name: 'Beach House', revenue: 320000, percentage: 20 },
+    { name: 'City Loft', revenue: 280000, percentage: 18 },
+    { name: 'Garden Suite', revenue: 160000, percentage: 10 },
+  ]
+
+  const chartColors = {
+    primary: '#3B82F6',
+    secondary: '#10B981',
+    accent: '#F59E0B',
+    danger: '#EF4444',
+    info: '#8B5CF6',
+    success: '#059669',
+  }
 
   const currencies = [
     {
@@ -1185,60 +1275,355 @@ const Dashboard = () => {
 
       case 'analytics':
         return (
-          <div className='space-y-4 md:space-y-6'>
-            <h2 className='text-xl md:text-2xl font-bold text-primary-800'>
-              Analytics & Insights
-            </h2>
+          <div className='space-y-6 md:space-y-8'>
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
+              <h2 className='text-2xl md:text-3xl font-bold text-primary-800'>
+                Analytics & Insights
+              </h2>
+              <div className='flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-primary-200'>
+                <span className='text-sm font-medium text-primary-600'>
+                  Last 12 months
+                </span>
+                <FaChevronDown className='text-primary-400 text-sm' />
+              </div>
+            </div>
 
-            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
-              <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-3 md:mb-4'>
-                Revenue Overview
-              </h3>
-              <div className='bg-primary-25 h-48 md:h-64 rounded-xl flex items-center justify-center'>
-                <div className='text-center'>
-                  <HiOutlineChartBar className='text-4xl md:text-5xl text-primary-400 mx-auto mb-2' />
-                  <p className='text-primary-600 text-sm md:text-base'>
-                    Revenue chart will be displayed here
+            {/* Revenue Overview Chart */}
+            <div className='bg-white p-4 sm:p-6 md:p-8 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6'>
+                <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2 sm:mb-0'>
+                  Revenue Overview
+                </h3>
+                <div className='flex items-center gap-4 text-sm'>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-3 h-3 bg-blue-500 rounded-full'></div>
+                    <span className='text-primary-600'>Revenue</span>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <div className='w-3 h-3 bg-green-500 rounded-full'></div>
+                    <span className='text-primary-600'>Bookings</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className='h-64 sm:h-80 md:h-96'>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <AreaChart data={revenueData}>
+                    <defs>
+                      <linearGradient
+                        id='revenueGradient'
+                        x1='0'
+                        y1='0'
+                        x2='0'
+                        y2='1'
+                      >
+                        <stop
+                          offset='5%'
+                          stopColor={chartColors.primary}
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset='95%'
+                          stopColor={chartColors.primary}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                      <linearGradient
+                        id='bookingsGradient'
+                        x1='0'
+                        y1='0'
+                        x2='0'
+                        y2='1'
+                      >
+                        <stop
+                          offset='5%'
+                          stopColor={chartColors.secondary}
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset='95%'
+                          stopColor={chartColors.secondary}
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+                    <XAxis
+                      dataKey='month'
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
+                      labelStyle={{ color: '#374151', fontWeight: 'bold' }}
+                    />
+                    <Area
+                      type='monotone'
+                      dataKey='revenue'
+                      stroke={chartColors.primary}
+                      strokeWidth={2}
+                      fill='url(#revenueGradient)'
+                    />
+                    <Area
+                      type='monotone'
+                      dataKey='bookings'
+                      stroke={chartColors.secondary}
+                      strokeWidth={2}
+                      fill='url(#bookingsGradient)'
+                      yAxisId='bookings'
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Transaction Analytics Grid */}
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8'>
+              {/* Recent Transactions */}
+              <div className='lg:col-span-2 bg-white p-4 sm:p-6 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6'>
+                  <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2 sm:mb-0'>
+                    Recent Transactions
+                  </h3>
+                  <button className='text-primary-600 hover:text-primary-800 font-medium text-sm transition-colors self-start sm:self-auto'>
+                    View All →
+                  </button>
+                </div>
+
+                <div className='space-y-3 sm:space-y-4'>
+                  {transactionData.map((transaction, index) => (
+                    <div
+                      key={index}
+                      className='flex items-center justify-between p-3 sm:p-4 bg-primary-25/50 rounded-lg border border-primary-100'
+                    >
+                      <div className='flex items-center gap-3 sm:gap-4 min-w-0 flex-1'>
+                        <div className='w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0'>
+                          <FaHome className='text-primary-600 text-lg sm:text-xl' />
+                        </div>
+                        <div className='min-w-0 flex-1'>
+                          <h4 className='font-bold text-primary-800 text-sm sm:text-base truncate'>
+                            {transaction.property}
+                          </h4>
+                          <p className='text-primary-600 text-xs sm:text-sm'>
+                            {transaction.date}
+                          </p>
+                        </div>
+                      </div>
+                      <div className='text-right flex-shrink-0'>
+                        <p className='font-bold text-primary-800 text-sm sm:text-base'>
+                          ₦{transaction.amount.toLocaleString()}
+                        </p>
+                        <div
+                          className={`flex items-center justify-end gap-1 text-xs ${
+                            transaction.status === 'completed'
+                              ? 'text-green-600'
+                              : 'text-amber-600'
+                          }`}
+                        >
+                          <div
+                            className={`w-2 h-2 rounded-full ${
+                              transaction.status === 'completed'
+                                ? 'bg-green-500'
+                                : 'bg-amber-500'
+                            }`}
+                          ></div>
+                          <span className='capitalize'>
+                            {transaction.status}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Property Revenue Distribution */}
+              <div className='bg-white p-4 sm:p-6 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-4 sm:mb-6'>
+                  Revenue by Property
+                </h3>
+
+                <div className='h-48 sm:h-64 mb-4'>
+                  <ResponsiveContainer width='100%' height='100%'>
+                    <PieChart>
+                      <Pie
+                        data={propertyRevenueData}
+                        cx='50%'
+                        cy='50%'
+                        innerRadius={40}
+                        outerRadius={80}
+                        paddingAngle={2}
+                        dataKey='percentage'
+                      >
+                        {propertyRevenueData.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              Object.values(chartColors)[
+                                index % Object.values(chartColors).length
+                              ]
+                            }
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value, name, props) => [
+                          `₦${props.payload.revenue.toLocaleString()}`,
+                          'Revenue',
+                        ]}
+                        labelFormatter={(label) => `${label}`}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className='space-y-2'>
+                  {propertyRevenueData.slice(0, 4).map((property, index) => (
+                    <div
+                      key={index}
+                      className='flex items-center justify-between text-sm'
+                    >
+                      <div className='flex items-center gap-2'>
+                        <div
+                          className='w-3 h-3 rounded-full'
+                          style={{
+                            backgroundColor: Object.values(chartColors)[index],
+                          }}
+                        ></div>
+                        <span className='text-primary-700 truncate'>
+                          {property.name.length > 12
+                            ? `${property.name.slice(0, 12)}...`
+                            : property.name}
+                        </span>
+                      </div>
+                      <span className='font-medium text-primary-800'>
+                        {property.percentage}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Metrics */}
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'>
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h4 className='font-bold text-primary-800 mb-2 text-base md:text-lg'>
+                  Occupancy Rate
+                </h4>
+                <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
+                  78%
+                </p>
+                <div className='flex items-center gap-2 mt-2'>
+                  <FaArrowUp className='text-green-500 text-sm' />
+                  <p className='text-sm md:text-base text-green-600 font-medium'>
+                    ↑ 12% from last month
+                  </p>
+                </div>
+              </div>
+
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h4 className='font-bold text-primary-800 mb-2 text-base md:text-lg'>
+                  Average Daily Rate
+                </h4>
+                <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
+                  ₦28k
+                </p>
+                <div className='flex items-center gap-2 mt-2'>
+                  <FaArrowUp className='text-green-500 text-sm' />
+                  <p className='text-sm md:text-base text-green-600 font-medium'>
+                    ↑ 8% from last month
+                  </p>
+                </div>
+              </div>
+
+              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+                <h4 className='font-bold text-primary-800 mb-2 text-base md:text-lg'>
+                  Guest Rating
+                </h4>
+                <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
+                  4.8
+                </p>
+                <div className='flex items-center gap-2 mt-2'>
+                  <div className='flex text-amber-400'>{'★'.repeat(5)}</div>
+                  <p className='text-sm md:text-base text-primary-600'>
+                    (124 reviews)
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'>
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
-                <h4 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
-                  Occupancy Rate
-                </h4>
-                <p className='text-2xl md:text-3xl font-bold text-primary-800'>
-                  78%
-                </p>
-                <p className='text-xs md:text-sm text-accent-green-600'>
-                  ↑ 12% from last month
-                </p>
+            {/* Monthly Performance Bar Chart */}
+            <div className='bg-white p-4 sm:p-6 md:p-8 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6'>
+                <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2 sm:mb-0'>
+                  Monthly Performance
+                </h3>
+                <div className='flex items-center gap-2 text-sm text-primary-600'>
+                  <span>Bookings vs Average Rate</span>
+                </div>
               </div>
 
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
-                <h4 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
-                  Average Daily Rate
-                </h4>
-                <p className='text-2xl md:text-3xl font-bold text-primary-800'>
-                  ₦22k
-                </p>
-                <p className='text-xs md:text-sm text-accent-green-600'>
-                  ↑ 5% from last month
-                </p>
-              </div>
-
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
-                <h4 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
-                  Guest Rating
-                </h4>
-                <p className='text-2xl md:text-3xl font-bold text-primary-800'>
-                  4.8
-                </p>
-                <p className='text-xs md:text-sm text-primary-600'>
-                  Based on 124 reviews
-                </p>
+              <div className='h-64 sm:h-80'>
+                <ResponsiveContainer width='100%' height='100%'>
+                  <ComposedChart data={revenueData}>
+                    <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+                    <XAxis
+                      dataKey='month'
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      yAxisId='left'
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <YAxis
+                      yAxisId='right'
+                      orientation='right'
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
+                    <Legend />
+                    <Bar
+                      yAxisId='left'
+                      dataKey='bookings'
+                      fill={chartColors.primary}
+                      radius={[4, 4, 0, 0]}
+                      name='Bookings'
+                    />
+                    <Line
+                      yAxisId='right'
+                      type='monotone'
+                      dataKey='avgRate'
+                      stroke={chartColors.accent}
+                      strokeWidth={3}
+                      name='Avg Rate (₦)'
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
