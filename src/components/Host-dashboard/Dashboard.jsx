@@ -32,6 +32,8 @@ import {
   FaChevronDown,
   FaGlobe,
   FaArrowUp,
+  FaChartArea,
+  FaChartBar,
 } from 'react-icons/fa'
 import {
   HiHome,
@@ -171,6 +173,7 @@ CurrencySelector.propTypes = {
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview')
   const [currentStep, setCurrentStep] = useState(1)
+  const [chartType, setChartType] = useState('area') // 'area' or 'bar'
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -1294,96 +1297,170 @@ const Dashboard = () => {
                 <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2 sm:mb-0'>
                   Revenue Overview
                 </h3>
-                <div className='flex items-center gap-4 text-sm'>
-                  <div className='flex items-center gap-2'>
-                    <div className='w-3 h-3 bg-blue-500 rounded-full'></div>
-                    <span className='text-primary-600'>Revenue</span>
-                  </div>
-                  <div className='flex items-center gap-2'>
-                    <div className='w-3 h-3 bg-green-500 rounded-full'></div>
-                    <span className='text-primary-600'>Bookings</span>
+
+                {/* Chart Type Toggle */}
+                <div className='flex items-center gap-2'>
+                  <div className='flex items-center bg-primary-50 p-1 rounded-lg border border-primary-200'>
+                    <button
+                      onClick={() => setChartType('area')}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        chartType === 'area'
+                          ? 'bg-primary-500 text-white shadow-sm'
+                          : 'text-primary-600 hover:bg-primary-100'
+                      }`}
+                    >
+                      <FaChartArea className='text-sm' />
+                      Trends
+                    </button>
+                    <button
+                      onClick={() => setChartType('bar')}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                        chartType === 'bar'
+                          ? 'bg-primary-500 text-white shadow-sm'
+                          : 'text-primary-600 hover:bg-primary-100'
+                      }`}
+                    >
+                      <FaChartBar className='text-sm' />
+                      Performance
+                    </button>
                   </div>
                 </div>
               </div>
 
+              {/* Dynamic Chart Legend */}
+              <div className='flex items-center gap-4 text-sm mb-4'>
+                {chartType === 'area' ? (
+                  <>
+                    <div className='flex items-center gap-2'>
+                      <div className='w-3 h-3 bg-blue-500 rounded-full'></div>
+                      <span className='text-primary-600'>Revenue</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className='flex items-center gap-2'>
+                      <div className='w-3 h-3 bg-blue-500 rounded-full'></div>
+                      <span className='text-primary-600'>Bookings</span>
+                    </div>
+                    <div className='flex items-center gap-2'>
+                      <div className='w-3 h-3 bg-amber-500 rounded-full'></div>
+                      <span className='text-primary-600'>Avg Rate</span>
+                    </div>
+                  </>
+                )}
+              </div>
+
               <div className='h-64 sm:h-80 md:h-96'>
                 <ResponsiveContainer width='100%' height='100%'>
-                  <AreaChart data={revenueData}>
-                    <defs>
-                      <linearGradient
-                        id='revenueGradient'
-                        x1='0'
-                        y1='0'
-                        x2='0'
-                        y2='1'
-                      >
-                        <stop
-                          offset='5%'
-                          stopColor={chartColors.primary}
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset='95%'
-                          stopColor={chartColors.primary}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                      <linearGradient
-                        id='bookingsGradient'
-                        x1='0'
-                        y1='0'
-                        x2='0'
-                        y2='1'
-                      >
-                        <stop
-                          offset='5%'
-                          stopColor={chartColors.secondary}
-                          stopOpacity={0.3}
-                        />
-                        <stop
-                          offset='95%'
-                          stopColor={chartColors.secondary}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
-                    <XAxis
-                      dataKey='month'
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                      }}
-                      labelStyle={{ color: '#374151', fontWeight: 'bold' }}
-                    />
-                    <Area
-                      type='monotone'
-                      dataKey='revenue'
-                      stroke={chartColors.primary}
-                      strokeWidth={2}
-                      fill='url(#revenueGradient)'
-                    />
-                    <Area
-                      type='monotone'
-                      dataKey='bookings'
-                      stroke={chartColors.secondary}
-                      strokeWidth={2}
-                      fill='url(#bookingsGradient)'
-                      yAxisId='bookings'
-                    />
-                  </AreaChart>
+                  {chartType === 'area' ? (
+                    <AreaChart data={revenueData}>
+                      <defs>
+                        <linearGradient
+                          id='revenueGradient'
+                          x1='0'
+                          y1='0'
+                          x2='0'
+                          y2='1'
+                        >
+                          <stop
+                            offset='5%'
+                            stopColor={chartColors.primary}
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset='95%'
+                            stopColor={chartColors.primary}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+                      <XAxis
+                        dataKey='month'
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        }}
+                        formatter={(value) => [
+                          `₦${value.toLocaleString()}`,
+                          'Revenue',
+                        ]}
+                      />
+                      <Area
+                        type='monotone'
+                        dataKey='revenue'
+                        stroke={chartColors.primary}
+                        strokeWidth={3}
+                        fill='url(#revenueGradient)'
+                        name='revenue'
+                      />
+                    </AreaChart>
+                  ) : (
+                    <ComposedChart data={revenueData}>
+                      <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
+                      <XAxis
+                        dataKey='month'
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        yAxisId='left'
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        yAxisId='right'
+                        orientation='right'
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                        }}
+                        formatter={(value, name) => [
+                          name === 'bookings'
+                            ? value
+                            : `₦${value.toLocaleString()}`,
+                          name === 'bookings' ? 'Bookings' : 'Avg Rate',
+                        ]}
+                      />
+                      <Legend />
+                      <Bar
+                        yAxisId='left'
+                        dataKey='bookings'
+                        fill={chartColors.primary}
+                        radius={[4, 4, 0, 0]}
+                        name='Bookings'
+                      />
+                      <Line
+                        yAxisId='right'
+                        type='monotone'
+                        dataKey='avgRate'
+                        stroke={chartColors.accent}
+                        strokeWidth={3}
+                        name='Avg Rate'
+                      />
+                    </ComposedChart>
+                  )}
                 </ResponsiveContainer>
               </div>
             </div>
@@ -1561,69 +1638,6 @@ const Dashboard = () => {
                     (124 reviews)
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {/* Monthly Performance Bar Chart */}
-            <div className='bg-white p-4 sm:p-6 md:p-8 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
-              <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6'>
-                <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2 sm:mb-0'>
-                  Monthly Performance
-                </h3>
-                <div className='flex items-center gap-2 text-sm text-primary-600'>
-                  <span>Bookings vs Average Rate</span>
-                </div>
-              </div>
-
-              <div className='h-64 sm:h-80'>
-                <ResponsiveContainer width='100%' height='100%'>
-                  <ComposedChart data={revenueData}>
-                    <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
-                    <XAxis
-                      dataKey='month'
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      yAxisId='left'
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      yAxisId='right'
-                      orientation='right'
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-                      }}
-                    />
-                    <Legend />
-                    <Bar
-                      yAxisId='left'
-                      dataKey='bookings'
-                      fill={chartColors.primary}
-                      radius={[4, 4, 0, 0]}
-                      name='Bookings'
-                    />
-                    <Line
-                      yAxisId='right'
-                      type='monotone'
-                      dataKey='avgRate'
-                      stroke={chartColors.accent}
-                      strokeWidth={3}
-                      name='Avg Rate (₦)'
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
               </div>
             </div>
           </div>

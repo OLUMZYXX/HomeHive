@@ -141,8 +141,8 @@ const Createacct = () => {
           <div className='grid lg:grid-cols-1 gap-8 items-center'>
             {/* Sign Up Card */}
             <div className='w-full max-w-2xl mx-auto'>
-              {/* Mobile Logo */}
-              <div className='text-center mb-8'>
+              {/* Mobile Logo - Hidden on mobile, show on larger screens */}
+              <div className='hidden lg:block text-center mb-8'>
                 <div
                   className='flex items-center justify-center gap-4 mb-4 cursor-pointer group'
                   onClick={handleHomeNavigation}

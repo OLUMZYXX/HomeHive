@@ -130,7 +130,7 @@ const Hostlogin = () => {
               <div className='space-y-6'>
                 {/* Logo */}
                 <div
-                  className='flex items-center justify-center gap-4 mb-8 cursor-pointer group'
+                  className='hidden lg:flex items-center justify-center gap-4 mb-8 cursor-pointer group'
                   onClick={handleHomeNavigation}
                 >
                   <div className='w-20 h-20 bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
@@ -205,8 +205,8 @@ const Hostlogin = () => {
 
             {/* Right Side - Login Form */}
             <div className='w-full max-w-md mx-auto lg:mx-0'>
-              {/* Mobile Logo - Better Text Sizing */}
-              <div className='lg:hidden text-center mb-6 md:mb-8'>
+              {/* Mobile Logo - Hidden on mobile, show on larger screens */}
+              <div className='hidden lg:block text-center mb-6 md:mb-8'>
                 <div
                   className='flex flex-col items-center gap-3 mb-4 cursor-pointer group'
                   onClick={handleHomeNavigation}
