@@ -7,15 +7,43 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+out/
 *.local
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+.nyc_output/
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components/
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
-.idea
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
 *.suo
@@ -24,36 +52,51 @@ Thumbs.db
 *.sln
 *.sw?
 
-# Environment files (keep examples untracked exception below)
+# Environment files - CRITICAL: Never commit these!
 .env
 .env.*
 .env.local
+.env.development
 .env.development.local
+.env.test
 .env.test.local
+.env.production
 .env.production.local
 !.env.example
 
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
 # Vite/Tooling caches
-.vite
+.vite/
 .cache/
 .parcel-cache/
+.rollup.cache/
 
-# Coverage outputs
-coverage/
-.nyc_output/
+# Webpack bundle analyzer
+bundle-analyzer-report.html
+
+# TypeScript cache
+*.tsbuildinfo
 
 # Firebase (local/emulator logs & service creds)
 .firebase/
 firebase-debug.log
 firestore-debug.log
+ui-debug.log
 storage-debug.log
 firebase-service-account*.json
+.firebaserc
 
 # Deployment/platform local state
 .vercel/
+.netlify/
 .netlify/state.json
 
-# Key/cert files
+# Key/cert files - CRITICAL: Never commit these!
 *.pem
 *.key
 *.p12
@@ -61,11 +104,57 @@ firebase-service-account*.json
 *.crt
 *.der
 *.pfx
+*.p8
 
-# Misc
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
 tmp/
+temp/
+.tmp/
 
-# Documentation (if you want to keep README files private)
-README.md
-README*.md
-ANIMATION_GUIDE.md
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Lock files (uncomment if you don't want to commit them)
+package-lock.json
+yarn.lock
+
+# Documentation with sensitive info
+FIREBASE_SETUP.md
+JWT_API_SETUP.md
+
+# Config files that might contain secrets
+config.json
+secrets.json
+credentials.json
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# IDE files
+.vscode/settings.json
+*.sublime-project
+*.sublime-workspace
+
+# Test coverage
+coverage/
+lcov.info
+
+# Storybook build outputs
+storybook-static/
+
+# Sentry Config File
+.sentryclirc
