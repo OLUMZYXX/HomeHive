@@ -329,7 +329,7 @@ const Dashboard = () => {
               <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What type of property do you have?
               </h3>
-              <div className='grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-4'>
                 {propertyTypes.map((type) => (
                   <button
                     key={type.id}
@@ -339,27 +339,27 @@ const Dashboard = () => {
                         propertyType: type.id,
                       }))
                     }
-                    className={`p-4 md:p-6 border-2 rounded-xl md:rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
+                    className={`p-4 sm:p-5 md:p-6 border-2 rounded-xl md:rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
                       formData.propertyType === type.id
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-primary-200 bg-white hover:border-primary-300'
                     }`}
                   >
-                    <div className='flex items-center gap-3 md:gap-4'>
+                    <div className='flex items-center gap-3 sm:gap-4 md:gap-4'>
                       <div
-                        className={`p-2 md:p-3 rounded-xl ${
+                        className={`p-3 sm:p-3 md:p-3 rounded-xl ${
                           formData.propertyType === type.id
                             ? 'bg-primary-500 text-white'
                             : 'bg-primary-100 text-primary-600'
                         }`}
                       >
-                        <type.icon className='text-2xl md:text-3xl' />
+                        <type.icon className='text-2xl sm:text-3xl md:text-3xl' />
                       </div>
                       <div>
-                        <h4 className='font-bold text-primary-800 text-base md:text-lg'>
+                        <h4 className='font-bold text-primary-800 text-base sm:text-lg md:text-lg'>
                           {type.name}
                         </h4>
-                        <p className='text-primary-600 text-sm'>
+                        <p className='text-primary-600 text-sm sm:text-sm'>
                           {type.description}
                         </p>
                       </div>
@@ -380,21 +380,21 @@ const Dashboard = () => {
                     onClick={() =>
                       setFormData((prev) => ({ ...prev, placeType: place.id }))
                     }
-                    className={`p-4 md:p-6 border-2 rounded-xl md:rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
+                    className={`p-4 sm:p-5 md:p-6 border-2 rounded-xl md:rounded-2xl transition-all duration-300 text-left hover:shadow-medium ${
                       formData.placeType === place.id
                         ? 'border-primary-500 bg-primary-50'
                         : 'border-primary-200 bg-white hover:border-primary-300'
                     }`}
                   >
-                    <div className='flex items-center gap-3 md:gap-4'>
+                    <div className='flex items-center gap-3 sm:gap-4 md:gap-4'>
                       <div
-                        className={`p-2 md:p-3 rounded-xl ${
+                        className={`p-3 sm:p-3 md:p-3 rounded-xl ${
                           formData.placeType === place.id
                             ? 'bg-primary-500 text-white'
                             : 'bg-primary-100 text-primary-600'
                         }`}
                       >
-                        <place.icon className='text-2xl md:text-3xl' />
+                        <place.icon className='text-2xl sm:text-3xl md:text-3xl' />
                       </div>
                       <div>
                         <h4 className='font-bold text-primary-800 text-base md:text-lg'>
@@ -424,12 +424,12 @@ const Dashboard = () => {
                           bedrooms: Math.max(1, prev.bedrooms - 1),
                         }))
                       }
-                      className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                      className='p-3 sm:p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50 min-w-[44px] min-h-[44px] flex items-center justify-center'
                     >
-                      <FaMinus className='text-primary-600 text-lg' />
+                      <FaMinus className='text-primary-600 text-base sm:text-lg' />
                     </button>
                   </ButtonTooltip>
-                  <span className='text-xl md:text-2xl font-bold text-primary-800 w-8 text-center'>
+                  <span className='text-lg sm:text-xl md:text-2xl font-bold text-primary-800 w-8 sm:w-8 text-center'>
                     {formData.bedrooms}
                   </span>
                   <ButtonTooltip content='Increase bedrooms'>
@@ -440,9 +440,9 @@ const Dashboard = () => {
                           bedrooms: prev.bedrooms + 1,
                         }))
                       }
-                      className='p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50'
+                      className='p-3 sm:p-3 md:p-2 border border-primary-300 rounded-full hover:bg-primary-50 min-w-[44px] min-h-[44px] flex items-center justify-center'
                     >
-                      <FaPlus className='text-primary-600 text-lg' />
+                      <FaPlus className='text-primary-600 text-base sm:text-lg' />
                     </button>
                   </ButtonTooltip>
                 </div>
@@ -649,14 +649,14 @@ const Dashboard = () => {
                   <h4 className='text-base md:text-lg font-bold text-primary-700 mb-3 md:mb-4'>
                     {category} amenities
                   </h4>
-                  <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4'>
+                  <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-4'>
                     {amenities
                       .filter((amenity) => amenity.category === category)
                       .map((amenity) => (
                         <button
                           key={amenity.id}
                           onClick={() => handleAmenityToggle(amenity.id)}
-                          className={`p-3 md:p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-medium ${
+                          className={`p-3 sm:p-4 md:p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-medium ${
                             formData.amenities.includes(amenity.id)
                               ? 'border-primary-500 bg-primary-50'
                               : 'border-primary-200 bg-white hover:border-primary-300'
@@ -664,19 +664,19 @@ const Dashboard = () => {
                         >
                           <div className='flex flex-col items-center text-center'>
                             <div
-                              className={`p-2 md:p-3 rounded-xl mb-2 ${
+                              className={`p-2 sm:p-3 md:p-3 rounded-xl mb-2 ${
                                 formData.amenities.includes(amenity.id)
                                   ? 'bg-primary-500 text-white'
                                   : 'bg-primary-100 text-primary-600'
                               }`}
                             >
-                              <amenity.icon className='text-xl md:text-2xl' />
+                              <amenity.icon className='text-xl sm:text-2xl md:text-2xl' />
                             </div>
-                            <span className='text-xs md:text-sm font-medium text-primary-800'>
+                            <span className='text-xs sm:text-sm md:text-sm font-medium text-primary-800 leading-tight'>
                               {amenity.name}
                             </span>
                             {formData.amenities.includes(amenity.id) && (
-                              <FaCheck className='text-primary-500 mt-1 text-base' />
+                              <FaCheck className='text-primary-500 mt-1 text-sm sm:text-base' />
                             )}
                           </div>
                         </button>
@@ -955,78 +955,78 @@ const Dashboard = () => {
     switch (activeTab) {
       case 'overview':
         return (
-          <div className='space-y-6 md:space-y-8'>
-            <div className='bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl md:rounded-2xl p-6 md:p-8 text-white'>
-              <h2 className='text-2xl md:text-3xl font-bold mb-3 md:mb-4'>
+          <div className='space-y-4 sm:space-y-6 md:space-y-8'>
+            <div className='bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl md:rounded-2xl p-4 sm:p-6 md:p-8 text-white'>
+              <h2 className='text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 md:mb-4'>
                 Welcome back, Host!
               </h2>
-              <p className='text-lg md:text-xl opacity-90 mb-4 md:mb-6'>
+              <p className='text-base sm:text-lg md:text-xl opacity-90 mb-3 sm:mb-4 md:mb-6'>
                 Ready to share your space with the world?
               </p>
               <ButtonTooltip content='Start creating your first property listing'>
                 <button
                   onClick={() => setActiveTab('create')}
-                  className='bg-white text-primary-800 px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-sm md:text-base'
+                  className='bg-white text-primary-800 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-sm sm:text-base md:text-base'
                 >
                   Create New Listing
                 </button>
               </ButtonTooltip>
             </div>
 
-            <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6'>
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6'>
+              <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
+                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
                       Total Listings
                     </p>
-                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
                       3
                     </p>
                   </div>
-                  <FaHome className='text-xl md:text-2xl text-primary-400' />
+                  <FaHome className='text-lg sm:text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
 
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
+                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
                       Total Bookings
                     </p>
-                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
                       24
                     </p>
                   </div>
-                  <FaCalendarAlt className='text-xl md:text-2xl text-primary-400' />
+                  <FaCalendarAlt className='text-lg sm:text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
 
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
+                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
                       Monthly Earnings
                     </p>
-                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
                       ₦125k
                     </p>
                   </div>
-                  <FaDollarSign className='text-xl md:text-2xl text-primary-400' />
+                  <FaDollarSign className='text-lg sm:text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
 
-              <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs md:text-sm font-medium'>
+                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
                       Rating
                     </p>
-                    <p className='text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
                       4.8
                     </p>
                   </div>
-                  <FaCheck className='text-xl md:text-2xl text-primary-400' />
+                  <FaCheck className='text-lg sm:text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
             </div>
@@ -1342,30 +1342,32 @@ const Dashboard = () => {
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100'>
-      <div className='container mx-auto px-4 py-6 md:py-8 max-w-[1400px]'>
-        <div className='mb-6 md:mb-8'>
-          <h1 className='text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 md:mb-2'>
+      <div className='container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[1400px]'>
+        <div className='mb-4 sm:mb-6 md:mb-8'>
+          <h1 className='text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 sm:mb-1 md:mb-2'>
             Host Dashboard
           </h1>
-          <p className='text-primary-600 text-sm md:text-lg'>
+          <p className='text-primary-600 text-sm sm:text-base md:text-lg'>
             Manage your properties and grow your hosting business
           </p>
         </div>
 
-        <div className='bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft border border-primary-200 p-1 md:p-2 mb-6 md:mb-8'>
-          <div className='flex space-x-1 md:space-x-2 overflow-x-auto scrollbar-hide'>
+        <div className='bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft border border-primary-200 p-1 sm:p-1.5 md:p-2 mb-6 md:mb-8'>
+          <div className='flex space-x-1 sm:space-x-1.5 md:space-x-2 overflow-x-auto scrollbar-hide'>
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 md:gap-3 px-3 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm md:text-base ${
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-xs sm:text-sm md:text-base min-w-0 flex-1 sm:flex-none ${
                   activeTab === tab.id
                     ? 'bg-primary-800 text-white shadow-medium'
                     : 'text-primary-600 hover:bg-primary-50'
                 }`}
               >
-                <tab.icon className='text-lg md:text-xl' />
-                <span className='hidden sm:inline'>{tab.name}</span>
+                <tab.icon className='text-xl sm:text-2xl md:text-xl flex-shrink-0' />
+                <span className='text-xs sm:text-sm md:inline leading-tight sm:leading-normal'>
+                  {tab.name}
+                </span>
               </button>
             ))}
           </div>

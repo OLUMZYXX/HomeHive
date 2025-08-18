@@ -235,36 +235,36 @@ const Hostlogin = () => {
                 </div>
               </div>
 
-              {/* Login Card - Balanced Form Sizing */}
-              <div className='bg-neutral-25/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-strong border border-neutral-200/20 p-6 md:p-8 relative'>
-                {/* Card Header - Better Text Sizing */}
-                <div className='text-center mb-6 md:mb-8'>
-                  <div className='inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-accent-blue-50 border border-primary-200 rounded-full px-4 py-2 md:px-5 md:py-2.5 mb-4 md:mb-5'>
-                    <HiHome className='text-primary-600 text-sm md:text-base' />
-                    <span className='text-sm md:text-base font-medium text-primary-700'>
+              {/* Login Card - Enhanced Mobile Layout (Smaller to Match Signup) */}
+              <div className='bg-neutral-25/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-strong border border-neutral-200/20 p-4 sm:p-6 lg:p-8 relative'>
+                {/* Card Header - Smaller Text Sizing */}
+                <div className='text-center mb-4 sm:mb-6 lg:mb-8'>
+                  <div className='inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-accent-blue-50 border border-primary-200 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 md:px-5 md:py-2.5 mb-3 sm:mb-4 md:mb-5'>
+                    <HiHome className='text-primary-600 text-xs sm:text-sm md:text-base' />
+                    <span className='text-xs sm:text-sm md:text-base font-medium text-primary-700'>
                       Host Login
                     </span>
                   </div>
-                  <h2 className='text-2xl md:text-3xl font-NotoSans font-bold text-primary-800 mb-3 lg:block hidden'>
+                  <h2 className='text-xl sm:text-2xl md:text-3xl font-NotoSans font-bold text-primary-800 mb-1.5 sm:mb-3 lg:block hidden'>
                     Welcome Back
                   </h2>
-                  <p className='text-primary-600 text-base md:text-lg lg:block hidden'>
+                  <p className='text-sm sm:text-base md:text-lg text-primary-600 lg:block hidden'>
                     Sign in to your host dashboard
                   </p>
                 </div>
 
-                {/* Login Form - Balanced Form and Text Sizes */}
+                {/* Login Form - Smaller Form Sizes to Match Signup */}
                 <form
                   onSubmit={handleSubmit}
-                  className='space-y-5 md:space-y-6'
+                  className='space-y-3 sm:space-y-4 lg:space-y-6'
                 >
-                  {/* Email Field - Better Proportions */}
-                  <div className='space-y-2'>
+                  {/* Email Field - Smaller Proportions */}
+                  <div className='space-y-1.5 sm:space-y-2'>
                     <label
                       htmlFor='email'
-                      className='text-base md:text-lg font-semibold text-primary-700 flex items-center gap-2'
+                      className='text-sm sm:text-base md:text-lg font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
                     >
-                      <HiMail className='text-primary-500 text-base md:text-lg' />
+                      <HiMail className='text-primary-500 text-sm sm:text-base md:text-lg' />
                       Email Address
                     </label>
                     <input
@@ -272,7 +272,7 @@ const Hostlogin = () => {
                       id='email'
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full px-4 py-3.5 md:py-4 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 text-base md:text-lg ${
+                      className={`w-full px-3 py-3 sm:px-4 sm:py-3.5 md:py-4 text-sm sm:text-base md:text-lg rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
                         errors.email
                           ? 'border-error-300 focus:border-error-500 bg-error-50/50'
                           : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
@@ -280,24 +280,24 @@ const Hostlogin = () => {
                       placeholder='Enter your email address'
                       style={{
                         fontSize: '16px', // Prevents zoom on iOS
-                        minHeight: '50px', // Better touch target
+                        minHeight: '44px', // Smaller touch target to match signup
                       }}
                     />
                     {errors.email && (
-                      <p className='text-error-600 text-sm md:text-base flex items-center gap-2 mt-2'>
-                        <span className='text-sm'>⚠️</span>
+                      <p className='text-error-600 text-xs sm:text-sm md:text-base flex items-center gap-1.5 sm:gap-2 mt-1'>
+                        <span className='text-xs'>⚠️</span>
                         {errors.email}
                       </p>
                     )}
                   </div>
 
-                  {/* Password Field - Better Proportions */}
-                  <div className='space-y-2'>
+                  {/* Password Field - Smaller Proportions */}
+                  <div className='space-y-1.5 sm:space-y-2'>
                     <label
                       htmlFor='password'
-                      className='text-base md:text-lg font-semibold text-primary-700 flex items-center gap-2'
+                      className='text-sm sm:text-base md:text-lg font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
                     >
-                      <HiLockClosed className='text-primary-500 text-base md:text-lg' />
+                      <HiLockClosed className='text-primary-500 text-sm sm:text-base md:text-lg' />
                       Password
                     </label>
                     <div className='relative'>
@@ -306,7 +306,7 @@ const Hostlogin = () => {
                         id='password'
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className={`w-full px-4 py-3.5 md:py-4 pr-12 rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 text-base md:text-lg ${
+                        className={`w-full px-3 py-3 sm:px-4 sm:py-3.5 md:py-4 pr-10 sm:pr-12 text-sm sm:text-base md:text-lg rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
                           errors.password
                             ? 'border-error-300 focus:border-error-500 bg-error-50/50'
                             : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
@@ -314,32 +314,32 @@ const Hostlogin = () => {
                         placeholder='Enter your password'
                         style={{
                           fontSize: '16px', // Prevents zoom on iOS
-                          minHeight: '50px', // Better touch target
+                          minHeight: '44px', // Smaller touch target to match signup
                         }}
                       />
                       <button
                         type='button'
                         onClick={() => setShowPassword(!showPassword)}
-                        className='absolute right-4 top-1/2 transform -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors duration-200 p-1'
+                        className='absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors duration-200 p-1'
                       >
                         {showPassword ? (
-                          <FaEyeSlash className='text-xl md:text-2xl' />
+                          <FaEyeSlash className='text-base sm:text-xl md:text-2xl' />
                         ) : (
-                          <FaEye className='text-xl md:text-2xl' />
+                          <FaEye className='text-base sm:text-xl md:text-2xl' />
                         )}
                       </button>
                     </div>
                     {errors.password && (
-                      <p className='text-error-600 text-sm md:text-base flex items-center gap-2 mt-2'>
-                        <span className='text-sm'>⚠️</span>
+                      <p className='text-error-600 text-xs sm:text-sm md:text-base flex items-center gap-1.5 sm:gap-2 mt-1'>
+                        <span className='text-xs'>⚠️</span>
                         {errors.password}
                       </p>
                     )}
                   </div>
 
-                  {/* Remember Me & Forgot Password - Fixed Flexbox Layout */}
-                  <div className='flex items-center justify-between pt-3 gap-4'>
-                    <label className='flex items-center gap-3 cursor-pointer group flex-shrink-0'>
+                  {/* Remember Me & Forgot Password - Smaller Sizing */}
+                  <div className='flex items-center justify-between pt-2 sm:pt-3 gap-3 sm:gap-4'>
+                    <label className='flex items-center gap-2 sm:gap-3 cursor-pointer group flex-shrink-0'>
                       <div className='relative'>
                         <input
                           type='checkbox'
@@ -347,10 +347,10 @@ const Hostlogin = () => {
                           checked={rememberMe}
                           onChange={() => setRememberMe(!rememberMe)}
                         />
-                        <div className='w-5 h-5 border-2 border-primary-300 rounded peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all duration-200 flex items-center justify-center'>
+                        <div className='w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary-300 rounded peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all duration-200 flex items-center justify-center'>
                           {rememberMe && (
                             <svg
-                              className='w-3 h-3 text-white'
+                              className='w-2.5 h-2.5 sm:w-3 sm:h-3 text-white'
                               fill='currentColor'
                               viewBox='0 0 20 20'
                             >
@@ -363,65 +363,65 @@ const Hostlogin = () => {
                           )}
                         </div>
                       </div>
-                      <span className='text-base md:text-lg text-primary-600 group-hover:text-primary-800 transition-colors duration-200 font-medium whitespace-nowrap'>
+                      <span className='text-sm sm:text-base md:text-lg text-primary-600 group-hover:text-primary-800 transition-colors duration-200 font-medium whitespace-nowrap'>
                         Remember me
                       </span>
                     </label>
                     <button
                       type='button'
-                      className='text-base md:text-lg text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline flex-shrink-0'
+                      className='text-sm sm:text-base md:text-lg text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline flex-shrink-0'
                     >
                       Forgot Password?
                     </button>
                   </div>
 
-                  {/* Submit Button - Better Proportions */}
+                  {/* Submit Button - Smaller Proportions to Match Signup */}
                   <button
                     type='submit'
                     disabled={isLoading}
-                    className={`w-full py-4 md:py-5 rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden text-base md:text-lg ${
+                    className={`w-full py-3 sm:py-4 md:py-5 text-sm sm:text-base md:text-lg rounded-lg sm:rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden ${
                       isLoading
                         ? 'bg-neutral-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-primary-600 to-primary-800 hover:from-primary-700 hover:to-primary-900 hover:scale-[1.02] active:scale-[0.98] shadow-medium hover:shadow-strong'
                     }`}
                   >
                     <div
-                      className={`flex items-center justify-center gap-3 ${
+                      className={`flex items-center justify-center gap-2 sm:gap-3 ${
                         isLoading ? 'opacity-0' : 'opacity-100'
                       } transition-opacity duration-300`}
                     >
-                      <HiHome className='text-lg md:text-xl' />
+                      <HiHome className='text-base sm:text-lg md:text-xl' />
                       <span>Sign In to Dashboard</span>
                     </div>
                     {isLoading && (
                       <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='w-6 h-6 md:w-7 md:h-7 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
+                        <div className='w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
                       </div>
                     )}
                   </button>
 
-                  {/* Divider - Better Spacing */}
-                  <div className='relative my-7 md:my-8'>
+                  {/* Divider - Smaller Spacing */}
+                  <div className='relative my-5 sm:my-6 lg:my-8'>
                     <div className='absolute inset-0 flex items-center'>
                       <div className='w-full border-t border-primary-200'></div>
                     </div>
-                    <div className='relative flex justify-center text-base md:text-lg'>
-                      <span className='px-4 bg-neutral-25 text-primary-500 font-medium'>
+                    <div className='relative flex justify-center text-xs sm:text-sm md:text-base lg:text-lg'>
+                      <span className='px-3 sm:px-4 bg-neutral-25 text-primary-500 font-medium'>
                         Or continue with
                       </span>
                     </div>
                   </div>
 
-                  {/* Google Login - Better Button Size */}
+                  {/* Google Login - Smaller Button Size to Match Signup */}
                   <button
                     type='button'
                     onClick={handleGoogleLogin}
                     disabled={isGoogleLoading}
-                    className='w-full py-4 md:py-5 px-4 border-2 border-primary-200 hover:border-primary-300 rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium text-base md:text-lg'
+                    className='w-full py-3 sm:py-4 md:py-5 px-3 sm:px-4 text-sm sm:text-base md:text-lg border-2 border-primary-200 hover:border-primary-300 rounded-lg sm:rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium'
                   >
                     {isGoogleLoading ? (
                       <>
-                        <div className='w-5 h-5 md:w-6 md:h-6 border-2 border-slate-600 border-t-transparent rounded-full animate-spin'></div>
+                        <div className='w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 border-2 border-slate-600 border-t-transparent rounded-full animate-spin'></div>
                         <span>Connecting...</span>
                       </>
                     ) : (
@@ -429,7 +429,7 @@ const Hostlogin = () => {
                         <img
                           src='https://www.google.com/favicon.ico'
                           alt='Google'
-                          className='w-5 h-5 md:w-6 md:h-6'
+                          className='w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6'
                         />
                         <span>Sign in with Google</span>
                       </>
@@ -437,33 +437,33 @@ const Hostlogin = () => {
                   </button>
                 </form>
 
-                {/* Sign Up Link - Better Text Size */}
-                <div className='mt-7 md:mt-8 text-center p-5 md:p-6 bg-primary-50/80 rounded-2xl border border-primary-100'>
-                  <p className='text-primary-600 mb-3 text-base md:text-lg'>
+                {/* Sign Up Link - Smaller Text Size to Match Signup */}
+                <div className='mt-5 sm:mt-6 lg:mt-8 text-center p-4 sm:p-5 md:p-6 bg-primary-50/80 rounded-xl sm:rounded-2xl border border-primary-100'>
+                  <p className='text-xs sm:text-sm md:text-base lg:text-lg text-primary-600 mb-2 sm:mb-3'>
                     New to hosting with us?
                   </p>
                   <button
                     onClick={() => navigate('/host-signup')}
-                    className='text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline text-base md:text-lg'
+                    className='text-sm sm:text-base md:text-lg text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline'
                   >
                     Create your host account →
                   </button>
                 </div>
 
-                {/* Success/Error Messages */}
+                {/* Success/Error Messages - Smaller Sizing */}
                 {errors.submit && (
-                  <div className='mt-4 p-4 bg-error-50 border border-error-200 rounded-xl'>
-                    <p className='text-error-700 text-sm flex items-center gap-2'>
-                      <span className='text-lg'>❌</span>
+                  <div className='mt-3 sm:mt-4 p-3 sm:p-4 bg-error-50 border border-error-200 rounded-lg sm:rounded-xl'>
+                    <p className='text-error-700 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2'>
+                      <span className='text-base sm:text-lg'>❌</span>
                       {errors.submit}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Footer Links - Better Text Size */}
-              <div className='mt-6 md:mt-8 text-center space-y-3 md:space-y-4'>
-                <div className='flex flex-wrap items-center justify-center gap-4 md:gap-6 text-sm md:text-base text-primary-500'>
+              {/* Footer Links - Smaller Text Size */}
+              <div className='mt-4 sm:mt-6 md:mt-8 text-center space-y-2 sm:space-y-3 md:space-y-4'>
+                <div className='flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm md:text-base text-primary-500'>
                   <a
                     href='/privacy'
                     className='hover:text-primary-700 transition-colors duration-200'
