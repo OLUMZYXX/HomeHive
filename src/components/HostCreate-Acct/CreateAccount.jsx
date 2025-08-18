@@ -533,7 +533,7 @@ const Createacct = () => {
                   </a>
                 </div>
                 <p className='text-xs text-primary-400'>
-                  © 2024 Homehive. All rights reserved.
+                  © {new Date().getFullYear()} Homehive. All rights reserved.
                 </p>
               </div>
             </div>

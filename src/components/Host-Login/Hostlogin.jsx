@@ -486,7 +486,7 @@ const Hostlogin = () => {
                   </a>
                 </div>
                 <p className='text-xs md:text-sm text-primary-400'>
-                  © 2024 Homehive. All rights reserved.
+                  © {new Date().getFullYear()} Homehive. All rights reserved.
                 </p>
               </div>
             </div>
