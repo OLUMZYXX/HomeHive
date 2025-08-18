@@ -326,7 +326,7 @@ const Dashboard = () => {
         return (
           <div className='space-y-6 md:space-y-8'>
             <div>
-              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
+              <h3 className='text-2xl md:text-3xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What type of property do you have?
               </h3>
               <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:gap-4'>
@@ -356,10 +356,10 @@ const Dashboard = () => {
                         <type.icon className='text-2xl sm:text-3xl md:text-3xl' />
                       </div>
                       <div>
-                        <h4 className='font-bold text-primary-800 text-base sm:text-lg md:text-lg'>
+                        <h4 className='font-bold text-primary-800 text-lg sm:text-xl md:text-xl'>
                           {type.name}
                         </h4>
-                        <p className='text-primary-600 text-sm sm:text-sm'>
+                        <p className='text-primary-600 text-base sm:text-base md:text-base'>
                           {type.description}
                         </p>
                       </div>
@@ -370,7 +370,7 @@ const Dashboard = () => {
             </div>
 
             <div>
-              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
+              <h3 className='text-2xl md:text-3xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What will guests have access to?
               </h3>
               <div className='grid grid-cols-1 gap-3 md:gap-4'>
@@ -397,10 +397,10 @@ const Dashboard = () => {
                         <place.icon className='text-2xl sm:text-3xl md:text-3xl' />
                       </div>
                       <div>
-                        <h4 className='font-bold text-primary-800 text-base md:text-lg'>
+                        <h4 className='font-bold text-primary-800 text-lg md:text-xl'>
                           {place.name}
                         </h4>
-                        <p className='text-primary-600 text-sm'>
+                        <p className='text-primary-600 text-base md:text-base'>
                           {place.description}
                         </p>
                       </div>
@@ -412,7 +412,7 @@ const Dashboard = () => {
 
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6'>
               <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200'>
-                <label className='block text-sm font-bold text-primary-700 mb-2'>
+                <label className='block text-base md:text-lg font-bold text-primary-700 mb-2'>
                   Bedrooms
                 </label>
                 <div className='flex items-center gap-4'>
@@ -640,13 +640,13 @@ const Dashboard = () => {
             </div>
 
             <div>
-              <h3 className='text-xl md:text-2xl font-bold text-primary-800 mb-4 md:mb-6'>
+              <h3 className='text-2xl md:text-3xl font-bold text-primary-800 mb-4 md:mb-6'>
                 What amenities do you offer?
               </h3>
 
               {['Popular', 'Standout', 'Safety', 'Unique'].map((category) => (
                 <div key={category} className='mb-6 md:mb-8'>
-                  <h4 className='text-base md:text-lg font-bold text-primary-700 mb-3 md:mb-4'>
+                  <h4 className='text-lg md:text-xl font-bold text-primary-700 mb-3 md:mb-4'>
                     {category} amenities
                   </h4>
                   <div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-4'>
@@ -672,11 +672,11 @@ const Dashboard = () => {
                             >
                               <amenity.icon className='text-xl sm:text-2xl md:text-2xl' />
                             </div>
-                            <span className='text-xs sm:text-sm md:text-sm font-medium text-primary-800 leading-tight'>
+                            <span className='text-sm sm:text-base md:text-base font-medium text-primary-800 leading-tight'>
                               {amenity.name}
                             </span>
                             {formData.amenities.includes(amenity.id) && (
-                              <FaCheck className='text-primary-500 mt-1 text-sm sm:text-base' />
+                              <FaCheck className='text-primary-500 mt-1 text-base sm:text-lg' />
                             )}
                           </div>
                         </button>
@@ -957,16 +957,16 @@ const Dashboard = () => {
         return (
           <div className='space-y-4 sm:space-y-6 md:space-y-8'>
             <div className='bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl md:rounded-2xl p-4 sm:p-6 md:p-8 text-white'>
-              <h2 className='text-xl sm:text-2xl md:text-3xl font-bold mb-2 sm:mb-3 md:mb-4'>
+              <h2 className='text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 md:mb-4'>
                 Welcome back, Host!
               </h2>
-              <p className='text-base sm:text-lg md:text-xl opacity-90 mb-3 sm:mb-4 md:mb-6'>
+              <p className='text-lg sm:text-xl md:text-2xl opacity-90 mb-3 sm:mb-4 md:mb-6'>
                 Ready to share your space with the world?
               </p>
               <ButtonTooltip content='Start creating your first property listing'>
                 <button
                   onClick={() => setActiveTab('create')}
-                  className='bg-white text-primary-800 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-sm sm:text-base md:text-base'
+                  className='bg-white text-primary-800 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-base sm:text-lg md:text-lg'
                 >
                   Create New Listing
                 </button>
@@ -977,10 +977,10 @@ const Dashboard = () => {
               <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
+                    <p className='text-primary-600 text-sm sm:text-base md:text-base font-medium'>
                       Total Listings
                     </p>
-                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
                       3
                     </p>
                   </div>
@@ -991,10 +991,10 @@ const Dashboard = () => {
               <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
+                    <p className='text-primary-600 text-sm sm:text-base md:text-base font-medium'>
                       Total Bookings
                     </p>
-                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
                       24
                     </p>
                   </div>
@@ -1005,10 +1005,10 @@ const Dashboard = () => {
               <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
+                    <p className='text-primary-600 text-sm sm:text-base md:text-base font-medium'>
                       Monthly Earnings
                     </p>
-                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
                       ₦125k
                     </p>
                   </div>
@@ -1019,10 +1019,10 @@ const Dashboard = () => {
               <div className='bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
                 <div className='flex items-center justify-between'>
                   <div>
-                    <p className='text-primary-600 text-xs sm:text-sm md:text-sm font-medium'>
+                    <p className='text-primary-600 text-sm sm:text-base md:text-base font-medium'>
                       Rating
                     </p>
-                    <p className='text-xl sm:text-2xl md:text-3xl font-bold text-primary-800'>
+                    <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
                       4.8
                     </p>
                   </div>
@@ -1037,12 +1037,12 @@ const Dashboard = () => {
         return (
           <div className='space-y-4 md:space-y-6'>
             <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
-              <h2 className='text-xl md:text-2xl font-bold text-primary-800'>
+              <h2 className='text-2xl md:text-3xl font-bold text-primary-800'>
                 My Listings
               </h2>
               <button
                 onClick={() => setActiveTab('create')}
-                className='bg-primary-800 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-sm md:text-base'
+                className='bg-primary-800 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-base md:text-lg'
               >
                 Add New Listing
               </button>
@@ -1344,10 +1344,10 @@ const Dashboard = () => {
     <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100'>
       <div className='container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[1400px]'>
         <div className='mb-4 sm:mb-6 md:mb-8'>
-          <h1 className='text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 sm:mb-1 md:mb-2'>
+          <h1 className='text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 sm:mb-1 md:mb-2'>
             Host Dashboard
           </h1>
-          <p className='text-primary-600 text-sm sm:text-base md:text-lg'>
+          <p className='text-primary-600 text-base sm:text-lg md:text-xl'>
             Manage your properties and grow your hosting business
           </p>
         </div>
@@ -1358,14 +1358,14 @@ const Dashboard = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-xs sm:text-sm md:text-base min-w-0 flex-1 sm:flex-none ${
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm sm:text-base md:text-lg min-w-0 flex-1 sm:flex-none ${
                   activeTab === tab.id
                     ? 'bg-primary-800 text-white shadow-medium'
                     : 'text-primary-600 hover:bg-primary-50'
                 }`}
               >
                 <tab.icon className='text-xl sm:text-2xl md:text-xl flex-shrink-0' />
-                <span className='text-xs sm:text-sm md:inline leading-tight sm:leading-normal'>
+                <span className='text-sm sm:text-base md:text-lg md:inline leading-tight sm:leading-normal'>
                   {tab.name}
                 </span>
               </button>
