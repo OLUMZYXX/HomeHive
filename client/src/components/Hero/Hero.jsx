@@ -1,7 +1,13 @@
 'use client'
+import { useState, useEffect, useCallback } from 'react'
 import heroimg from '../../assets/heroimg.png'
 import { useNavigate } from 'react-router-dom'
-import { HiArrowRight, HiLocationMarker, HiStar } from 'react-icons/hi'
+import {
+  HiArrowRight,
+  HiLocationMarker,
+  HiStar,
+  HiRefresh,
+} from 'react-icons/hi'
 import {
   ScrollReveal,
   StaggerContainer,
@@ -9,9 +15,99 @@ import {
   AnimatedButton,
   FloatingElement,
 } from '../common/AnimatedComponents'
+import { useAPI } from '../../contexts/APIContext'
 
 const Hero = () => {
   const navigate = useNavigate()
+  const { getPremiumImages } = useAPI()
+
+  // State for image rotation
+  const [currentImage, setCurrentImage] = useState(heroimg)
+  const [premiumImages, setPremiumImages] = useState([])
+  const [imageIndex, setImageIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [imageError, setImageError] = useState(false)
+
+  // Fetch premium images on component mount
+  const fetchPremiumImages = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      setImageError(false)
+
+      const response = await getPremiumImages()
+
+      if (
+        response &&
+        response.images &&
+        Array.isArray(response.images) &&
+        response.images.length > 0
+      ) {
+        // Filter valid images
+        const validImages = response.images.filter((img) => {
+          const imageUrl = img.imageUrl || img.url || img
+          return (
+            imageUrl && typeof imageUrl === 'string' && imageUrl.trim() !== ''
+          )
+        })
+
+        if (validImages.length > 0) {
+          setPremiumImages(validImages)
+          const firstImage = validImages[0]
+          setCurrentImage(firstImage.imageUrl || firstImage.url || firstImage)
+          setImageIndex(0)
+          console.log(`Loaded ${validImages.length} premium images`)
+          return
+        }
+      }
+
+      // No premium images available, keep default
+      console.log('No premium images available, using default')
+      setCurrentImage(heroimg)
+      setPremiumImages([])
+    } catch (error) {
+      console.error('Error fetching premium images:', error)
+      // Fallback to default image on error
+      setCurrentImage(heroimg)
+      setPremiumImages([])
+      setImageError(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [getPremiumImages])
+
+  // Retry fetching premium images
+  const retryFetchImages = useCallback(() => {
+    if (!isLoading) {
+      fetchPremiumImages()
+    }
+  }, [fetchPremiumImages, isLoading])
+
+  // Setup image rotation
+  useEffect(() => {
+    fetchPremiumImages()
+  }, [fetchPremiumImages])
+
+  // Auto-rotate images every 5 seconds
+  useEffect(() => {
+    if (premiumImages.length > 1) {
+      const interval = setInterval(() => {
+        setImageIndex((prevIndex) => {
+          const nextIndex = (prevIndex + 1) % premiumImages.length
+          const nextImage = premiumImages[nextIndex]
+          setCurrentImage(nextImage.imageUrl || nextImage.url || nextImage)
+          return nextIndex
+        })
+      }, 5000) // 5 seconds
+
+      return () => clearInterval(interval)
+    }
+  }, [premiumImages])
+
+  // Handle image load error
+  const handleImageError = useCallback(() => {
+    setImageError(true)
+    setCurrentImage(heroimg) // Fallback to default image
+  }, [])
 
   const handleExploreClick = () => {
     navigate('/signin')
@@ -154,15 +250,77 @@ const Hero = () => {
 
               {/* Image */}
               <div className='relative bg-white p-3 rounded-3xl shadow-strong'>
+                {isLoading && (
+                  <div className='absolute inset-0 flex items-center justify-center bg-white rounded-2xl z-10'>
+                    <div className='flex flex-col items-center space-y-4'>
+                      <div className='w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin'></div>
+                      <p className='text-sm text-primary-600'>
+                        Loading premium images...
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <img
-                  src={heroimg}
+                  src={currentImage}
                   alt='Beautiful accommodation showcasing comfort and luxury'
                   className='w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl object-cover transform group-hover:scale-105 transition-transform duration-700'
                   loading='eager'
                   decoding='async'
                   width={1024}
                   height={768}
+                  onError={handleImageError}
+                  style={{
+                    opacity: isLoading ? 0.3 : 1,
+                    transition: 'opacity 0.5s ease-in-out',
+                  }}
                 />
+
+                {/* Premium Badge with Refresh */}
+                {premiumImages.length > 0 && !imageError && (
+                  <ScrollReveal direction='scale' delay={0.8}>
+                    <div className='absolute top-4 right-4 flex items-center space-x-2'>
+                      <div className='bg-gradient-to-r from-amber-400 to-amber-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-medium'>
+                        ✨ Premium Host
+                      </div>
+                      <button
+                        onClick={retryFetchImages}
+                        disabled={isLoading}
+                        className='bg-white/90 backdrop-blur-sm text-gray-600 hover:text-gray-800 p-2 rounded-full shadow-md transition-colors duration-200 disabled:opacity-50'
+                        title='Refresh premium images'
+                      >
+                        <HiRefresh
+                          className={`text-sm ${
+                            isLoading ? 'animate-spin' : ''
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </ScrollReveal>
+                )}
+
+                {/* Image Counter */}
+                {premiumImages.length > 1 && (
+                  <div className='absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium'>
+                    {imageIndex + 1} / {premiumImages.length}
+                  </div>
+                )}
+
+                {/* Error Badge with Retry */}
+                {imageError && (
+                  <div className='absolute top-4 left-4 bg-red-100 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs'>
+                    <div className='flex items-center space-x-2'>
+                      <span>Server error - using fallback</span>
+                      <button
+                        onClick={retryFetchImages}
+                        disabled={isLoading}
+                        className='text-red-700 hover:text-red-800 underline font-medium disabled:opacity-50'
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Floating Cards */}
                 <ScrollReveal direction='scale' delay={1.2}>

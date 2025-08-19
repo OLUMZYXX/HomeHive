@@ -1,82 +1,149 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FaArrowLeft, FaEye, FaEyeSlash, FaCheck } from 'react-icons/fa'
-import { HiUser, HiMail, HiLockClosed } from 'react-icons/hi'
-import { toast } from 'sonner'
+import { FcGoogle } from 'react-icons/fc'
+import { HiUser, HiMail, HiLockClosed, HiPhone } from 'react-icons/hi'
+import { toast } from '../../utils/toast.jsx'
+import { useAPI } from '../../contexts/APIContext'
+import GoogleAuth from '../../config/googleAuth'
 
 const Createacct = () => {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const navigate = useNavigate()
+  const { register, googleAuth } = useAPI()
 
   const isEmailValid = (email) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
   }
 
+  const isPhoneValid = (phone) => {
+    return phone.length >= 10 && /^\+?[\d\s-()]+$/.test(phone)
+  }
+
   const handleCreateAccount = async (e) => {
     e.preventDefault()
+
+    // Reset error
+    setError('')
+
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      toast.error('Please fill in all fields.', {
-        duration: 3000,
-        className: 'text-sm font-medium',
-      })
+      setError('Please fill in all required fields.')
       return
     }
+
     if (!isEmailValid(email)) {
-      toast.error('Please enter a valid email address.', {
-        duration: 3000,
-        className: 'text-sm font-medium',
-      })
+      setError('Please enter a valid email address.')
       return
     }
+
+    if (phone && !isPhoneValid(phone)) {
+      setError('Please enter a valid phone number.')
+      return
+    }
+
     if (password !== confirmPassword) {
-      toast.error('Passwords do not match.', {
-        duration: 3000,
-        className: 'text-sm font-medium',
-      })
+      setError('Passwords do not match.')
       return
     }
+
     if (password.length < 6) {
-      toast.error('Password must be at least 6 characters.', {
-        duration: 3000,
-        className: 'text-sm font-medium',
-      })
+      setError('Password must be at least 6 characters.')
       return
     }
+
     setIsLoading(true)
-    setTimeout(() => {
-      console.log('Account created successfully!')
+
+    try {
+      const userData = {
+        name: `${firstName} ${lastName}`,
+        firstName,
+        lastName,
+        email,
+        phone: phone || undefined,
+        password,
+      }
+
+      const result = await register(userData)
+
       toast.success('Account created successfully! Welcome to HomeHive!', {
         duration: 4000,
-        className: 'text-sm font-medium',
       })
+
+      // Redirect after successful registration
+      const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
+      localStorage.removeItem('redirectAfterLogin')
+      setTimeout(() => navigate(redirectPath), 2000)
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Failed to create account. Please try again.'
+      setError(errorMessage)
+      toast.error('Registration Failed', {
+        description: errorMessage,
+        duration: 4000,
+      })
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true)
-    setTimeout(() => {
-      console.log('Account created with Google!')
-      toast.success('Account created with Google! Welcome to HomeHive!', {
-        duration: 4000,
-        className: 'text-sm font-medium',
+    try {
+      // Initialize and sign in with Google
+      await GoogleAuth.initialize()
+      const googleUser = await GoogleAuth.signIn()
+
+      // Send to backend for authentication/registration
+      const result = await googleAuth(googleUser.idToken, {
+        email: googleUser.email,
+        name: googleUser.name,
+        firstName: googleUser.firstName,
+        lastName: googleUser.lastName,
+        picture: googleUser.picture,
+        googleId: googleUser.id,
       })
+
+      toast.success(`Welcome ${googleUser.name}!`, {
+        description:
+          'Account created successfully with Google! Welcome to HomeHive!',
+        duration: 4000,
+      })
+
+      // Redirect after successful registration
+      const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
+      localStorage.removeItem('redirectAfterLogin')
+      setTimeout(() => navigate(redirectPath), 2000)
+    } catch (error) {
+      console.error('Google signup error:', error)
+      const errorMessage =
+        error.message || 'Google registration failed. Please try again.'
+      toast.error('Registration Error', {
+        description: errorMessage,
+        duration: 4000,
+      })
+    } finally {
       setIsGoogleLoading(false)
-    }, 2000)
+    }
   }
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 flex items-center justify-center p-4'>
       {/* Back to Login Button */}
       <button
-        onClick={() => console.log('Navigate to signin')}
+        onClick={() => navigate('/signin')}
         className='absolute top-6 left-6 flex items-center gap-2 text-primary-700 hover:text-primary-900 bg-white hover:bg-primary-25 px-4 py-3 rounded-xl border border-primary-200 hover:border-primary-300 transition-all duration-300 font-medium shadow-soft hover:shadow-medium'
       >
         <FaArrowLeft className='text-sm' />
@@ -183,6 +250,25 @@ const Createacct = () => {
                       placeholder='Enter your email'
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      className='w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50'
+                    />
+                  </div>
+                </div>
+
+                {/* Phone Input (Optional) */}
+                <div className='space-y-2'>
+                  <label className='block text-sm font-semibold text-neutral-700'>
+                    Phone Number (Optional)
+                  </label>
+                  <div className='relative'>
+                    <div className='absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none'>
+                      <HiPhone className='h-5 w-5 text-neutral-400' />
+                    </div>
+                    <input
+                      type='tel'
+                      placeholder='Enter your phone number'
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
                       className='w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50'
                     />
                   </div>
@@ -315,7 +401,7 @@ const Createacct = () => {
                 <p className='text-primary-600'>
                   Already have an account?{' '}
                   <button
-                    onClick={() => console.log('Navigate to signin')}
+                    onClick={() => navigate('/signin')}
                     className='text-primary-800 hover:text-primary-900 font-semibold transition-colors duration-300 underline decoration-2 underline-offset-2'
                   >
                     Sign In

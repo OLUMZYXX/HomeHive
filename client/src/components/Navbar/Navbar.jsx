@@ -3,10 +3,9 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import { CiSearch } from 'react-icons/ci'
-// ...existing code...
 import { IoClose } from 'react-icons/io5'
+import { HiMenu } from 'react-icons/hi'
 import {
-  FaUserCircle,
   FaCog,
   FaSignOutAlt,
   FaHeart,
@@ -14,13 +13,21 @@ import {
   FaBook,
   FaStar,
 } from 'react-icons/fa'
-import { onAuthStateChanged } from 'firebase/auth'
-import { userAuth } from '../../config/firebaseConfig'
 import { navigateToHome } from '../../utils/navigation'
 import { AnimatedButton } from '../common/AnimatedComponents'
+import { useAPI } from '../../contexts/APIContext'
+import { TokenManager } from '../../services/jwtAuthService'
+import { toast } from '../../utils/toast.jsx'
 
 const Navbar = () => {
-  const [user, setUser] = useState(null)
+  const {
+    user,
+    isAuthenticated,
+    logout: apiLogout,
+    loading,
+    error,
+    clearError,
+  } = useAPI()
   const [menuOpen, setMenuOpen] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -38,13 +45,23 @@ const Navbar = () => {
     setMenuOpen(false)
   }
 
-  // Authentication listener
+  // Initialize token manager and check authentication status
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(userAuth, (currentUser) => {
-      setUser(currentUser)
-    })
-    return unsubscribe
-  }, [])
+    TokenManager.initialize()
+
+    // Clear any previous errors when component mounts
+    if (error) {
+      clearError()
+    }
+  }, [error, clearError])
+
+  // Error handling useEffect
+  useEffect(() => {
+    if (error) {
+      toast.error(error)
+      clearError()
+    }
+  }, [error, clearError])
 
   // Close profile menu on outside click
   useEffect(() => {
@@ -84,17 +101,22 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await userAuth.signOut()
+      await apiLogout()
+      toast.success('Logged out successfully')
       setMenuOpen(false)
+      setProfileMenuOpen(false)
+      navigate('/')
     } catch (error) {
       console.error('Logout error:', error)
+      toast.error('Logout failed. Please try again.')
     }
   }
 
   const handleBookingClick = (e) => {
     e.preventDefault()
-    if (!user) {
+    if (!user || !isAuthenticated) {
       localStorage.setItem('redirectAfterLogin', '/homepage')
+      toast.info('Please log in to view your bookings')
       navigate('/signin')
       return
     }
@@ -102,18 +124,59 @@ const Navbar = () => {
     setMenuOpen(false)
   }
 
+  const handleFavoritesClick = () => {
+    if (!user || !isAuthenticated) {
+      localStorage.setItem('redirectAfterLogin', '/favorites')
+      toast.info('Please log in to view your favorites')
+      navigate('/signin')
+      return
+    }
+    navigate('/favorites')
+    setMenuOpen(false)
+    setProfileMenuOpen(false)
+  }
+
+  const handleBookingsClick = () => {
+    if (!user || !isAuthenticated) {
+      localStorage.setItem('redirectAfterLogin', '/bookings')
+      toast.info('Please log in to view your bookings')
+      navigate('/signin')
+      return
+    }
+    navigate('/bookings')
+    setMenuOpen(false)
+    setProfileMenuOpen(false)
+  }
+
+  const handleSettingsClick = () => {
+    if (!user || !isAuthenticated) {
+      toast.info('Please log in to access settings')
+      navigate('/signin')
+      return
+    }
+    navigate('/profile/settings')
+    setMenuOpen(false)
+    setProfileMenuOpen(false)
+  }
+
   const scrollToSection = (sectionId) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
     setMenuOpen(false)
   }
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      // Handle search functionality here
-      console.log('Searching for:', searchQuery)
-      setIsSearching(false)
-      setSearchQuery('')
+      try {
+        // Navigate to search results page with query
+        navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+        setIsSearching(false)
+        setSearchQuery('')
+        setMenuOpen(false)
+      } catch (error) {
+        console.error('Search error:', error)
+        toast.error('Search failed. Please try again.')
+      }
     }
   }
 
@@ -227,7 +290,11 @@ const Navbar = () => {
             className='lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200'
             aria-label='Toggle menu'
           >
-            {menuOpen ? <IoClose className='text-2xl text-gray-700' /> : <></>}
+            {menuOpen ? (
+              <IoClose className='text-2xl text-gray-700' />
+            ) : (
+              <HiMenu className='text-2xl text-gray-700' />
+            )}
           </button>
 
           {/* Desktop Auth Buttons */}
@@ -239,26 +306,46 @@ const Navbar = () => {
               Become a Host
             </AnimatedButton>
 
-            {user ? (
+            {user && isAuthenticated ? (
               <div className='relative flex items-center gap-4'>
                 <button
                   className='w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 overflow-hidden relative focus:outline-none'
                   onClick={() => setProfileMenuOpen((open) => !open)}
                   aria-label='Profile menu'
                 >
-                  <img
-                    src={user.photoURL}
-                    alt='User'
-                    className='w-full h-full object-cover'
-                  />
-                  {/* Dot indicator when logged in */}
+                  {user.profilePicture || user.photoURL ? (
+                    <img
+                      src={user.profilePicture || user.photoURL}
+                      alt='User Profile'
+                      className='w-full h-full object-cover'
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.nextSibling.style.display = 'flex'
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className='w-full h-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg'
+                    style={{
+                      display:
+                        user.profilePicture || user.photoURL ? 'none' : 'flex',
+                    }}
+                  >
+                    {(user.displayName || user.firstName || user.email || 'U')
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                  {/* Status indicator for authenticated users */}
                   <span className='absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-white'></span>
                 </button>
                 <button
                   onClick={handleLogout}
-                  className='bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-2 px-4 lg:py-3 lg:px-6 rounded-full font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105'
+                  disabled={loading}
+                  className={`bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-2 px-4 lg:py-3 lg:px-6 rounded-full font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105 ${
+                    loading ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Logout
+                  {loading ? 'Logging out...' : 'Logout'}
                 </button>
               </div>
             ) : (
@@ -280,7 +367,7 @@ const Navbar = () => {
 
         {/* Profile Dropdown - Only one, properly positioned */}
         <AnimatePresence>
-          {profileMenuOpen && (
+          {profileMenuOpen && user && isAuthenticated && (
             <motion.div
               ref={profileMenuRef}
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
@@ -294,11 +381,30 @@ const Navbar = () => {
               <div className='p-6 bg-gradient-to-r from-neutral-50 to-primary-50 border-b border-neutral-200/30'>
                 <div className='flex items-center gap-4'>
                   <div className='relative'>
-                    <img
-                      src={user.photoURL}
-                      alt='User'
-                      className='w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium'
-                    />
+                    {user.profilePicture || user.photoURL ? (
+                      <img
+                        src={user.profilePicture || user.photoURL}
+                        alt='User Profile'
+                        className='w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium'
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className='w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-white shadow-medium'
+                      style={{
+                        display:
+                          user.profilePicture || user.photoURL
+                            ? 'none'
+                            : 'flex',
+                      }}
+                    >
+                      {(user.displayName || user.firstName || user.email || 'U')
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
                     {/* Enhanced status indicator */}
                     <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-success-500 rounded-full border-2 border-white shadow-sm'>
                       <div className='w-full h-full bg-success-400 rounded-full animate-ping opacity-75'></div>
@@ -306,14 +412,14 @@ const Navbar = () => {
                   </div>
                   <div className='flex-1 min-w-0'>
                     <div className='font-semibold text-neutral-800 text-lg truncate'>
-                      {user.displayName || 'User'}
+                      {user.displayName || user.firstName || 'User'}
                     </div>
                     <div className='text-sm text-neutral-500 truncate'>
                       {user.email}
                     </div>
                     <div className='inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-success-100 text-success-700 text-xs font-medium rounded-full'>
                       <div className='w-1.5 h-1.5 bg-success-500 rounded-full'></div>
-                      Active
+                      {user.userType === 'host' ? 'Host' : 'Active'}
                     </div>
                   </div>
                 </div>
@@ -326,7 +432,10 @@ const Navbar = () => {
                   <div className='text-xs font-semibold text-neutral-400 uppercase tracking-wider px-4 py-2'>
                     Account
                   </div>
-                  <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
+                  <button
+                    onClick={handleSettingsClick}
+                    className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
+                  >
                     <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-primary-100 rounded-xl transition-colors duration-200'>
                       <FaCog className='text-neutral-600 group-hover:text-primary-600 text-sm' />
                     </div>
@@ -338,7 +447,10 @@ const Navbar = () => {
                     </div>
                   </button>
 
-                  <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
+                  <button
+                    onClick={handleBookingsClick}
+                    className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
+                  >
                     <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-blue-100 rounded-xl transition-colors duration-200'>
                       <FaBook className='text-neutral-600 group-hover:text-accent-blue-600 text-sm' />
                     </div>
@@ -350,7 +462,10 @@ const Navbar = () => {
                     </div>
                   </button>
 
-                  <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
+                  <button
+                    onClick={handleFavoritesClick}
+                    className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
+                  >
                     <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-red-100 rounded-xl transition-colors duration-200'>
                       <FaHeart className='text-neutral-600 group-hover:text-accent-red-500 text-sm' />
                     </div>
@@ -366,8 +481,194 @@ const Navbar = () => {
                 {/* Divider */}
                 <div className='my-2 mx-6 border-t border-neutral-200/50'></div>
 
-                {/* Logout Section */}
-                {/* Logout button removed from dropdown for consistency */}
+                {/* Quick Actions */}
+                <div className='px-2 pb-2'>
+                  <div className='text-xs font-semibold text-neutral-400 uppercase tracking-wider px-4 py-2'>
+                    Quick Actions
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    disabled={loading}
+                    className={`w-full group flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-all duration-200 rounded-2xl mx-2 ${
+                      loading ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <div className='flex items-center justify-center w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-xl transition-colors duration-200'>
+                      <FaSignOutAlt className='text-red-600 text-sm' />
+                    </div>
+                    <div className='flex-1 text-left'>
+                      <div className='font-medium text-sm'>
+                        {loading ? 'Logging out...' : 'Sign Out'}
+                      </div>
+                      <div className='text-xs text-red-500'>
+                        End your session
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className='lg:hidden bg-white border-t border-gray-200 shadow-lg overflow-hidden'
+            >
+              <div className='px-4 py-4 space-y-4'>
+                {/* Search Bar - Mobile */}
+                <div className='relative'>
+                  <form onSubmit={handleSearch} className='flex items-center'>
+                    <input
+                      type='text'
+                      placeholder='Search accommodations...'
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className='w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-full text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500'
+                    />
+                    <button
+                      type='submit'
+                      className='ml-2 p-3 bg-primary-600 hover:bg-primary-700 text-white rounded-full transition-colors duration-200'
+                    >
+                      <CiSearch className='text-xl' />
+                    </button>
+                  </form>
+                </div>
+
+                {/* Navigation Links - Mobile */}
+                <div className='space-y-2'>
+                  {navLinks.map((link) => (
+                    <button
+                      key={link.name}
+                      onClick={link.action}
+                      className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
+                    >
+                      {link.icon}
+                      <span className='font-medium'>{link.name}</span>
+                    </button>
+                  ))}
+
+                  <button
+                    onClick={navigateToHost}
+                    className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
+                  >
+                    <FaHome />
+                    <span className='font-medium'>Become a Host</span>
+                  </button>
+                </div>
+
+                {/* Authentication Section - Mobile */}
+                <div className='pt-4 border-t border-gray-200'>
+                  {user && isAuthenticated ? (
+                    <div className='space-y-4'>
+                      {/* User Profile - Mobile */}
+                      <div className='flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg'>
+                        {user.profilePicture || user.photoURL ? (
+                          <img
+                            src={user.profilePicture || user.photoURL}
+                            alt='User Profile'
+                            className='w-10 h-10 rounded-full object-cover'
+                            onError={(e) => {
+                              e.target.style.display = 'none'
+                              e.target.nextSibling.style.display = 'flex'
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className='w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm'
+                          style={{
+                            display:
+                              user.profilePicture || user.photoURL
+                                ? 'none'
+                                : 'flex',
+                          }}
+                        >
+                          {(
+                            user.displayName ||
+                            user.firstName ||
+                            user.email ||
+                            'U'
+                          )
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <div className='font-medium text-gray-900 truncate'>
+                            {user.displayName || user.firstName || 'User'}
+                          </div>
+                          <div className='text-sm text-gray-500 truncate'>
+                            {user.email}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* User Actions - Mobile */}
+                      <div className='space-y-2'>
+                        <button
+                          onClick={handleSettingsClick}
+                          className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
+                        >
+                          <FaCog />
+                          <span className='font-medium'>Settings</span>
+                        </button>
+
+                        <button
+                          onClick={handleBookingsClick}
+                          className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
+                        >
+                          <FaBook />
+                          <span className='font-medium'>My Bookings</span>
+                        </button>
+
+                        <button
+                          onClick={handleFavoritesClick}
+                          className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
+                        >
+                          <FaHeart />
+                          <span className='font-medium'>Favorites</span>
+                        </button>
+
+                        <button
+                          onClick={handleLogout}
+                          disabled={loading}
+                          className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 rounded-lg ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          <FaSignOutAlt />
+                          <span className='font-medium'>
+                            {loading ? 'Logging out...' : 'Sign Out'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='space-y-3'>
+                      <Link to='/signin' className='block'>
+                        <button
+                          onClick={() => setMenuOpen(false)}
+                          className='w-full px-6 py-3 text-gray-700 hover:text-gray-900 border-2 border-gray-800 rounded-full font-medium transition-all duration-200'
+                        >
+                          Login
+                        </button>
+                      </Link>
+                      <Link to='/signup' className='block'>
+                        <button
+                          onClick={() => setMenuOpen(false)}
+                          className='w-full px-6 py-3 bg-gray-800 text-white rounded-full font-medium hover:bg-gray-900 transition-all duration-200'
+                        >
+                          Sign Up
+                        </button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

@@ -143,6 +143,377 @@ export const propertyService = {
       // Don't throw error as this is not critical
     }
   },
+
+  // Weekly Featured Images for Header
+  async getWeeklyFeaturedImages() {
+    try {
+      // Check if we have a cached weekly selection
+      const weeklyRef = doc(db, 'featured', 'weekly-header')
+      const weeklySnap = await getDoc(weeklyRef)
+
+      // Calculate current week number
+      const now = new Date()
+      const currentWeek = Math.floor(now.getTime() / (7 * 24 * 60 * 60 * 1000))
+
+      if (weeklySnap.exists()) {
+        const data = weeklySnap.data()
+        if (data.week === currentWeek && data.images) {
+          return {
+            images: data.images,
+            lastUpdated: data.lastUpdated?.toDate(),
+            week: currentWeek,
+            cached: true,
+          }
+        }
+      }
+
+      // Fetch fresh high-quality images from premium hosts
+      const bestImages = await this.selectBestWeeklyImages()
+
+      // Cache the selection for the week
+      await updateDoc(weeklyRef, {
+        images: bestImages,
+        week: currentWeek,
+        lastUpdated: new Date(),
+        selectedAt: new Date(),
+      }).catch(async () => {
+        // Create document if it doesn't exist
+        await addDoc(collection(db, 'featured'), {
+          images: bestImages,
+          week: currentWeek,
+          lastUpdated: new Date(),
+          selectedAt: new Date(),
+          type: 'weekly-header',
+        })
+      })
+
+      return {
+        images: bestImages,
+        lastUpdated: new Date(),
+        week: currentWeek,
+        cached: false,
+      }
+    } catch (error) {
+      console.error('Error fetching weekly featured images:', error)
+      throw new Error('Failed to fetch weekly featured images')
+    }
+  },
+
+  async selectBestWeeklyImages() {
+    try {
+      // Get luxury premium properties with minimum price of 200K
+      const luxuryQuery = query(
+        collection(db, 'properties'),
+        where('isActive', '==', true),
+        where('price', '>=', 200000), // Minimum 200K/night
+        where('category', 'in', ['Luxury', 'Premium', 'Executive']),
+        where('imageQuality', '>=', 8),
+        orderBy('price', 'desc'), // Show most expensive first
+        orderBy('imageQuality', 'desc'),
+        limit(15) // Get more options for variety
+      )
+
+      const snapshot = await getDocs(luxuryQuery)
+      let properties = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+
+      // If no luxury properties found, get high-end properties above 200K
+      if (properties.length === 0) {
+        const fallbackQuery = query(
+          collection(db, 'properties'),
+          where('isActive', '==', true),
+          where('price', '>=', 200000),
+          where('images', '!=', []),
+          orderBy('price', 'desc'),
+          orderBy('views', 'desc'),
+          limit(10)
+        )
+
+        const fallbackSnapshot = await getDocs(fallbackQuery)
+        properties = fallbackSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+      }
+
+      // Get currently displayed hero images to avoid duplicates
+      const heroImagesQuery = query(
+        collection(db, 'featured'),
+        where('type', '==', 'hero-rotation')
+      )
+      const heroSnapshot = await getDocs(heroImagesQuery)
+      const usedImageUrls = new Set()
+
+      heroSnapshot.docs.forEach((doc) => {
+        const data = doc.data()
+        if (data.images) {
+          data.images.forEach((img) => usedImageUrls.add(img.url))
+        }
+      })
+
+      // Select diverse luxury properties avoiding hero duplicates
+      const selectedImages = []
+      const usedPropertyTypes = new Set()
+      const usedLocations = new Set()
+
+      for (const property of properties) {
+        if (selectedImages.length >= 6) break
+
+        // Skip if image is already used in hero section
+        if (property.images?.[0] && usedImageUrls.has(property.images[0])) {
+          continue
+        }
+
+        // Ensure variety in property types and locations
+        const propertyType = property.type || property.category
+        const location = property.address?.city || property.location
+
+        if (selectedImages.length < 3) {
+          // First 3 can be any luxury type
+        } else {
+          // For remaining slots, ensure variety
+          if (
+            usedPropertyTypes.has(propertyType) &&
+            usedPropertyTypes.size >= 3
+          )
+            continue
+          if (usedLocations.has(location) && usedLocations.size >= 4) continue
+        }
+
+        if (property.images && property.images.length > 0) {
+          selectedImages.push({
+            id: property.id,
+            url: property.images[0],
+            title: property.title || `Luxury ${propertyType}`,
+            type: propertyType,
+            category: property.category || 'Luxury',
+            location: location || 'Premium Location',
+            price: property.price,
+            originalPrice: property.originalPrice || property.price,
+            currency: property.currency || 'NGN',
+            rating: property.averageRating || 4.8,
+            quality: property.imageQuality || 8,
+            isPremium: property.hostPremium || property.price >= 500000,
+            isLuxury: true,
+            amenities: property.amenities || [],
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            views: property.views || 0,
+            hostName: property.hostName,
+            propertyId: property.id,
+          })
+
+          usedPropertyTypes.add(propertyType)
+          usedLocations.add(location)
+        }
+      }
+
+      // If we don't have enough luxury properties, fill with high-end alternatives
+      if (selectedImages.length < 2) {
+        const additionalQuery = query(
+          collection(db, 'properties'),
+          where('isActive', '==', true),
+          where('price', '>=', 150000), // Slightly lower threshold
+          where('images', '!=', []),
+          orderBy('price', 'desc'),
+          limit(5)
+        )
+
+        const additionalSnapshot = await getDocs(additionalQuery)
+        const additionalProps = additionalSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+
+        for (const property of additionalProps) {
+          if (selectedImages.length >= 6) break
+
+          // Skip duplicates
+          if (selectedImages.some((img) => img.id === property.id)) continue
+          if (property.images?.[0] && usedImageUrls.has(property.images[0]))
+            continue
+
+          selectedImages.push({
+            id: property.id,
+            url: property.images[0],
+            title: property.title || `Premium ${property.type}`,
+            type: property.type,
+            category: property.category || 'Premium',
+            location: property.address?.city || 'Featured Location',
+            price: Math.max(property.price, 200000), // Ensure minimum 200K display
+            originalPrice: property.price,
+            currency: property.currency || 'NGN',
+            rating: property.averageRating || 4.5,
+            quality: property.imageQuality || 7,
+            isPremium: property.price >= 300000,
+            isLuxury: property.price >= 500000,
+            amenities: property.amenities || [],
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            views: property.views || 0,
+            hostName: property.hostName,
+            propertyId: property.id,
+          })
+        }
+      }
+
+      return selectedImages
+    } catch (error) {
+      console.error('Error selecting best weekly images:', error)
+      return [] // Return empty array for fallback handling
+    }
+  },
+
+  async getPremiumShowcaseImages() {
+    try {
+      const q = query(
+        collection(db, 'properties'),
+        where('isActive', '==', true),
+        where('hostPremium', '==', true),
+        where('imageQuality', '>=', 9),
+        orderBy('imageQuality', 'desc'),
+        orderBy('createdAt', 'desc'),
+        limit(12)
+      )
+
+      const snapshot = await getDocs(q)
+      return snapshot.docs.map((doc) => {
+        const data = doc.data()
+        return {
+          id: doc.id,
+          url: data.images?.[0],
+          title: data.title,
+          type: data.type,
+          location: data.address?.city,
+          price: data.price,
+          rating: data.averageRating || 5.0,
+          quality: data.imageQuality,
+          premiumBadge: true,
+        }
+      })
+    } catch (error) {
+      console.error('Error fetching premium showcase:', error)
+      return []
+    }
+  },
+
+  async getRandomBestImages(limit = 6, excludeUrls = []) {
+    try {
+      // Get high-quality images, excluding header images
+      const q = query(
+        collection(db, 'properties'),
+        where('isActive', '==', true),
+        where('images', '!=', []),
+        orderBy('views', 'desc'),
+        limit(limit * 3) // Get more than needed for filtering and randomization
+      )
+
+      const snapshot = await getDocs(q)
+      let properties = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+
+      // Filter out properties with excluded image URLs
+      if (excludeUrls.length > 0) {
+        properties = properties.filter((property) => {
+          return !property.images?.some((imageUrl) =>
+            excludeUrls.includes(imageUrl)
+          )
+        })
+      }
+
+      // Randomize and select
+      const shuffled = properties.sort(() => 0.5 - Math.random())
+      return shuffled.slice(0, limit).map((property) => ({
+        id: property.id,
+        url: property.images[0],
+        title: property.title || `${property.type} Property`,
+        type: property.type,
+        category: property.category || 'Featured',
+        location: property.address?.city || 'Featured Location',
+        price: property.price,
+        currency: property.currency || 'NGN',
+        rating: property.averageRating || 4.5,
+        quality: property.imageQuality || 7,
+        views: property.views || 0,
+        bedrooms: property.bedrooms,
+        bathrooms: property.bathrooms,
+        amenities: property.amenities || [],
+        hostName: property.hostName,
+        propertyId: property.id,
+      }))
+    } catch (error) {
+      console.error('Error fetching random best images:', error)
+      return []
+    }
+  },
+
+  async updateWeeklyFeaturedImages(images) {
+    try {
+      const weeklyRef = doc(db, 'featured', 'weekly-header')
+      const currentWeek = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000))
+
+      await updateDoc(weeklyRef, {
+        images,
+        week: currentWeek,
+        lastUpdated: new Date(),
+        manualUpdate: true,
+      }).catch(async () => {
+        // Create document if it doesn't exist
+        await addDoc(collection(db, 'featured'), {
+          images,
+          week: currentWeek,
+          lastUpdated: new Date(),
+          manualUpdate: true,
+          type: 'weekly-header',
+        })
+      })
+    } catch (error) {
+      console.error('Error updating weekly featured images:', error)
+      throw new Error('Failed to update weekly featured images')
+    }
+  },
+
+  // Track used images to prevent duplicates between sections
+  async markImagesAsUsed(images, section = 'header') {
+    try {
+      const usedImagesRef = doc(db, 'featured', 'used-images')
+      const imageUrls = images.map((img) => img.url).filter(Boolean)
+
+      const updateData = {}
+      updateData[section] = imageUrls
+      updateData[`${section}UpdatedAt`] = new Date()
+
+      await updateDoc(usedImagesRef, updateData).catch(async () => {
+        await addDoc(collection(db, 'featured'), {
+          ...updateData,
+          type: 'used-images',
+        })
+      })
+    } catch (error) {
+      console.error('Error marking images as used:', error)
+      // Non-critical, don't throw
+    }
+  },
+
+  async getUsedImages(section = null) {
+    try {
+      const usedImagesRef = doc(db, 'featured', 'used-images')
+      const docSnap = await getDoc(usedImagesRef)
+
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+        return section ? data[section] || [] : data
+      }
+      return section ? [] : {}
+    } catch (error) {
+      console.error('Error getting used images:', error)
+      return section ? [] : {}
+    }
+  },
 }
 
 // User Service

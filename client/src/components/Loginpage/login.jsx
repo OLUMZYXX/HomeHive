@@ -4,11 +4,11 @@ import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
 import { FcGoogle } from 'react-icons/fc'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
 import loginImg from '../../assets/login.jpg'
-import { toast } from 'sonner'
-import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth'
-import { userAuth, userProvider } from '../../config/firebaseConfig'
+import { toast } from '../../utils/toast.jsx'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
+import { useAPI } from '../../contexts/APIContext'
+import GoogleAuth from '../../config/googleAuthSimple'
 
 const Login = () => {
   // Use scroll to top hook
@@ -22,25 +22,24 @@ const Login = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { login, googleAuth } = useAPI()
 
   // Smart home navigation handler
   const handleHomeNavigation = () => {
     navigateToHome(navigate, location)
   }
 
-  const isPasswordValid = (password) =>
-    password.length >= 8 && /[A-Z]/.test(password)
+  const isPasswordValid = (password) => password.length >= 6
   const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault()
     if (!isEmailValid(email)) {
       setError('Please enter a valid email address.')
       return
     }
     if (!isPasswordValid(password)) {
-      setError(
-        'Password must be at least 8 characters long and contain an uppercase letter.'
-      )
+      setError('Password must be at least 6 characters long.')
       return
     }
 
@@ -48,22 +47,23 @@ const Login = () => {
     setIsLoading(true)
 
     try {
-      const userCredentials = await signInWithEmailAndPassword(
-        userAuth,
-        email,
-        password
-      )
-      toast.success(`Welcome back, ${userCredentials.user.email}!`, {
+      const result = await login(email, password, false) // false for regular user
+
+      toast.success(`Welcome back!`, {
         description: 'Login successful! Redirecting you now...',
         duration: 3000,
       })
+
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
-    } catch {
-      setError('Invalid email or password. Please try again.')
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        'Invalid email or password. Please try again.'
+      setError(errorMessage)
       toast.error('Authentication Error', {
-        description: 'Login failed. Please check your credentials.',
+        description: errorMessage,
         duration: 4000,
       })
     } finally {
@@ -74,17 +74,34 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true)
     try {
-      const result = await signInWithPopup(userAuth, userProvider)
-      toast.success(`Welcome ${result.user.displayName}!`, {
+      // Initialize and sign in with Google
+      await GoogleAuth.initialize()
+      const googleUser = await GoogleAuth.signIn()
+
+      // Send to backend for authentication/registration
+      const result = await googleAuth(googleUser.idToken, {
+        email: googleUser.email,
+        name: googleUser.name,
+        firstName: googleUser.firstName,
+        lastName: googleUser.lastName,
+        picture: googleUser.picture,
+        googleId: googleUser.id,
+      })
+
+      toast.success(`Welcome ${googleUser.name}!`, {
         description: 'Google login successful! Redirecting you now...',
         duration: 3000,
       })
+
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
-    } catch {
+    } catch (error) {
+      console.error('Google login error:', error)
+      const errorMessage =
+        error.message || 'Google login failed. Please try again.'
       toast.error('Authentication Error', {
-        description: 'Google login failed. Please try again.',
+        description: errorMessage,
         duration: 4000,
       })
     } finally {

@@ -121,6 +121,14 @@ class APIClient {
       )
       return response.data
     },
+
+    // Fetch featured properties from the correct backend endpoint
+    getFeaturedRandom: async (limit = 6, excludeHeader = true) => {
+      const response = await axiosInstance.get(
+        `/featured/featured-random?limit=${limit}&excludeHeader=${excludeHeader}`
+      )
+      return response.data
+    },
   }
 
   // Booking management
@@ -259,6 +267,63 @@ class APIClient {
       return response.data
     },
   }
+
+  // Premium plan management
+  premium = {
+    getFeaturedImages: async () => {
+      const response = await axiosInstance.get('/premium/featured-images')
+      return response.data
+    },
+
+    upgradeToPremium: async (planData) => {
+      const response = await axiosInstance.post('/premium/upgrade', planData)
+      return response.data
+    },
+
+    getPremiumStatus: async () => {
+      const response = await axiosInstance.get('/premium/status')
+      return response.data
+    },
+
+    cancelPremium: async () => {
+      const response = await axiosInstance.post('/premium/cancel')
+      return response.data
+    },
+
+    getPremiumPlans: async () => {
+      const response = await axiosInstance.get('/premium/plans')
+      return response.data
+    },
+
+    updateFeaturedImage: async (imageData) => {
+      const response = await axiosInstance.post(
+        '/premium/featured-image',
+        imageData
+      )
+      return response.data
+    },
+  }
+
+  // Testimonials management
+  testimonials = {
+    getTestimonials: async (limit = 20) => {
+      const response = await axiosInstance.get(`/testimonials?limit=${limit}`)
+      return response.data
+    },
+
+    createTestimonial: async (testimonialData) => {
+      const response = await axiosInstance.post(
+        '/testimonials',
+        testimonialData
+      )
+      return response.data
+    },
+
+    getTestimonialStats: async () => {
+      const response = await axiosInstance.get('/testimonials/stats')
+      return response.data
+    },
+  }
 }
 
 // Create singleton instance
@@ -273,5 +338,7 @@ export const favoritesAPI = apiClient.favorites
 export const reviewsAPI = apiClient.reviews
 export const filesAPI = apiClient.files
 export const analyticsAPI = apiClient.analytics
+export const premiumAPI = apiClient.premium
+export const testimonialsAPI = apiClient.testimonials
 
 export default apiClient

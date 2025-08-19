@@ -248,6 +248,28 @@ export const APIProvider = ({ children }) => {
     [setLoading, setError, clearError]
   )
 
+  const googleAuth = useCallback(
+    async (idToken, userData) => {
+      try {
+        setLoading(true)
+        clearError()
+
+        const response = await axiosInstance.post('/auth/google', {
+          idToken,
+          userData,
+        })
+
+        const { user, tokens } = response.data
+        dispatch({ type: actionTypes.SET_USER, payload: user })
+        return response.data
+      } catch (error) {
+        setError(error)
+        throw error
+      }
+    },
+    [setLoading, setError, clearError]
+  )
+
   const logout = useCallback(async () => {
     try {
       setLoading(true)
@@ -474,6 +496,154 @@ export const APIProvider = ({ children }) => {
     }
   }, [setLoading, setError, clearError])
 
+  const searchProperties = useCallback(
+    async (searchCriteria) => {
+      try {
+        setLoading(true)
+        clearError()
+
+        const response = await axiosInstance.post(
+          '/properties/search',
+          searchCriteria
+        )
+        const { properties } = response.data
+
+        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties })
+        return properties
+      } catch (error) {
+        setError(error)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setLoading, setError, clearError]
+  )
+
+  const getFeaturedProperties = useCallback(
+    async (limit = 10) => {
+      try {
+        setLoading(true)
+        clearError()
+
+        const response = await axiosInstance.get(
+          `/properties/featured?limit=${limit}`
+        )
+        const { properties } = response.data
+
+        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties })
+        return properties
+      } catch (error) {
+        setError(error)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setLoading, setError, clearError]
+  )
+
+  // Premium plan methods
+  const getPremiumImages = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/premium/featured-images')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching premium images:', error)
+      return { images: [] } // Return empty array on error
+    }
+  }, [])
+
+  const getWeeklyHeaderImages = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/featured/header-images')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching weekly header images:', error)
+      return {
+        success: false,
+        images: [],
+        useLocal: true,
+        message: 'Using fallback images',
+      }
+    }
+  }, [])
+
+  const getRandomFeaturedImages = useCallback(async (limit = 6) => {
+    try {
+      const response = await axiosInstance.get(
+        `/featured/featured-random?limit=${limit}`
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error fetching random featured images:', error)
+      return {
+        success: false,
+        images: [],
+        useLocal: true,
+      }
+    }
+  }, [])
+
+  const getPremiumShowcase = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/featured/premium-showcase')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching premium showcase:', error)
+      return {
+        success: false,
+        showcase: [],
+        useLocal: true,
+      }
+    }
+  }, [])
+
+  const getHeroImages = useCallback(async (limit = 6) => {
+    try {
+      const response = await axiosInstance.get(
+        `/featured/hero-images?limit=${limit}`
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error fetching hero images:', error)
+      return {
+        success: false,
+        images: [],
+        useLocal: true,
+        excludedHeaderDuplicates: false,
+      }
+    }
+  }, [])
+
+  const upgradeToPremium = useCallback(
+    async (planData) => {
+      try {
+        setLoading(true)
+        clearError()
+
+        const response = await axiosInstance.post('/premium/upgrade', planData)
+        return response.data
+      } catch (error) {
+        setError(error)
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setLoading, setError, clearError]
+  )
+
+  const getPremiumStatus = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/premium/status')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching premium status:', error)
+      return { isPremium: false }
+    }
+  }, [])
+
   // ================================
   // FAVORITES API CALLS
   // ================================
@@ -619,6 +789,7 @@ export const APIProvider = ({ children }) => {
     register,
     registerHost,
     login,
+    googleAuth,
     logout,
     getCurrentUser,
     changePassword,
@@ -632,6 +803,15 @@ export const APIProvider = ({ children }) => {
     updateProperty,
     deleteProperty,
     getHostProperties,
+    searchProperties,
+    getFeaturedProperties,
+    getPremiumImages,
+    getWeeklyHeaderImages,
+    getRandomFeaturedImages,
+    getPremiumShowcase,
+    getHeroImages,
+    upgradeToPremium,
+    getPremiumStatus,
 
     // Favorites
     getFavorites,
