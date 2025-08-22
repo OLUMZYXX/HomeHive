@@ -62,6 +62,12 @@ app.use(helmet())
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true }))
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`)
+  next()
+})
+
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -85,31 +91,59 @@ app.use('/api/favorites', favoritesRoutes)
 app.use('/api/premium', premiumRoutes)
 app.use('/api/upload', uploadRoutes)
 
-// Health check endpoint
-app.get('/api/health', async (req, res) => {
-  await connectMongoDB()
+// Add a simple test route
+app.get('/api/test', (req, res) => {
   res.json({
     success: true,
-    message: 'HomeHive API Server is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'production',
-    database:
-      mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ⚠️',
-    databaseState: mongoose.connection.readyState,
+    message: 'API is working!',
+    timestamp: new Date().toISOString()
   })
+})
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    await connectMongoDB()
+    res.json({
+      success: true,
+      message: 'HomeHive API Server is running',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'production',
+      database:
+        mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ⚠️',
+      databaseState: mongoose.connection.readyState,
+    })
+  } catch (error) {
+    console.error('Health check error:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Health check failed',
+      error: error.message
+    })
+  }
 })
 
 // Root endpoint
 app.get('/', async (req, res) => {
-  await connectMongoDB()
-  res.json({
-    success: true,
-    message: '🏠 Welcome to HomeHive API Server',
-    version: '1.0.0',
-    status: 'Server running on Vercel',
-    database:
-      mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ⚠️',
-  })
+  try {
+    await connectMongoDB()
+    res.json({
+      success: true,
+      message: '🏠 Welcome to HomeHive API Server',
+      version: '1.0.0',
+      status: 'Server running on Vercel',
+      timestamp: new Date().toISOString(),
+      database:
+        mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ⚠️',
+    })
+  } catch (error) {
+    console.error('Root endpoint error:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    })
+  }
 })
 
 // 404 Handler

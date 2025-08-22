@@ -1,10 +1,23 @@
 {
   "version": 2,
-  "name": "homehive-api",
+  "name": "home-hive-server",
   "builds": [
     {
       "src": "api/index.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": [
+          "routes/**",
+          "models/**",
+          "middleware/**",
+          "authService/**",
+          "jwtAuthService/**",
+          "config/**",
+          "services/**",
+          "utils/**",
+          "data/**"
+        ]
+      }
     }
   ],
   "routes": [
@@ -15,7 +28,8 @@
   ],
   "functions": {
     "api/index.js": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "memory": 1024
     }
   },
   "env": {
