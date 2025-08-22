@@ -18,33 +18,6 @@ import uploadRoutes from './routes/upload.js'
 
 const app = express()
 
-// Auto port detection function
-const findAvailablePort = async (startPort = 3001) => {
-  const net = await import('net')
-
-  return new Promise((resolve, reject) => {
-    const server = net.createServer()
-
-    const tryPort = (port) => {
-      server.listen(port, () => {
-        server.once('close', () => resolve(port))
-        server.close()
-      })
-
-      server.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          console.log(`Port ${port} is busy, trying ${port + 1}...`)
-          tryPort(port + 1)
-        } else {
-          reject(err)
-        }
-      })
-    }
-
-    tryPort(startPort)
-  })
-}
-
 // MongoDB connection function
 const connectMongoDB = async () => {
   try {
@@ -149,24 +122,25 @@ const startServer = async () => {
     console.log('🔄 Starting server with MongoDB...')
     await connectMongoDB()
 
-    const preferredPort = process.env.PORT || 3001
-    const availablePort = await findAvailablePort(parseInt(preferredPort))
+    const PORT = process.env.PORT || 3001
+    console.log(`📡 Attempting to start server on port: ${PORT}`)
 
     const server = createServer(app)
 
-    server.listen(availablePort, () => {
-      console.log('\n🚀 HomeHive Basic API Server Started!')
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log('\n🚀 HomeHive API Server Started!')
       console.log('━'.repeat(50))
-      console.log(`🌐 Server URL: http://localhost:${availablePort}`)
-      console.log(
-        `🏥 Health Check: http://localhost:${availablePort}/api/health`
-      )
+      console.log(`🌐 Server URL: http://localhost:${PORT}`)
+      console.log(`🏥 Health Check: http://localhost:${PORT}/api/health`)
       console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`)
       console.log('━'.repeat(50))
     })
 
     server.on('error', (err) => {
       console.error('❌ Server Error:', err)
+      if (err.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use`)
+      }
       process.exit(1)
     })
 
@@ -175,6 +149,7 @@ const startServer = async () => {
       console.log('\nSIGTERM received. Shutting down gracefully...')
       server.close(() => {
         console.log('✅ Server closed')
+        mongoose.connection.close()
         process.exit(0)
       })
     })
@@ -183,6 +158,7 @@ const startServer = async () => {
       console.log('\nSIGINT received. Shutting down gracefully...')
       server.close(() => {
         console.log('✅ Server closed')
+        mongoose.connection.close()
         process.exit(0)
       })
     })
