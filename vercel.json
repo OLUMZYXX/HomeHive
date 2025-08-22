@@ -13,6 +13,6 @@
   ],
   "env": {
     "VITE_GOOGLE_CLIENT_ID": "949714468705-1tjrgqef5apu7gjchm3emk6f80gttg0o.apps.googleusercontent.com",
-    "VITE_API_BASE_URL": "https://homehive-api.vercel.app/api"
+    "VITE_API_BASE_URL": "https://home-hive-server-delta.vercel.app/api"
   }
 }

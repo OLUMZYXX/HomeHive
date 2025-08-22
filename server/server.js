@@ -74,7 +74,11 @@ app.use(
       'http://localhost:5174',
       'http://localhost:5175',
       'http://localhost:4173',
-    ],
+      'https://homehive-client.vercel.app',
+      'https://home-hive-client.vercel.app',
+      'https://homehive.vercel.app',
+      process.env.FRONTEND_URL,
+    ].filter(Boolean),
     credentials: true,
     optionsSuccessStatus: 200,
   })
@@ -186,6 +190,14 @@ const startServer = async () => {
     console.error('❌ Failed to start server:', error)
     process.exit(1)
   }
+}
+
+// Initialize MongoDB connection for Vercel
+if (process.env.VERCEL === '1') {
+  // In Vercel environment, connect to MongoDB immediately
+  connectMongoDB().catch(error => {
+    console.error('Failed to connect to MongoDB in Vercel:', error)
+  })
 }
 
 // Export for Vercel
