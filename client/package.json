@@ -12,7 +12,8 @@
     "build": "vite build",
     "build-static": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel-build": "vite build"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.22.6",

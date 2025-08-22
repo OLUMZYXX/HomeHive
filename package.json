@@ -1,0 +1,14 @@
+{
+  "name": "homehive",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd client && npm install && npm run build",
+    "dev": "cd client && npm run dev",
+    "start": "cd server && npm start"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ]
+}
