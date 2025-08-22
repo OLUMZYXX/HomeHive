@@ -121,7 +121,7 @@ app.use('*', (req, res) => {
 })
 
 // Initialize MongoDB connection for Vercel
-connectMongoDB().catch(error => {
+connectMongoDB().catch((error) => {
   console.error('Failed to connect to MongoDB in Vercel:', error)
 })
 

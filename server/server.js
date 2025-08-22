@@ -195,7 +195,7 @@ const startServer = async () => {
 // Initialize MongoDB connection for Vercel
 if (process.env.VERCEL === '1') {
   // In Vercel environment, connect to MongoDB immediately
-  connectMongoDB().catch(error => {
+  connectMongoDB().catch((error) => {
     console.error('Failed to connect to MongoDB in Vercel:', error)
   })
 }
