@@ -1,0 +1,7 @@
+server/
+.git/
+*.md
+.env
+.gitignore
+ecosystem.config.json
+node_modules/
