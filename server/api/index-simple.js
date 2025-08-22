@@ -1,4 +1,4 @@
-// Simple test version for debugging Vercel deployment
+// Simple test version for debugging
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -11,18 +11,15 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`)
-    
     const response = {
       success: true,
-      message: '🏠 Welcome to HomeHive API Server - Testing Version',
+      message: '🏠 Welcome to HomeHive API Server - Simple Version',
       timestamp: new Date().toISOString(),
       method: req.method,
       url: req.url,
       path: req.url.split('?')[0],
       environment: process.env.NODE_ENV || 'production',
-      mongoUri: process.env.MONGODB_URI ? 'Set ✅' : 'Missing ❌',
-      jwtSecret: process.env.JWT_SECRET ? 'Set ✅' : 'Missing ❌'
+      mongoUri: process.env.MONGODB_URI ? 'Set ✅' : 'Missing ❌'
     }
 
     res.status(200).json(response)
@@ -31,8 +28,7 @@ export default async function handler(req, res) {
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message,
-      stack: error.stack
+      error: error.message
     })
   }
 }

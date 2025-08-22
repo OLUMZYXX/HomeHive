@@ -3,24 +3,15 @@
   "name": "home-hive-server",
   "builds": [
     {
-      "src": "api/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "routes/**",
-          "models/**",
-          "middleware/**",
-          "authService/**",
-          "jwtAuthService/**",
-          "config/**",
-          "services/**",
-          "utils/**",
-          "data/**"
-        ]
-      }
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "/api/index.js"
@@ -31,8 +22,5 @@
       "maxDuration": 30,
       "memory": 1024
     }
-  },
-  "env": {
-    "NODE_ENV": "production"
   }
 }
