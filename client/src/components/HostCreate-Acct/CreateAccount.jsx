@@ -6,6 +6,7 @@ import { HiUser } from 'react-icons/hi2'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { toast } from 'sonner'
+import { useAPI } from '../../contexts/APIContext'
 
 const Createacct = () => {
   // Use scroll to top hook
@@ -13,6 +14,9 @@ const Createacct = () => {
 
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Get API functions
+  const { registerHost, googleAuth, loading } = useAPI()
 
   // Smart home navigation handler
   const handleHomeNavigation = () => {
@@ -23,6 +27,9 @@ const Createacct = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [businessName, setBusinessName] = useState('')
+  const [businessType, setBusinessType] = useState('individual')
+  const [phone, setPhone] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -58,6 +65,8 @@ const Createacct = () => {
     } else if (!isEmailValid(email)) {
       newErrors.email = 'Please enter a valid email address'
     }
+    if (!businessName.trim())
+      newErrors.businessName = 'Business name is required'
     if (!password) {
       newErrors.password = 'Password is required'
     } else if (!isPasswordValid(password)) {
@@ -80,20 +89,49 @@ const Createacct = () => {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      toast.success('Host account created successfully! Welcome to HomeHive!', {
-        duration: 4000,
-        className: 'text-sm font-medium',
+      // Call the actual API for host registration
+      const result = await registerHost({
+        email: email.trim(),
+        password,
+        name: `${firstName.trim()} ${lastName.trim()}`,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        businessName: businessName.trim(),
+        businessType,
       })
-      setTimeout(() => {
-        navigate('/host-dashboard')
-      }, 1000)
-    } catch {
-      toast.error('Failed to create account. Please try again.', {
+
+      if (result.success) {
+        toast.success(
+          'Host account created successfully! Welcome to HomeHive!',
+          {
+            duration: 4000,
+            className: 'text-sm font-medium',
+          }
+        )
+
+        setTimeout(() => {
+          navigate('/host-dashboard')
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Host registration error:', error)
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to create account. Please try again.'
+
+      toast.error(errorMessage, {
         duration: 3000,
         className: 'text-sm font-medium',
       })
+
+      // Set form errors if available
+      if (error.response?.data?.field) {
+        setErrors({
+          [error.response.data.field]: errorMessage,
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -103,13 +141,50 @@ const Createacct = () => {
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true)
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      setSuccessMessage('Google sign up successful! Redirecting...')
-      setTimeout(() => {
-        navigate('/host-dashboard')
-      }, 1000)
-    } catch {
-      setErrors({ submit: 'Google sign up failed. Please try again.' })
+      // Import Google Auth configuration
+      const { signInWithGoogle } = await import('../../config/googleAuth')
+
+      // Get Google credentials
+      const { user, credential } = await signInWithGoogle()
+
+      // Call API with Google token for host registration
+      const result = await googleAuth(credential.idToken, {
+        email: user.email,
+        name: user.displayName,
+        firstName: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        profilePicture: user.photoURL,
+        businessName: `${user.displayName || 'User'}'s Properties`,
+        businessType: 'individual',
+        isHost: true,
+      })
+
+      if (result.success) {
+        toast.success(
+          'Google account created successfully! Welcome to HomeHive!',
+          {
+            duration: 4000,
+            className: 'text-sm font-medium',
+          }
+        )
+
+        setTimeout(() => {
+          navigate('/host-dashboard')
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Google signup error:', error)
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Google sign up failed. Please try again.'
+
+      toast.error(errorMessage, {
+        duration: 3000,
+        className: 'text-sm font-medium',
+      })
+
+      setErrors({ submit: errorMessage })
     } finally {
       setIsGoogleLoading(false)
     }
@@ -271,6 +346,64 @@ const Createacct = () => {
                     )}
                   </div>
 
+                  {/* Business Info Fields */}
+                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
+                    <div className='space-y-1.5 sm:space-y-2'>
+                      <label
+                        htmlFor='businessName'
+                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
+                      >
+                        <HiUser className='text-primary-500 text-sm' />
+                        Business Name
+                      </label>
+                      <input
+                        type='text'
+                        id='businessName'
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
+                          errors.businessName
+                            ? 'border-error-300 focus:border-error-500 bg-error-50/50'
+                            : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
+                        }`}
+                        placeholder='Your property business name'
+                      />
+                      {errors.businessName && (
+                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
+                          <span className='text-xs'>⚠️</span>
+                          {errors.businessName}
+                        </p>
+                      )}
+                    </div>
+                    <div className='space-y-1.5 sm:space-y-2'>
+                      <label
+                        htmlFor='phone'
+                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
+                      >
+                        <HiMail className='text-primary-500 text-sm' />
+                        Phone Number
+                      </label>
+                      <input
+                        type='tel'
+                        id='phone'
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
+                          errors.phone
+                            ? 'border-error-300 focus:border-error-500 bg-error-50/50'
+                            : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
+                        }`}
+                        placeholder='Your contact number'
+                      />
+                      {errors.phone && (
+                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
+                          <span className='text-xs'>⚠️</span>
+                          {errors.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Password Fields */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                     <div className='space-y-1.5 sm:space-y-2'>
@@ -362,15 +495,26 @@ const Createacct = () => {
 
                   {/* Terms Checkbox - Enhanced Mobile Layout */}
                   <div className='flex items-start gap-2.5 sm:gap-3 pt-2'>
-                    <div className='relative mt-0.5'>
+                    <label
+                      htmlFor='agreeTerms'
+                      className='relative mt-0.5 cursor-pointer group'
+                    >
                       <input
                         type='checkbox'
                         id='agreeTerms'
-                        className='peer sr-only'
+                        className='sr-only peer'
                         checked={agreeTerms}
-                        onChange={() => setAgreeTerms(!agreeTerms)}
+                        onChange={(e) => setAgreeTerms(e.target.checked)}
                       />
-                      <div className='w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary-300 rounded peer-checked:border-primary-600 peer-checked:bg-primary-600 transition-all duration-200 flex items-center justify-center'>
+                      <div
+                        className={`w-4 h-4 sm:w-5 sm:h-5 border-2 rounded transition-all duration-200 flex items-center justify-center group-hover:border-primary-400 ${
+                          agreeTerms
+                            ? 'border-primary-600 bg-primary-600'
+                            : errors.terms
+                            ? 'border-error-300 bg-error-50'
+                            : 'border-primary-300 bg-neutral-25'
+                        }`}
+                      >
                         {agreeTerms && (
                           <svg
                             className='w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-25'
@@ -385,29 +529,35 @@ const Createacct = () => {
                           </svg>
                         )}
                       </div>
-                    </div>
+                    </label>
                     <label
                       htmlFor='agreeTerms'
-                      className='text-xs sm:text-sm text-primary-600 cursor-pointer leading-relaxed'
+                      className='text-xs sm:text-sm text-primary-600 cursor-pointer leading-relaxed flex-1'
                     >
                       I agree to the{' '}
                       <a
                         href='/terms'
+                        target='_blank'
+                        rel='noopener noreferrer'
                         className='text-primary-700 hover:text-primary-800 font-semibold underline'
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Terms & Conditions
                       </a>{' '}
                       and{' '}
                       <a
                         href='/privacy'
+                        target='_blank'
+                        rel='noopener noreferrer'
                         className='text-primary-700 hover:text-primary-800 font-semibold underline'
+                        onClick={(e) => e.stopPropagation()}
                       >
                         Privacy Policy
                       </a>
                     </label>
                   </div>
                   {errors.terms && (
-                    <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2'>
+                    <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
                       <span className='text-xs'>⚠️</span>
                       {errors.terms}
                     </p>
@@ -416,22 +566,22 @@ const Createacct = () => {
                   {/* Submit Button - Enhanced Mobile Layout */}
                   <button
                     type='submit'
-                    disabled={isLoading}
+                    disabled={isLoading || loading}
                     className={`w-full py-3 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden ${
-                      isLoading
+                      isLoading || loading
                         ? 'bg-primary-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-primary-600 to-primary-800 hover:from-primary-700 hover:to-primary-900 hover:scale-[1.02] active:scale-[0.98] shadow-medium hover:shadow-strong'
                     }`}
                   >
                     <div
                       className={`flex items-center justify-center gap-2 sm:gap-3 ${
-                        isLoading ? 'opacity-0' : 'opacity-100'
+                        isLoading || loading ? 'opacity-0' : 'opacity-100'
                       } transition-opacity duration-300`}
                     >
                       <HiUser className='text-base sm:text-lg' />
                       <span>Create Host Account</span>
                     </div>
-                    {isLoading && (
+                    {(isLoading || loading) && (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div className='w-5 h-5 sm:w-6 sm:h-6 border-2 border-neutral-25/30 border-t-neutral-25 rounded-full animate-spin'></div>
                       </div>
@@ -454,10 +604,10 @@ const Createacct = () => {
                   <button
                     type='button'
                     onClick={handleGoogleSignUp}
-                    disabled={isGoogleLoading}
-                    className='w-full py-3 sm:py-4 px-3 sm:px-4 text-sm sm:text-base border-2 border-primary-200 hover:border-primary-300 rounded-lg sm:rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium'
+                    disabled={isGoogleLoading || loading}
+                    className='w-full py-3 sm:py-4 px-3 sm:px-4 text-sm sm:text-base border-2 border-primary-200 hover:border-primary-300 rounded-lg sm:rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                   >
-                    {isGoogleLoading ? (
+                    {isGoogleLoading || loading ? (
                       <>
                         <div className='w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin'></div>
                         <span>Creating Account...</span>

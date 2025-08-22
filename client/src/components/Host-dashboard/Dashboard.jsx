@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import {
   FaHome,
   FaCamera,
@@ -12,28 +12,29 @@ import {
   FaDumbbell,
   FaPaw,
   FaGamepad,
-  FaHotTub,
-  FaParking,
-  FaShieldAlt,
-  FaWheelchair,
-  FaPlus,
-  FaMinus,
-  FaCheck,
   FaBuilding,
   FaWarehouse,
   FaBed,
-  FaCouch,
-  FaUsers,
-  FaDollarSign,
-  FaCalendarAlt,
-  FaEdit,
-  FaTrash,
-  FaEye,
-  FaChevronDown,
   FaGlobe,
-  FaArrowUp,
+  FaChevronDown,
+  FaCheck,
+  FaCog,
+  FaSignOutAlt,
+  FaCouch,
+  FaParking,
+  FaHotTub,
+  FaShieldAlt,
+  FaWheelchair,
+  FaDollarSign,
+  FaMinus,
+  FaPlus,
+  FaTrash,
+  FaCalendarAlt,
+  FaEye,
+  FaEdit,
   FaChartArea,
   FaChartBar,
+  FaArrowUp,
 } from 'react-icons/fa'
 import {
   HiHome,
@@ -43,7 +44,9 @@ import {
   HiClipboardList,
   HiCog,
   HiOutlineChartBar,
+  HiMenu,
 } from 'react-icons/hi'
+import { IoClose } from 'react-icons/io5'
 import {
   AreaChart,
   Area,
@@ -61,8 +64,19 @@ import {
   Bar,
 } from 'recharts'
 import { ButtonTooltip, InfoTooltip } from '../common/Tooltip'
+import HomeHiveLogo from '../../assets/HomeHiveLogo'
+import { useAPI } from '../../contexts/APIContext'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  validateTextLength,
+  getTextValidationClasses,
+  getTextValidationTextClasses,
+} from '../../utils/textUtils'
 
 import PropTypes from 'prop-types'
+import HostBookingManagement from './HostBookingManagement'
 
 // Enhanced Currency Selector Component
 const CurrencySelector = ({
@@ -171,9 +185,105 @@ CurrencySelector.propTypes = {
 }
 
 const Dashboard = () => {
+  const navigate = useNavigate()
+  const {
+    user,
+    isAuthenticated,
+    logout: apiLogout,
+    loading,
+    hostProperties,
+    getHostProperties,
+    getHostStats,
+    updateProperty,
+    createProperty,
+    getCurrentUser,
+    error,
+  } = useAPI()
+
+  // Restore authentication and fetch host properties on dashboard load
+  useEffect(() => {
+    const restoreAuthAndFetch = async () => {
+      const token = localStorage.getItem('homehive_access_token')
+      if (token) {
+        // Always try to refresh token and rehydrate user
+        try {
+          // Dynamically import TokenManager to avoid circular import
+          const { TokenManager } = await import('../../services/jwtAuthService')
+          await TokenManager.refreshTokenIfNeeded()
+          await getCurrentUser()
+
+          // Wait a bit for auth state to update, then fetch properties if user is host
+          setTimeout(async () => {
+            const userData = TokenManager.getUserData()
+            if (userData?.role === 'host') {
+              console.log('🏠 Dashboard: Fetching host properties...')
+              await getHostProperties()
+            }
+          }, 100)
+        } catch (err) {
+          console.error('Authentication restoration failed:', err)
+          // If token is invalid, user will be logged out by context
+        }
+      } else {
+        // No token, redirect to login if trying to access dashboard
+        navigate('/hostlogin')
+      }
+    }
+    restoreAuthAndFetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const [activeTab, setActiveTab] = useState('overview')
   const [currentStep, setCurrentStep] = useState(1)
   const [chartType, setChartType] = useState('area') // 'area' or 'bar'
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [hostStats, setHostStats] = useState({
+    totalListings: 0,
+    totalBookings: 0,
+    monthlyEarnings: 0,
+    averageRating: 0,
+    totalReviews: 0,
+  })
+  const [statsLoading, setStatsLoading] = useState(false)
+
+  // Function to fetch host statistics
+  const fetchHostStats = useCallback(async () => {
+    if (!user?.uid || user.role !== 'host') return
+
+    try {
+      setStatsLoading(true)
+      const stats = await getHostStats(user.uid)
+      setHostStats({
+        totalListings: stats.totalListings || hostProperties?.length || 0,
+        totalBookings: stats.totalBookings || 0,
+        monthlyEarnings: stats.monthlyEarnings || 0,
+        averageRating: stats.averageRating || 0,
+        totalReviews: stats.totalReviews || 0,
+      })
+    } catch (error) {
+      console.error('Error fetching host stats:', error)
+      // Use fallback data
+      setHostStats({
+        totalListings: hostProperties?.length || 0,
+        totalBookings: 0,
+        monthlyEarnings: 0,
+        averageRating: 0,
+        totalReviews: 0,
+      })
+    } finally {
+      setStatsLoading(false)
+    }
+  }, [user, hostProperties, getHostStats])
+
+  // Fetch stats when user or properties change
+  useEffect(() => {
+    if (user?.uid && user.role === 'host' && hostProperties) {
+      fetchHostStats()
+    }
+  }, [user, hostProperties, fetchHostStats])
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const profileMenuRef = useRef(null)
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -185,9 +295,371 @@ const Dashboard = () => {
     maxGuests: 1,
     amenities: [],
     images: [],
+    mainImageIndex: 0,
     pricePerNight: '',
     currency: 'NGN',
   })
+
+  // Handle scroll effect for navbar
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50)
+    }
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  // Close profile menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setProfileMenuOpen(false)
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [profileMenuOpen])
+
+  // Authentication handlers
+  const handleLogout = async () => {
+    try {
+      await apiLogout()
+      toast.success('Logged out successfully')
+      setProfileMenuOpen(false)
+      navigate('/hostlogin')
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Logout failed. Please try again.')
+    }
+  }
+
+  // Property handlers
+  const handlePublishProperty = async (propertyId, currentStatus) => {
+    try {
+      const newActiveStatus = currentStatus === 'active' ? false : true
+
+      await updateProperty(propertyId, { isActive: newActiveStatus })
+
+      // Refresh the properties list to show the updated status
+      await getHostProperties()
+
+      toast.success(
+        newActiveStatus
+          ? '✅ Property published successfully! Your listing is now live and visible to guests.'
+          : '⏸️ Property unpublished successfully! Your listing is now hidden from guests.',
+        {
+          description: newActiveStatus
+            ? 'Guests can now discover and book your property.'
+            : "Your property won't appear in search results.",
+          duration: 4000,
+        }
+      )
+    } catch (error) {
+      console.error('Error updating property status:', error)
+      toast.error('Failed to update property status. Please try again.')
+    }
+  }
+
+  // Render the Host Dashboard Navbar
+  const renderNavbar = () => (
+    <nav
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        isScrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-strong'
+          : 'bg-white shadow-soft'
+      }`}
+    >
+      <div className='container mx-auto px-3 sm:px-4 py-4 max-w-[1400px]'>
+        <div className='flex items-center justify-between'>
+          {/* Logo Section */}
+          <div className='flex items-center gap-3'>
+            {/* Logo */}
+            <HomeHiveLogo className='w-10 h-10 sm:w-12 sm:h-12 object-contain transition-transform duration-200 hover:scale-105' />
+            <div>
+              <h1 className='font-NotoSans text-lg sm:text-xl lg:text-2xl font-bold text-primary-800'>
+                Host Dashboard
+              </h1>
+            </div>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className='lg:hidden p-2 rounded-lg hover:bg-primary-50 transition-colors duration-200'
+          >
+            {mobileMenuOpen ? (
+              <IoClose className='text-2xl text-primary-700' />
+            ) : (
+              <HiMenu className='text-2xl text-primary-700' />
+            )}
+          </button>
+
+          {/* Desktop User Section */}
+          <div className='hidden lg:flex items-center gap-4'>
+            {user && isAuthenticated ? (
+              <div className='relative flex items-center gap-3'>
+                {/* User Profile Button */}
+                <button
+                  onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                  className='flex items-center gap-3 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-xl px-4 py-2 transition-all duration-300'
+                >
+                  {user.profilePicture || user.photoURL ? (
+                    <img
+                      src={user.profilePicture || user.photoURL}
+                      alt='Host Profile'
+                      className='w-8 h-8 rounded-full object-cover'
+                      onError={(e) => {
+                        e.target.style.display = 'none'
+                        e.target.nextSibling.style.display = 'flex'
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className='w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm'
+                    style={{
+                      display:
+                        user.profilePicture || user.photoURL ? 'none' : 'flex',
+                    }}
+                  >
+                    {(user.displayName || user.firstName || user.email || 'H')
+                      .charAt(0)
+                      .toUpperCase()}
+                  </div>
+                  <div className='text-left'>
+                    <div className='text-primary-900 text-sm font-medium'>
+                      {user.displayName || user.firstName || 'Host'}
+                    </div>
+                    <div className='text-primary-600 text-xs'>
+                      {user.role === 'host'
+                        ? 'Host Account'
+                        : 'Dashboard Access'}
+                    </div>
+                  </div>
+                  <FaChevronDown className='text-primary-600 text-xs' />
+                </button>
+
+                {/* Profile Dropdown */}
+                <AnimatePresence>
+                  {profileMenuOpen && (
+                    <motion.div
+                      ref={profileMenuRef}
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className='absolute top-full right-0 mt-2 w-80 bg-white border border-primary-200 rounded-2xl shadow-strong z-50 overflow-hidden'
+                    >
+                      {/* User Info Section */}
+                      <div className='px-6 py-4 border-b border-primary-100 bg-gradient-to-r from-primary-50 to-primary-100'>
+                        <div className='flex items-center gap-4'>
+                          <div className='relative'>
+                            {user.profilePicture || user.photoURL ? (
+                              <img
+                                src={user.profilePicture || user.photoURL}
+                                alt='Host Profile'
+                                className='w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium'
+                                onError={(e) => {
+                                  e.target.style.display = 'none'
+                                  e.target.nextSibling.style.display = 'flex'
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className='w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-white shadow-medium'
+                              style={{
+                                display:
+                                  user.profilePicture || user.photoURL
+                                    ? 'none'
+                                    : 'flex',
+                              }}
+                            >
+                              {(
+                                user.displayName ||
+                                user.firstName ||
+                                user.email ||
+                                'H'
+                              )
+                                .charAt(0)
+                                .toUpperCase()}
+                            </div>
+                            <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-success-500 rounded-full border-2 border-white shadow-sm'>
+                              <div className='w-full h-full bg-success-400 rounded-full animate-ping opacity-75'></div>
+                            </div>
+                          </div>
+                          <div className='flex-1 min-w-0'>
+                            <div className='font-semibold text-primary-900 text-lg truncate'>
+                              {user.displayName || user.firstName || 'Host'}
+                            </div>
+                            <div className='text-sm text-primary-600 truncate'>
+                              {user.email}
+                            </div>
+                            <div className='inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full'>
+                              <div className='w-1.5 h-1.5 bg-primary-500 rounded-full'></div>
+                              Host Active
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Menu Items */}
+                      <div className='py-2'>
+                        <button
+                          onClick={() => {
+                            setActiveTab('settings')
+                            setProfileMenuOpen(false)
+                          }}
+                          className='w-full flex items-center gap-3 px-6 py-3 text-primary-700 hover:bg-primary-50 hover:text-primary-900 transition-colors duration-200'
+                        >
+                          <div className='w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center'>
+                            <FaCog className='text-primary-600 text-sm' />
+                          </div>
+                          <div className='flex-1 text-left'>
+                            <div className='font-medium text-sm'>Settings</div>
+                            <div className='text-xs text-primary-500'>
+                              Account preferences
+                            </div>
+                          </div>
+                        </button>
+
+                        <button
+                          onClick={handleLogout}
+                          disabled={loading}
+                          className={`w-full flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 group ${
+                            loading ? 'opacity-50 cursor-not-allowed' : ''
+                          }`}
+                        >
+                          <div className='w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center'>
+                            <FaSignOutAlt className='text-red-600 text-sm' />
+                          </div>
+                          <div className='flex-1 text-left'>
+                            <div className='font-medium text-sm'>
+                              {loading ? 'Logging out...' : 'Sign Out'}
+                            </div>
+                            <div className='text-xs text-red-500'>
+                              End your session
+                            </div>
+                          </div>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              <div className='flex items-center gap-3'>
+                <button
+                  onClick={() => navigate('/hostlogin')}
+                  className='text-primary-700 hover:text-primary-900 px-4 py-2 rounded-xl font-medium transition-colors duration-300'
+                >
+                  Host Login
+                </button>
+                <button
+                  onClick={() => navigate('/host-signup')}
+                  className='bg-primary-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-primary-900 transition-colors duration-300'
+                >
+                  Create Account
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className='lg:hidden mt-4 border-t border-primary-200 pt-4'
+            >
+              {user && isAuthenticated ? (
+                <div className='space-y-4'>
+                  {/* User Profile - Mobile */}
+                  <div className='flex items-center gap-3 px-4 py-3 bg-primary-50 rounded-lg'>
+                    {user.profilePicture || user.photoURL ? (
+                      <img
+                        src={user.profilePicture || user.photoURL}
+                        alt='Host Profile'
+                        className='w-10 h-10 rounded-full object-cover'
+                      />
+                    ) : (
+                      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm'>
+                        {(
+                          user.displayName ||
+                          user.firstName ||
+                          user.email ||
+                          'H'
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                    )}
+                    <div className='flex-1 min-w-0'>
+                      <div className='font-medium text-primary-900 truncate'>
+                        {user.displayName || user.firstName || 'Host'}
+                      </div>
+                      <div className='text-sm text-primary-600 truncate'>
+                        {user.email}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mobile Menu Actions */}
+                  <div className='space-y-2'>
+                    <button
+                      onClick={() => {
+                        setActiveTab('settings')
+                        setMobileMenuOpen(false)
+                      }}
+                      className='w-full flex items-center gap-3 px-4 py-3 text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-200'
+                    >
+                      <FaCog className='text-lg' />
+                      <span className='font-medium'>Settings</span>
+                    </button>
+
+                    <button
+                      onClick={handleLogout}
+                      disabled={loading}
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 ${
+                        loading ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <FaSignOutAlt className='text-lg' />
+                      <span className='font-medium'>
+                        {loading ? 'Logging out...' : 'Sign Out'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className='space-y-3'>
+                  <button
+                    onClick={() => navigate('/hostlogin')}
+                    className='w-full px-4 py-3 text-primary-700 hover:text-primary-900 border border-primary-300 rounded-xl font-medium transition-all duration-200'
+                  >
+                    Host Login
+                  </button>
+                  <button
+                    onClick={() => navigate('/host-signup')}
+                    className='w-full px-4 py-3 bg-primary-800 text-white rounded-xl font-medium hover:bg-primary-900 transition-all duration-200'
+                  >
+                    Create Account
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </nav>
+  )
 
   // Sample revenue and transaction data for charts
   const revenueData = [
@@ -377,6 +849,7 @@ const Dashboard = () => {
   const tabs = [
     { id: 'overview', name: 'Overview', icon: HiOutlineChartBar },
     { id: 'listings', name: 'My Listings', icon: HiHome },
+    { id: 'bookings', name: 'Bookings', icon: FaCalendarAlt },
     { id: 'create', name: 'Create Listing', icon: HiPhotograph },
     { id: 'analytics', name: 'Analytics', icon: HiClipboardList },
     { id: 'settings', name: 'Settings', icon: HiCog },
@@ -398,12 +871,107 @@ const Dashboard = () => {
     }))
   }
 
-  const handleImageUpload = (e) => {
+  // Track uploaded image URLs separately from local files
+  const [uploadedImageUrls, setUploadedImageUrls] = useState([])
+
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files)
-    setFormData((prev) => ({
-      ...prev,
-      images: [...prev.images, ...files],
-    }))
+    console.log('📤 Files selected:', files.length)
+
+    if (files.length === 0) {
+      console.log('❌ No files selected')
+      return
+    }
+
+    // Convert files to base64 and add to form data
+    const convertToBase64 = (file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => resolve(reader.result)
+        reader.onerror = (error) => reject(error)
+      })
+    }
+
+    try {
+      toast.info('Processing images...')
+      console.log('🚀 Converting images to base64...')
+
+      const base64Images = await Promise.all(
+        files.map(async (file) => {
+          const base64 = await convertToBase64(file)
+          return {
+            data: base64,
+            name: file.name,
+            type: file.type,
+            size: file.size,
+          }
+        })
+      )
+
+      console.log('✅ Images converted to base64:', base64Images.length)
+
+      // Add images to form data
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, ...base64Images],
+        mainImageIndex: prev.images.length === 0 ? 0 : prev.mainImageIndex,
+      }))
+
+      // Also add to uploaded URLs for immediate use
+      setUploadedImageUrls((prev) => {
+        const newUrls = [...prev, ...base64Images.map((img) => img.data)]
+        console.log('📊 Updated uploadedImageUrls:', newUrls.length)
+        return newUrls
+      })
+
+      toast.success('📸 Images processed successfully!', {
+        description: `${base64Images.length} image${
+          base64Images.length > 1 ? 's' : ''
+        } ready for your listing.`,
+        duration: 3000,
+      })
+      console.log('✅ Images processed successfully')
+    } catch (error) {
+      console.error('❌ Image processing error:', error)
+      toast.error('Failed to process images. Please try again.')
+    }
+
+    // Clear the file input so the same files can be selected again if needed
+    e.target.value = ''
+  }
+
+  const handleRemoveImage = (indexToRemove) => {
+    setFormData((prev) => {
+      const newImages = prev.images.filter(
+        (_, index) => index !== indexToRemove
+      )
+      let newMainImageIndex = prev.mainImageIndex
+
+      // Adjust main image index if necessary
+      if (indexToRemove === prev.mainImageIndex) {
+        // If we're removing the main image, set the first remaining image as main
+        newMainImageIndex = newImages.length > 0 ? 0 : 0
+      } else if (indexToRemove < prev.mainImageIndex) {
+        // If we're removing an image before the main image, decrease the main index
+        newMainImageIndex = prev.mainImageIndex - 1
+      }
+
+      return {
+        ...prev,
+        images: newImages,
+        mainImageIndex: newMainImageIndex,
+      }
+    })
+
+    // Also remove from uploadedImageUrls if it exists
+    setUploadedImageUrls((prev) => {
+      const newUrls = [...prev]
+      newUrls.splice(indexToRemove, 1)
+      return newUrls
+    })
+
+    toast.success('Image removed successfully')
   }
 
   const handleCurrencyChange = (currencyCode) => {
@@ -411,6 +979,116 @@ const Dashboard = () => {
       ...prev,
       currency: currencyCode,
     }))
+  }
+
+  // Transform form data to match backend schema
+  const transformFormDataForAPI = async (formData) => {
+    console.log('🔄 Transforming form data for API...')
+    console.log('📋 formData.images:', formData.images)
+    console.log('☁️  uploadedImageUrls:', uploadedImageUrls)
+    console.log('📊 formData.images.length:', formData.images.length)
+    console.log('📊 uploadedImageUrls.length:', uploadedImageUrls.length)
+
+    // Handle base64 images - extract data strings from image objects
+    let imageUrls = []
+
+    if (formData.images && formData.images.length > 0) {
+      imageUrls = formData.images
+        .map((image) => {
+          if (typeof image === 'object' && image.data) {
+            // This is a base64 image object
+            return image.data
+          } else if (typeof image === 'string') {
+            // This is already a URL/base64 string
+            return image
+          }
+          return null
+        })
+        .filter(Boolean)
+    }
+
+    // Fallback to uploadedImageUrls if available
+    if (imageUrls.length === 0 && uploadedImageUrls.length > 0) {
+      imageUrls = [...uploadedImageUrls]
+    }
+
+    console.log('📊 Final imageUrls after processing:', imageUrls.length)
+
+    // Reorder so main image is first
+    if (
+      formData.mainImageIndex >= 0 &&
+      formData.mainImageIndex < imageUrls.length
+    ) {
+      const mainImg = imageUrls[formData.mainImageIndex]
+      imageUrls = [
+        mainImg,
+        ...imageUrls.filter((img, idx) => idx !== formData.mainImageIndex),
+      ]
+    }
+
+    // If no images provided, use a default property image
+    if (!imageUrls || imageUrls.length === 0) {
+      console.log('⚠️  No images available, using default image')
+      imageUrls = [
+        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+      ]
+    }
+
+    console.log(
+      '✅ Final imageUrls for property creation:',
+      imageUrls.length,
+      'images'
+    )
+    return {
+      title: formData.title,
+      description: formData.description,
+      type: formData.propertyType,
+      price: parseFloat(formData.pricePerNight) || 0,
+      currency: formData.currency,
+      address: {
+        city: formData.location || 'Lagos',
+        state: 'Lagos',
+        country: 'Nigeria',
+      },
+      bedrooms: formData.bedrooms,
+      bathrooms: formData.bathrooms,
+      amenities: formData.amenities,
+      images: imageUrls,
+      hostId: user?.id || user?._id || 'temp-host-id',
+      hostName: user?.displayName || user?.firstName || 'Host',
+    }
+  }
+
+  // Validate form data
+  const validateFormData = (formData) => {
+    const errors = []
+
+    if (!formData.title.trim()) {
+      errors.push('Property title is required')
+    }
+
+    const descriptionValidation = validateTextLength(
+      formData.description.trim(),
+      50,
+      500
+    )
+    if (!descriptionValidation.isValid) {
+      errors.push(descriptionValidation.message)
+    }
+
+    if (!formData.propertyType) {
+      errors.push('Property type is required')
+    }
+
+    if (!formData.pricePerNight || formData.pricePerNight <= 0) {
+      errors.push('Valid price per night is required')
+    }
+
+    if (!formData.location.trim()) {
+      errors.push('Property location is required')
+    }
+
+    return errors
   }
 
   const renderStepContent = () => {
@@ -632,6 +1310,8 @@ const Dashboard = () => {
                   onChange={handleImageUpload}
                   className='hidden'
                   id='photo-upload'
+                  tabIndex={-1}
+                  autoComplete='off'
                 />
                 <label
                   htmlFor='photo-upload'
@@ -643,18 +1323,58 @@ const Dashboard = () => {
 
               {formData.images.length > 0 && (
                 <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-6'>
-                  {formData.images.map((image, index) => (
-                    <div key={index} className='relative group'>
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt={`Upload ${index + 1}`}
-                        className='w-full h-24 md:h-32 object-cover rounded-xl'
-                      />
-                      <button className='absolute top-2 right-2 bg-error-500 text-white p-1 md:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
-                        <FaTrash className='text-sm md:text-base' />
-                      </button>
-                    </div>
-                  ))}
+                  {formData.images.map((image, index) => {
+                    // Handle different image formats
+                    let previewUrl
+                    if (typeof image === 'object' && image.data) {
+                      // Base64 image object
+                      previewUrl = image.data
+                    } else if (typeof image === 'string') {
+                      // Already a URL or base64 string
+                      previewUrl = image
+                    } else if (image instanceof File) {
+                      // File object
+                      previewUrl = URL.createObjectURL(image)
+                    } else {
+                      // Fallback to uploaded URL
+                      previewUrl = uploadedImageUrls[index] || image
+                    }
+
+                    return (
+                      <div key={index} className='relative group'>
+                        <img
+                          src={previewUrl}
+                          alt={`Upload ${index + 1}`}
+                          className={`w-full h-32 md:h-40 object-cover rounded-xl ${
+                            formData.mainImageIndex === index
+                              ? 'ring-4 ring-primary-500'
+                              : ''
+                          }`}
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              mainImageIndex: index,
+                            }))
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        <span
+                          className={`absolute bottom-2 left-2 bg-primary-700 text-white px-2 py-1 rounded-full text-xs font-bold ${
+                            formData.mainImageIndex === index
+                              ? ''
+                              : 'opacity-0 group-hover:opacity-100'
+                          }`}
+                        >
+                          {formData.mainImageIndex === index
+                            ? 'Main Image'
+                            : 'Set as Main'}
+                        </span>
+                        <button className='absolute top-2 right-2 bg-error-500 text-white p-1 md:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                          <FaTrash className='text-sm md:text-base' />
+                        </button>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -677,19 +1397,45 @@ const Dashboard = () => {
             <div>
               <label className='block text-sm font-bold text-primary-700 mb-2'>
                 Description
+                <span className='text-primary-500 text-xs ml-2'>
+                  ({formData.description.length}/500 characters)
+                </span>
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                placeholder='Describe your space, what makes it special, and what guests can expect...'
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (value.length <= 500) {
+                    setFormData((prev) => ({
+                      ...prev,
+                      description: value,
+                    }))
+                  }
+                }}
+                placeholder='Describe your space, what makes it special, and what guests can expect... (Maximum 500 characters)'
                 rows={6}
-                className='w-full p-3 md:p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 resize-none'
+                maxLength={500}
+                className={`w-full p-3 md:p-4 border-2 rounded-xl focus:outline-none transition-colors duration-300 resize-none ${getTextValidationClasses(
+                  validateTextLength(formData.description, 50, 500).status
+                )}`}
               />
+              {(() => {
+                const validation = validateTextLength(
+                  formData.description,
+                  50,
+                  500
+                )
+                return validation.status !== 'success' ||
+                  formData.description.length > 450 ? (
+                  <p
+                    className={`text-xs mt-1 ${getTextValidationTextClasses(
+                      validation.status
+                    )}`}
+                  >
+                    {validation.message}
+                  </p>
+                ) : null
+              })()}
             </div>
           </div>
         )
@@ -826,7 +1572,6 @@ const Dashboard = () => {
                     {currencies.find((c) => c.code === formData.currency)?.name}
                   </span>
                 </div>
-
                 <div className='relative'>
                   <span className='absolute left-3 md:left-4 top-1/2 transform -translate-y-1/2 text-primary-400 text-xl md:text-2xl font-bold'>
                     {
@@ -847,7 +1592,6 @@ const Dashboard = () => {
                     className='w-full pl-12 md:pl-16 pr-3 md:pr-4 py-3 md:py-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 text-xl md:text-2xl font-bold'
                   />
                 </div>
-
                 <div className='mt-4 p-3 md:p-4 bg-primary-25 rounded-xl border border-primary-200'>
                   <div className='flex items-start gap-3'>
                     <div className='w-6 h-6 md:w-8 md:h-8 bg-info-100 rounded-full flex items-center justify-center flex-shrink-0'>
@@ -866,48 +1610,60 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
+                {formData.images.length > 0 && (
+                  <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mt-6'>
+                    {formData.images.map((image, index) => {
+                      let previewUrl = ''
+                      // Handle base64 image objects
+                      if (image && typeof image === 'object' && image.data) {
+                        previewUrl = image.data
+                      } else if (image instanceof File) {
+                        previewUrl = URL.createObjectURL(image)
+                      } else if (typeof image === 'string') {
+                        previewUrl = image.startsWith('data:') ? image : image
+                      }
 
-                {formData.pricePerNight && (
-                  <div className='mt-4 p-3 md:p-4 bg-gradient-to-r from-accent-green-50 to-accent-blue-50 rounded-xl border border-primary-200'>
-                    <h5 className='font-bold text-primary-800 mb-2 text-sm md:text-base'>
-                      Estimated Earnings
-                    </h5>
-                    <div className='space-y-1 text-xs md:text-sm'>
-                      <div className='flex justify-between'>
-                        <span className='text-primary-600'>Per night:</span>
-                        <span className='font-bold text-primary-800'>
-                          {
-                            currencies.find((c) => c.code === formData.currency)
-                              ?.symbol
-                          }
-                          {formData.pricePerNight}
-                        </span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-primary-600'>
-                          Per week (7 nights):
-                        </span>
-                        <span className='font-bold text-primary-800'>
-                          {
-                            currencies.find((c) => c.code === formData.currency)
-                              ?.symbol
-                          }
-                          {formData.pricePerNight * 7}
-                        </span>
-                      </div>
-                      <div className='flex justify-between'>
-                        <span className='text-primary-600'>
-                          Per month (30 nights):
-                        </span>
-                        <span className='font-bold text-primary-800'>
-                          {
-                            currencies.find((c) => c.code === formData.currency)
-                              ?.symbol
-                          }
-                          {formData.pricePerNight * 30}
-                        </span>
-                      </div>
-                    </div>
+                      return (
+                        <div key={index} className='relative group'>
+                          <img
+                            src={previewUrl}
+                            alt={`Upload ${index + 1}`}
+                            className={`w-full h-32 md:h-40 object-cover rounded-xl ${
+                              formData.mainImageIndex === index
+                                ? 'ring-4 ring-primary-500'
+                                : ''
+                            }`}
+                            onClick={() => {
+                              setFormData((prev) => ({
+                                ...prev,
+                                mainImageIndex: index,
+                              }))
+                            }}
+                            style={{ cursor: 'pointer' }}
+                          />
+                          <span
+                            className={`absolute bottom-2 left-2 bg-primary-700 text-white px-2 py-1 rounded-full text-xs font-bold ${
+                              formData.mainImageIndex === index
+                                ? ''
+                                : 'opacity-0 group-hover:opacity-100'
+                            }`}
+                          >
+                            {formData.mainImageIndex === index
+                              ? 'Main Image'
+                              : 'Set as Main'}
+                          </span>
+                          <button
+                            className='absolute top-2 right-2 bg-error-500 text-white p-1 md:p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleRemoveImage(index)
+                            }}
+                          >
+                            <FaTrash className='text-sm md:text-base' />
+                          </button>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -1007,11 +1763,6 @@ const Dashboard = () => {
                         </span>
                       )
                     })}
-                    {formData.amenities.length > 6 && (
-                      <span className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs'>
-                        +{formData.amenities.length - 6} more
-                      </span>
-                    )}
                   </div>
 
                   <div className='mt-4'>
@@ -1042,7 +1793,7 @@ const Dashboard = () => {
       default:
         return null
     }
-  }
+  } // End renderStepContent function
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -1074,7 +1825,7 @@ const Dashboard = () => {
                       Total Listings
                     </p>
                     <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
-                      3
+                      {hostProperties?.length || 0}
                     </p>
                   </div>
                   <FaHome className='text-lg sm:text-xl md:text-2xl text-primary-400' />
@@ -1088,7 +1839,7 @@ const Dashboard = () => {
                       Total Bookings
                     </p>
                     <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
-                      24
+                      {statsLoading ? '...' : hostStats.totalBookings}
                     </p>
                   </div>
                   <FaCalendarAlt className='text-lg sm:text-xl md:text-2xl text-primary-400' />
@@ -1102,7 +1853,9 @@ const Dashboard = () => {
                       Monthly Earnings
                     </p>
                     <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
-                      ₦125k
+                      {statsLoading
+                        ? '...'
+                        : `₦${hostStats.monthlyEarnings.toLocaleString()}`}
                     </p>
                   </div>
                   <FaDollarSign className='text-lg sm:text-xl md:text-2xl text-primary-400' />
@@ -1113,16 +1866,115 @@ const Dashboard = () => {
                 <div className='flex items-center justify-between'>
                   <div>
                     <p className='text-primary-600 text-sm sm:text-base md:text-base font-medium'>
-                      Rating
+                      Average Rating
                     </p>
                     <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800'>
-                      4.8
+                      {statsLoading
+                        ? '...'
+                        : hostStats.averageRating > 0
+                        ? hostStats.averageRating.toFixed(1)
+                        : 'N/A'}
                     </p>
                   </div>
                   <FaCheck className='text-lg sm:text-xl md:text-2xl text-primary-400' />
                 </div>
               </div>
             </div>
+
+            {/* Property Listings - API DATA */}
+            <div className='mt-8 space-y-4'>
+              {error && (
+                <div className='text-error-600 bg-error-50 p-3 rounded-lg'>
+                  Error loading properties: {error.message || error.toString()}
+                </div>
+              )}
+              {hostProperties?.length === 0 && !error ? (
+                <div className='text-primary-600 p-3'>
+                  No properties found. Create your first listing!
+                </div>
+              ) : (
+                <>
+                  {/* Debug: Log properties being rendered in overview */}
+                  {console.log(
+                    '📊 Overview: Rendering properties:',
+                    hostProperties
+                  )}
+                  {hostProperties?.map((property) => (
+                    <div
+                      key={property._id || property.id}
+                      className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'
+                    >
+                      <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6'>
+                        <div className='w-16 h-16 md:w-24 md:h-24 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                          {property.images && property.images.length > 0 ? (
+                            <img
+                              src={
+                                typeof property.images[0] === 'object' &&
+                                property.images[0].data
+                                  ? property.images[0].data
+                                  : property.images[0]
+                              }
+                              alt={property.title}
+                              className='w-full h-full object-cover'
+                            />
+                          ) : (
+                            <FaHome className='text-2xl md:text-3xl text-primary-600' />
+                          )}
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
+                            {property.title}
+                          </h3>
+                          <p className='text-primary-600 mb-2 text-sm md:text-base'>
+                            {property.bedrooms} beds • {property.bathrooms}{' '}
+                            baths{property.area && ` • ${property.area} m²`}
+                          </p>
+                          <div className='flex flex-wrap items-center gap-3 md:gap-4'>
+                            <span className='bg-accent-green-100 text-accent-green-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium'>
+                              {property.isActive ? 'Active' : 'Inactive'}
+                            </span>
+                            <span className='text-primary-600 text-xs md:text-sm'>
+                              {property.currency || '₦'}
+                              {property.price}/night
+                            </span>
+                            <span className='text-primary-500 text-xs md:text-sm'>
+                              {property.type}
+                            </span>
+                          </div>
+                        </div>
+                        <div className='flex items-center gap-2 self-start sm:self-center'>
+                          <ButtonTooltip content='View listing details'>
+                            <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                              <FaEye className='text-base md:text-lg' />
+                            </button>
+                          </ButtonTooltip>
+                          <ButtonTooltip content='Edit listing'>
+                            <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                              <FaEdit className='text-base md:text-lg' />
+                            </button>
+                          </ButtonTooltip>
+                          <ButtonTooltip
+                            content='Delete listing'
+                            variant='error'
+                          >
+                            <button className='p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg'>
+                              <FaTrash className='text-base md:text-lg' />
+                            </button>
+                          </ButtonTooltip>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          </div>
+        )
+
+      case 'bookings':
+        return (
+          <div className='space-y-6 md:space-y-8'>
+            <HostBookingManagement />
           </div>
         )
 
@@ -1141,103 +1993,181 @@ const Dashboard = () => {
               </button>
             </div>
 
-            {[1, 2, 3].map((listing) => (
-              <div
-                key={listing}
-                className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'
-              >
-                <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6'>
-                  <div className='w-16 h-16 md:w-24 md:h-24 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0'>
-                    <FaHome className='text-2xl md:text-3xl text-primary-600' />
-                  </div>
-                  <div className='flex-1 min-w-0'>
-                    <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
-                      Luxury Apartment in Victoria Island
-                    </h3>
-                    <p className='text-primary-600 mb-2 text-sm md:text-base'>
-                      2 beds • 2 baths • Up to 4 guests
-                    </p>
-                    <div className='flex flex-wrap items-center gap-3 md:gap-4'>
-                      <span className='bg-accent-green-100 text-accent-green-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium'>
-                        Active
-                      </span>
-                      <span className='text-primary-600 text-xs md:text-sm'>
-                        {
-                          currencies.find((c) => c.code === formData.currency)
-                            ?.symbol
-                        }
-                        25,000/night
-                      </span>
+            {hostProperties?.length === 0 ? (
+              <div className='bg-white p-6 rounded-xl border border-primary-200 text-center'>
+                <FaHome className='text-4xl text-primary-400 mx-auto mb-4' />
+                <h3 className='text-lg font-bold text-primary-800 mb-2'>
+                  No listings yet
+                </h3>
+                <p className='text-primary-600 mb-4'>
+                  Start by creating your first property listing
+                </p>
+                <button
+                  onClick={() => setActiveTab('create')}
+                  className='bg-primary-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300'
+                >
+                  Create First Listing
+                </button>
+              </div>
+            ) : (
+              <div className='space-y-4'>
+                {/* Debug: Log properties being rendered */}
+                {console.log(
+                  '🏠 Dashboard: Rendering host properties:',
+                  hostProperties
+                )}
+                {console.log(
+                  '🔢 Dashboard: Properties count:',
+                  hostProperties?.length
+                )}
+                {hostProperties?.map((property) => (
+                  <div
+                    key={property._id || property.id}
+                    className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'
+                  >
+                    <div className='flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6'>
+                      <div className='w-16 h-16 md:w-24 md:h-24 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden'>
+                        {property.images && property.images.length > 0 ? (
+                          <img
+                            src={
+                              typeof property.images[0] === 'object' &&
+                              property.images[0].data
+                                ? property.images[0].data
+                                : property.images[0]
+                            }
+                            alt={property.title}
+                            className='w-full h-full object-cover'
+                          />
+                        ) : (
+                          <FaHome className='text-2xl md:text-3xl text-primary-600' />
+                        )}
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2'>
+                          {property.title}
+                        </h3>
+                        <p className='text-primary-600 mb-2 text-sm md:text-base'>
+                          {property.bedrooms} beds • {property.bathrooms} baths
+                          {property.area && ` • ${property.area} m²`}
+                        </p>
+                        <div className='flex flex-wrap items-center gap-3 md:gap-4'>
+                          <span
+                            className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium ${
+                              property.isActive
+                                ? 'bg-accent-green-100 text-accent-green-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}
+                          >
+                            {property.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                          <span className='text-primary-600 text-xs md:text-sm'>
+                            {property.currency || '₦'}
+                            {property.price}/night
+                          </span>
+                          <span className='text-primary-500 text-xs md:text-sm'>
+                            {property.type}
+                          </span>
+                        </div>
+                      </div>
+                      <div className='flex items-center gap-2 self-start sm:self-center'>
+                        <ButtonTooltip
+                          content={
+                            property.isActive
+                              ? 'Deactivate listing'
+                              : 'Activate listing'
+                          }
+                        >
+                          <button
+                            onClick={() =>
+                              handlePublishProperty(
+                                property._id || property.id,
+                                property.isActive ? 'active' : 'inactive'
+                              )
+                            }
+                            className={`p-3 md:p-2 rounded-lg transition-colors duration-200 ${
+                              property.isActive
+                                ? 'text-amber-600 hover:bg-amber-50'
+                                : 'text-green-600 hover:bg-green-50'
+                            }`}
+                          >
+                            <FaGlobe className='text-base md:text-lg' />
+                          </button>
+                        </ButtonTooltip>
+                        <ButtonTooltip content='View listing details'>
+                          <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                            <FaEye className='text-base md:text-lg' />
+                          </button>
+                        </ButtonTooltip>
+                        <ButtonTooltip content='Edit listing'>
+                          <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
+                            <FaEdit className='text-base md:text-lg' />
+                          </button>
+                        </ButtonTooltip>
+                        <ButtonTooltip content='Delete listing' variant='error'>
+                          <button className='p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg'>
+                            <FaTrash className='text-base md:text-lg' />
+                          </button>
+                        </ButtonTooltip>
+                      </div>
                     </div>
                   </div>
-                  <div className='flex items-center gap-2 self-start sm:self-center'>
-                    <ButtonTooltip content='View listing details'>
-                      <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                        <FaEye className='text-base md:text-lg' />
-                      </button>
-                    </ButtonTooltip>
-                    <ButtonTooltip content='Edit listing'>
-                      <button className='p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg'>
-                        <FaEdit className='text-base md:text-lg' />
-                      </button>
-                    </ButtonTooltip>
-                    <ButtonTooltip content='Delete listing' variant='error'>
-                      <button className='p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg'>
-                        <FaTrash className='text-base md:text-lg' />
-                      </button>
-                    </ButtonTooltip>
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )
 
       case 'create':
         return (
           <div className='space-y-6 md:space-y-8'>
-            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft overflow-x-auto'>
-              <div className='flex items-center justify-between min-w-max pb-2'>
+            <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
+              <h2 className='text-2xl md:text-3xl font-bold text-primary-800'>
+                Create New Listing
+              </h2>
+              <div className='text-sm md:text-base text-primary-600'>
+                Step {currentStep} of {steps.length}
+              </div>
+            </div>
+
+            {/* Step Progress */}
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='flex items-center justify-between mb-4'>
                 {steps.map((step, index) => (
-                  <div key={step.id} className='flex items-center'>
+                  <div
+                    key={step.id}
+                    className={`flex items-center gap-2 md:gap-3 ${
+                      index !== steps.length - 1 ? 'flex-1' : ''
+                    }`}
+                  >
                     <div
-                      className={`flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-full border-2 transition-all duration-300 ${
+                      className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-base ${
                         currentStep >= step.id
-                          ? 'bg-primary-800 border-primary-800 text-white'
-                          : 'border-primary-300 text-primary-400'
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-primary-100 text-primary-400'
                       }`}
                     >
                       {currentStep > step.id ? (
-                        <FaCheck className='text-base md:text-lg' />
+                        <FaCheck className='text-sm md:text-base' />
                       ) : (
-                        <step.icon className='text-base md:text-lg' />
+                        <step.icon className='text-sm md:text-base' />
                       )}
                     </div>
-                    <div className='ml-2 md:ml-3 hidden sm:block'>
-                      <p
-                        className={`text-xs md:text-sm font-medium ${
+                    <div className='hidden sm:block'>
+                      <div
+                        className={`font-medium text-xs md:text-sm ${
                           currentStep >= step.id
                             ? 'text-primary-800'
                             : 'text-primary-400'
                         }`}
                       >
-                        Step {step.id}
-                      </p>
-                      <p
-                        className={`text-xs ${
-                          currentStep >= step.id
-                            ? 'text-primary-600'
-                            : 'text-primary-400'
-                        }`}
-                      >
                         {step.name}
-                      </p>
+                      </div>
                     </div>
-                    {index < steps.length - 1 && (
+                    {index !== steps.length - 1 && (
                       <div
-                        className={`w-8 md:w-12 h-1 mx-2 md:mx-4 rounded-full ${
+                        className={`hidden sm:block flex-1 h-0.5 ml-3 md:ml-4 ${
                           currentStep > step.id
-                            ? 'bg-primary-800'
+                            ? 'bg-primary-500'
                             : 'bg-primary-200'
                         }`}
                       />
@@ -1247,83 +2177,220 @@ const Dashboard = () => {
               </div>
             </div>
 
-            <div className='bg-white p-6 md:p-8 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+            {/* Step Content */}
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
               {renderStepContent()}
+            </div>
 
-              <div className='flex flex-col sm:flex-row sm:justify-between gap-4 mt-6 md:mt-8 pt-4 md:pt-6 border-t border-primary-200'>
-                <button
-                  onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-                  disabled={currentStep === 1}
-                  className='px-4 md:px-6 py-2 md:py-3 border-2 border-primary-200 text-primary-700 rounded-xl font-semibold hover:bg-primary-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 text-sm md:text-base'
-                >
-                  Previous
-                </button>
+            {/* Navigation Buttons */}
+            <div className='flex flex-col sm:flex-row justify-between gap-3 sm:gap-4'>
+              <button
+                onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+                disabled={currentStep === 1}
+                className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-colors duration-300 text-sm md:text-base ${
+                  currentStep === 1
+                    ? 'bg-primary-100 text-primary-400 cursor-not-allowed'
+                    : 'bg-primary-200 text-primary-800 hover:bg-primary-300'
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={async () => {
+                  if (currentStep === steps.length) {
+                    // Validate form data before submitting
+                    const validationErrors = validateFormData(formData)
+                    if (validationErrors.length > 0) {
+                      toast.error(
+                        `⚠️ Please complete all required fields: ${validationErrors.join(
+                          ', '
+                        )}`,
+                        {
+                          description:
+                            'All fields must be filled before publishing.',
+                          duration: 5000,
+                        }
+                      )
+                      return
+                    }
 
-                {currentStep < 4 ? (
-                  <button
-                    onClick={() => setCurrentStep(Math.min(4, currentStep + 1))}
-                    className='px-4 md:px-6 py-2 md:py-3 bg-primary-800 text-white rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-sm md:text-base'
-                  >
-                    Next Step
-                  </button>
-                ) : (
-                  <button className='px-6 md:px-8 py-2 md:py-3 bg-gradient-to-r from-accent-green-600 to-accent-green-500 text-white rounded-xl font-semibold hover:from-accent-green-700 hover:to-accent-green-600 transition-all duration-300 transform hover:scale-105 text-sm md:text-base'>
-                    Publish Listing
-                  </button>
-                )}
-              </div>
+                    try {
+                      toast.info('📝 Publishing your listing...', {
+                        description:
+                          'Please wait while we create your property listing.',
+                        duration: 2000,
+                      })
+                      console.log('Starting publish process...')
+                      console.log('Current formData:', formData)
+
+                      // Transform form data to match backend schema
+                      const propertyData = await transformFormDataForAPI(
+                        formData
+                      )
+                      console.log('Transformed property data:', propertyData)
+
+                      // Check if we have valid property data
+                      if (!propertyData || !propertyData.title) {
+                        throw new Error('Invalid property data generated')
+                      }
+
+                      const result = await createProperty(propertyData)
+                      console.log('Property creation result:', result)
+
+                      // Refresh properties list
+                      await getHostProperties()
+
+                      // Show success message
+                      toast.success(
+                        '🎉 Listing published successfully! Your property is now live.',
+                        {
+                          description:
+                            'Guests can now discover and book your property.',
+                          duration: 5000,
+                        }
+                      )
+                      console.log('Property published successfully!')
+
+                      // Switch to overview tab
+                      setActiveTab('overview')
+
+                      // Reset form and uploaded images
+                      setFormData({
+                        title: '',
+                        description: '',
+                        propertyType: '',
+                        placeType: '',
+                        location: '',
+                        bedrooms: 1,
+                        bathrooms: 1,
+                        maxGuests: 1,
+                        amenities: [],
+                        images: [],
+                        mainImageIndex: 0,
+                        pricePerNight: '',
+                        currency: 'NGN',
+                      })
+                      setUploadedImageUrls([])
+                      setCurrentStep(1)
+                    } catch (error) {
+                      console.error('Failed to create property:', error)
+                      console.error('Error details:', {
+                        message: error.message,
+                        response: error.response?.data,
+                        status: error.response?.status,
+                      })
+
+                      let errorMessage = 'Failed to publish listing'
+
+                      if (error.response) {
+                        // Server responded with error
+                        if (error.response.status === 401) {
+                          errorMessage =
+                            'Authentication failed. Please log in again.'
+                        } else if (error.response.status === 400) {
+                          errorMessage =
+                            error.response.data?.message ||
+                            'Invalid property data'
+                        } else if (error.response.status === 500) {
+                          errorMessage = 'Server error. Please try again later.'
+                        } else {
+                          errorMessage =
+                            error.response.data?.message ||
+                            'Unknown server error'
+                        }
+                      } else if (error.message.includes('Network Error')) {
+                        errorMessage =
+                          'Network error. Please check your connection and server status.'
+                      } else {
+                        errorMessage = error.message
+                      }
+
+                      toast.error(errorMessage, {
+                        description:
+                          'Please check your connection and try again.',
+                        duration: 5000,
+                      })
+                    }
+                  } else {
+                    setCurrentStep(Math.min(steps.length, currentStep + 1))
+                  }
+                }}
+                className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold transition-colors duration-300 text-sm md:text-base ${
+                  currentStep === steps.length
+                    ? 'bg-success-500 text-white hover:bg-success-600'
+                    : 'bg-primary-800 text-white hover:bg-primary-900'
+                }`}
+              >
+                {currentStep === steps.length ? 'Publish Listing' : 'Next'}
+              </button>
             </div>
           </div>
         )
 
       case 'analytics':
         return (
-          <div className='space-y-6 md:space-y-8'>
+          <div className='space-y-4 md:space-y-6'>
             <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4'>
               <h2 className='text-2xl md:text-3xl font-bold text-primary-800'>
-                Analytics & Insights
+                Analytics Dashboard
               </h2>
-              <div className='flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-primary-200'>
-                <span className='text-sm font-medium text-primary-600'>
-                  Last 12 months
-                </span>
-                <FaChevronDown className='text-primary-400 text-sm' />
+              <div className='flex items-center gap-2'>
+                <button
+                  onClick={() => setChartType('area')}
+                  className={`px-3 md:px-4 py-2 rounded-xl font-medium transition-colors duration-300 text-sm md:text-base flex items-center gap-2 ${
+                    chartType === 'area'
+                      ? 'bg-primary-500 text-white shadow-sm'
+                      : 'text-primary-600 hover:bg-primary-100'
+                  }`}
+                >
+                  <FaChartArea className='text-sm' />
+                  Revenue
+                </button>
+                <button
+                  onClick={() => setChartType('bar')}
+                  className={`px-3 md:px-4 py-2 rounded-xl font-medium transition-colors duration-300 text-sm md:text-base flex items-center gap-2 ${
+                    chartType === 'bar'
+                      ? 'bg-primary-500 text-white shadow-sm'
+                      : 'text-primary-600 hover:bg-primary-100'
+                  }`}
+                >
+                  <FaChartBar className='text-sm' />
+                  Performance
+                </button>
               </div>
             </div>
 
-            {/* Revenue Overview Chart */}
-            <div className='bg-white p-4 sm:p-6 md:p-8 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
-              <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6'>
+            {/* Revenue Chart */}
+            <div className='bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft'>
+              <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6'>
                 <h3 className='text-lg md:text-xl font-bold text-primary-800 mb-2 sm:mb-0'>
-                  Revenue Overview
+                  {chartType === 'area'
+                    ? 'Revenue Trend'
+                    : 'Performance Metrics'}
                 </h3>
-
-                {/* Chart Type Toggle */}
                 <div className='flex items-center gap-2'>
-                  <div className='flex items-center bg-primary-50 p-1 rounded-lg border border-primary-200'>
-                    <button
-                      onClick={() => setChartType('area')}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                        chartType === 'area'
-                          ? 'bg-primary-500 text-white shadow-sm'
-                          : 'text-primary-600 hover:bg-primary-100'
-                      }`}
-                    >
-                      <FaChartArea className='text-sm' />
-                      Trends
-                    </button>
-                    <button
-                      onClick={() => setChartType('bar')}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                        chartType === 'bar'
-                          ? 'bg-primary-500 text-white shadow-sm'
-                          : 'text-primary-600 hover:bg-primary-100'
-                      }`}
-                    >
-                      <FaChartBar className='text-sm' />
-                      Performance
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setChartType('area')}
+                    className={`px-3 md:px-4 py-2 rounded-xl font-medium transition-colors duration-300 text-sm md:text-base flex items-center gap-2 ${
+                      chartType === 'area'
+                        ? 'bg-primary-500 text-white shadow-sm'
+                        : 'text-primary-600 hover:bg-primary-100'
+                    }`}
+                  >
+                    <FaChartArea className='text-sm' />
+                    Revenue
+                  </button>
+                  <button
+                    onClick={() => setChartType('bar')}
+                    className={`px-3 md:px-4 py-2 rounded-xl font-medium transition-colors duration-300 text-sm md:text-base flex items-center gap-2 ${
+                      chartType === 'bar'
+                        ? 'bg-primary-500 text-white shadow-sm'
+                        : 'text-primary-600 hover:bg-primary-100'
+                    }`}
+                  >
+                    <FaChartBar className='text-sm' />
+                    Performance
+                  </button>
                 </div>
               </div>
 
@@ -1737,45 +2804,54 @@ const Dashboard = () => {
       default:
         return null
     }
-  }
+  } // End renderTabContent function
 
+  // Main Dashboard component return
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100'>
-      <div className='container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[1400px]'>
-        <div className='mb-4 sm:mb-6 md:mb-8'>
-          <h1 className='text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 sm:mb-1 md:mb-2'>
-            Host Dashboard
-          </h1>
-          <p className='text-primary-600 text-base sm:text-lg md:text-xl'>
-            Manage your properties and grow your hosting business
-          </p>
-        </div>
+    <>
+      {/* Host Dashboard Navbar */}
+      {renderNavbar()}
 
-        <div className='bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft border border-primary-200 p-1 sm:p-1.5 md:p-2 mb-6 md:mb-8'>
-          <div className='flex space-x-1 sm:space-x-1.5 md:space-x-2 overflow-x-auto scrollbar-hide'>
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm sm:text-base md:text-lg min-w-0 flex-1 sm:flex-none ${
-                  activeTab === tab.id
-                    ? 'bg-primary-800 text-white shadow-medium'
-                    : 'text-primary-600 hover:bg-primary-50'
-                }`}
-              >
-                <tab.icon className='text-xl sm:text-2xl md:text-xl flex-shrink-0' />
-                <span className='text-sm sm:text-base md:text-lg md:inline leading-tight sm:leading-normal'>
-                  {tab.name}
-                </span>
-              </button>
-            ))}
+      {/* Main Dashboard Content */}
+      <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100 pt-20'>
+        <div className='container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[1400px]'>
+          <div className='mb-4 sm:mb-6 md:mb-8'>
+            <h1 className='text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 sm:mb-1 md:mb-2'>
+              Host Dashboard
+            </h1>
+            <p className='text-primary-600 text-base sm:text-lg md:text-xl'>
+              Manage your properties and grow your hosting business
+            </p>
+          </div>
+
+          <div className='bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft border border-primary-200 p-1 sm:p-1.5 md:p-2 mb-6 md:mb-8'>
+            <div className='flex space-x-1 sm:space-x-1.5 md:space-x-2 overflow-x-auto scrollbar-hide'>
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm sm:text-base md:text-lg min-w-0 flex-1 sm:flex-none ${
+                    activeTab === tab.id
+                      ? 'bg-primary-800 text-white shadow-medium'
+                      : 'text-primary-600 hover:bg-primary-50'
+                  }`}
+                >
+                  <tab.icon className='text-xl sm:text-2xl md:text-xl flex-shrink-0' />
+                  <span className='text-sm sm:text-base md:text-lg md:inline leading-tight sm:leading-normal'>
+                    {tab.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className='transition-all duration-300'>
+            {renderTabContent()}
           </div>
         </div>
-
-        <div className='transition-all duration-300'>{renderTabContent()}</div>
       </div>
-    </div>
+    </>
   )
-}
+} // Close Dashboard component function
 
 export default Dashboard

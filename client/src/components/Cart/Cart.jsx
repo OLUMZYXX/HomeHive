@@ -1,29 +1,22 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState, useRef } from 'react'
+import Navbar from '../Navbar/Navbar'
 import {
   FaCheck,
-  FaRegUserCircle,
   FaCreditCard,
   FaCalendarAlt,
   FaUsers,
   FaShieldAlt,
   FaLock,
-  FaCog,
-  FaBook,
-  FaHeart,
 } from 'react-icons/fa'
 import { IoIosArrowBack } from 'react-icons/io'
 import { RiArrowDropDownLine, RiSecurePaymentLine } from 'react-icons/ri'
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
 import image from '../../assets/Apt2.webp'
-import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { userAuth } from '../../config/firebaseConfig'
-import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
-import { onAuthStateChanged } from 'firebase/auth'
-import { AnimatedButton } from '../common/AnimatedComponents'
+import { useCurrency } from '../../contexts/CurrencyContext'
 
 const countries = [
   'United States',
@@ -41,11 +34,8 @@ const Cart = () => {
 
   const navigate = useNavigate()
   const location = useLocation()
+  const { formatPrice, convertFromCurrency, selectedCurrency } = useCurrency()
 
-  // Smart navigation handler
-  const handleHomeNavigation = () => {
-    navigateToHome(navigate, location)
-  }
   const [open, setOpen] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState({
     name: 'PayPal',
@@ -64,9 +54,27 @@ const Cart = () => {
     country: '',
   })
 
-  const [guest, setGuest] = useState(1)
-  const [checkIn, setCheckIn] = useState('')
-  const [checkOut, setCheckOut] = useState('')
+  // Get booking info from navigation state
+  const bookingInfo = location.state || {}
+  const [checkIn, setCheckIn] = useState(bookingInfo.checkIn || '')
+  const [checkOut, setCheckOut] = useState(bookingInfo.checkout || '')
+  const [guest, setGuest] = useState(bookingInfo.guest || 1)
+  const [home, setHome] = useState(bookingInfo.home || {})
+  const originalPrice = bookingInfo.price || 20000
+  const originalCurrency = bookingInfo.currency || 'NGN'
+  const userSelectedCurrency = bookingInfo.selectedCurrency || selectedCurrency
+
+  // Convert price to user's selected currency if different from property currency
+  const pricePerNight =
+    originalCurrency === userSelectedCurrency
+      ? originalPrice
+      : parseFloat(
+          convertFromCurrency(
+            originalPrice,
+            originalCurrency,
+            userSelectedCurrency
+          )
+        )
   const [editOpt, setEditOpt] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('full')
   const [isLoading, setIsLoading] = useState(false)
@@ -80,88 +88,12 @@ const Cart = () => {
       })
       return
     }
-
-    const checkInDate = new Date(checkIn)
-    const checkOutDate = new Date(checkOut)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    if (checkInDate < today) {
-      toast.error('Invalid Date', {
-        description: 'Check-in date cannot be in the past',
-        duration: 4000,
-      })
-      return
-    }
-
-    if (checkOutDate <= checkInDate) {
-      toast.error('Invalid Date Range', {
-        description: 'Check-out date must be after check-in date',
-        duration: 4000,
-      })
-      return
-    }
-
-    if (!guest || guest < 1) {
-      toast.error('Guest Information Required', {
-        description: 'Please specify the number of guests',
-        duration: 4000,
-      })
-      return
-    }
-
-    if (guest > 10) {
-      toast.error('Guest Limit Exceeded', {
-        description: 'Maximum 10 guests allowed',
-        duration: 4000,
-      })
-      return
-    }
-
-    if (selectedPayment.name === 'Mastercard' && showCardDetails) {
-      // Validate card details
-      if (
-        !billingDetails.cardNumber ||
-        !billingDetails.expiryDate ||
-        !billingDetails.cvv
-      ) {
-        toast.error('Card Information Required', {
-          description: 'Please fill in all card details',
-          duration: 4000,
-        })
-        return
-      }
-
-      if (
-        !billingDetails.name ||
-        !billingDetails.address ||
-        !billingDetails.city
-      ) {
-        toast.error('Billing Information Required', {
-          description: 'Please fill in all billing information',
-          duration: 4000,
-        })
-        return
-      }
-    }
-
-    // Start loading
-    setIsLoading(true)
-
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // Process booking
-      toast.success('Booking Confirmed! 🎉', {
-        description: 'Your booking request has been submitted successfully',
+      // Simulate booking success
+      toast.success('Booking Successful!', {
+        description: 'Your booking has been processed.',
         duration: 4000,
-        action: {
-          label: 'View Details',
-          onClick: () => console.log('View booking details'),
-        },
       })
-
       // Reset form after success
       setCheckIn('')
       setCheckOut('')
@@ -205,50 +137,8 @@ const Cart = () => {
     }
   }
 
-  const [user, setUser] = useState(null)
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const profileMenuRef = useRef(null)
-
-  // Authentication listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(userAuth, (currentUser) => {
-      setUser(currentUser)
-    })
-    return unsubscribe
-  }, [])
-
-  // Close profile menu on outside click
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target)
-      ) {
-        setProfileMenuOpen(false)
-      }
-    }
-    if (profileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [profileMenuOpen])
-
   const toggleDropdown = () => {
     setOpen((prev) => !prev)
-  }
-
-  // Navigate to host page handler
-  const navigateToHost = () => {
-    navigate('/host')
-  }
-
-  // Logout handler
-  const handleLogout = async () => {
-    try {
-      await userAuth.signOut()
-    } catch (error) {
-      console.error('Logout error:', error)
-    }
   }
 
   const handleSelectPayment = (option) => {
@@ -308,7 +198,6 @@ const Cart = () => {
 
     if (nights <= 0) return { nights: 0, basePrice: 0, total: 0 }
 
-    const pricePerNight = 20000 // ₦20,000 per night
     const basePrice = pricePerNight * nights
     const cleaningFee = 5000
     const serviceFee = 15000
@@ -344,168 +233,9 @@ const Cart = () => {
   ]
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100'>
-      {/* Enhanced Navbar */}
-      <div className='bg-white/80 backdrop-blur-md shadow-medium border-b border-primary-200 sticky top-0 z-50'>
-        <div className='flex items-center justify-between mx-auto relative px-4 py-4 md:px-16'>
-          {/* Logo Section */}
-          <div className='flex items-center gap-4'>
-            <HomeHiveLogo
-              className='w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 group-hover:scale-105 cursor-pointer'
-              alt='Homehive Logo'
-              onClick={handleHomeNavigation}
-            />
-            <h1
-              className='font-NotoSans text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-primary-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity duration-300'
-              onClick={handleHomeNavigation}
-            >
-              Homehive
-            </h1>
-          </div>
-
-          {/* Right Section */}
-          <div className='flex items-center gap-4 md:gap-6'>
-            <AnimatedButton
-              onClick={navigateToHost}
-              className='hidden md:inline-block px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200'
-            >
-              Become a Host
-            </AnimatedButton>
-
-            <div className='flex items-center gap-4'>
-              {user ? (
-                <div className='relative flex items-center gap-4'>
-                  <button
-                    className='relative focus:outline-none'
-                    onClick={() => setProfileMenuOpen((open) => !open)}
-                    aria-label='Profile menu'
-                  >
-                    <img
-                      src={user.photoURL}
-                      alt='User'
-                      className='w-10 h-10 md:w-12 md:h-12 rounded-full object-cover ring-2 ring-primary-200 hover:ring-primary-300 transition-all duration-300'
-                    />
-                    <div className='absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-accent-green-500 rounded-full border-2 border-white'></div>
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className='hidden sm:block bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-2 px-4 lg:py-3 lg:px-6 rounded-full font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105'
-                  >
-                    Logout
-                  </button>
-
-                  {/* Profile Dropdown */}
-                  <AnimatePresence>
-                    {profileMenuOpen && (
-                      <motion.div
-                        ref={profileMenuRef}
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{
-                          duration: 0.2,
-                          ease: [0.25, 0.46, 0.45, 0.94],
-                        }}
-                        className='absolute top-16 right-0 w-96 bg-white/95 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-strong z-50 overflow-hidden'
-                      >
-                        {/* Profile Header */}
-                        <div className='p-6 bg-gradient-to-r from-neutral-50 to-primary-50 border-b border-neutral-200/30'>
-                          <div className='flex items-center gap-4'>
-                            <div className='relative'>
-                              <img
-                                src={user.photoURL}
-                                alt='User'
-                                className='w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium'
-                              />
-                              {/* Enhanced status indicator */}
-                              <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-success-500 rounded-full border-2 border-white shadow-sm'>
-                                <div className='w-full h-full bg-success-400 rounded-full animate-ping opacity-75'></div>
-                              </div>
-                            </div>
-                            <div className='flex-1 min-w-0'>
-                              <div className='font-semibold text-neutral-800 text-lg truncate'>
-                                {user.displayName || 'User'}
-                              </div>
-                              <div className='text-sm text-neutral-500 truncate'>
-                                {user.email}
-                              </div>
-                              <div className='inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-success-100 text-success-700 text-xs font-medium rounded-full'>
-                                <div className='w-1.5 h-1.5 bg-success-500 rounded-full'></div>
-                                Active
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Menu Items */}
-                        <div className='py-2'>
-                          {/* Account Section */}
-                          <div className='px-2 pb-2'>
-                            <div className='text-xs font-semibold text-neutral-400 uppercase tracking-wider px-4 py-2'>
-                              Account
-                            </div>
-                            <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
-                              <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-primary-100 rounded-xl transition-colors duration-200'>
-                                <FaCog className='text-neutral-600 group-hover:text-primary-600 text-sm' />
-                              </div>
-                              <div className='flex-1 text-left'>
-                                <div className='font-medium text-sm'>
-                                  Settings
-                                </div>
-                                <div className='text-xs text-neutral-500'>
-                                  Manage preferences
-                                </div>
-                              </div>
-                            </button>
-
-                            <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
-                              <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-blue-100 rounded-xl transition-colors duration-200'>
-                                <FaBook className='text-neutral-600 group-hover:text-accent-blue-600 text-sm' />
-                              </div>
-                              <div className='flex-1 text-left'>
-                                <div className='font-medium text-sm'>
-                                  My Bookings
-                                </div>
-                                <div className='text-xs text-neutral-500'>
-                                  View reservations
-                                </div>
-                              </div>
-                            </button>
-
-                            <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
-                              <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-red-100 rounded-xl transition-colors duration-200'>
-                                <FaHeart className='text-neutral-600 group-hover:text-accent-red-500 text-sm' />
-                              </div>
-                              <div className='flex-1 text-left'>
-                                <div className='font-medium text-sm'>
-                                  Favorites
-                                </div>
-                                <div className='text-xs text-neutral-500'>
-                                  Saved properties
-                                </div>
-                              </div>
-                            </button>
-                          </div>
-
-                          {/* Divider */}
-                          <div className='my-2 mx-6 border-t border-neutral-200/50'></div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : (
-                <div className='flex items-center gap-4'>
-                  <button className='p-2 md:p-3 hover:bg-primary-50 rounded-full transition-all duration-300'>
-                    <FaRegUserCircle className='text-xl md:text-2xl text-primary-600' />
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100 pt-20'>
+      {/* Shared Navbar Component */}
+      <Navbar />
 
       {/* Enhanced Header */}
       <div className='container mx-auto px-4 sm:px-6 lg:px-8 max-w-[1400px]'>
@@ -697,52 +427,54 @@ const Cart = () => {
               <div className='flex flex-col sm:flex-row gap-4 sm:gap-6'>
                 <div className='flex-shrink-0'>
                   <img
-                    src={image}
-                    alt='Luxury Banana Island Villa'
+                    src={home.image || image}
+                    alt={home.name || 'Accommodation'}
                     className='w-full sm:w-48 h-48 sm:h-32 object-cover rounded-xl shadow-medium hover:shadow-strong transition-all duration-300'
                   />
                 </div>
                 <div className='flex-1 space-y-3'>
                   <div>
                     <h3 className='text-xl font-bold text-primary-800 mb-1'>
-                      Luxury Banana Island Villa
+                      {home.name || 'Accommodation'}
                     </h3>
                     <p className='text-primary-600 font-medium'>
-                      Entire villa in Lagos, Nigeria
+                      {home.location || 'Location not specified'}
                     </p>
-                    <p className='text-sm text-primary-500'>
-                      4-6 guests · 5 beds · 3 baths
-                    </p>
+                    {/* Optionally show more details if available */}
+                    {home.text && (
+                      <p className='text-sm text-primary-500'>{home.text}</p>
+                    )}
                   </div>
 
                   <div className='flex flex-wrap items-center gap-2'>
-                    <span className='bg-accent-blue-100 text-accent-blue-700 px-3 py-1 rounded-full text-sm font-bold'>
-                      Superhost
-                    </span>
-                    <div className='flex items-center gap-1 bg-accent-amber-50 px-3 py-1 rounded-full'>
-                      <span className='text-accent-amber-500 text-sm'>★</span>
-                      <span className='font-bold text-primary-800 text-sm'>
-                        4.9
+                    {home.badge && (
+                      <span className='bg-accent-blue-100 text-accent-blue-700 px-3 py-1 rounded-full text-sm font-bold'>
+                        {home.badge}
                       </span>
-                      <span className='text-xs text-primary-600'>
-                        (312 reviews)
-                      </span>
-                    </div>
+                    )}
+                    {home.rating && (
+                      <div className='flex items-center gap-1 bg-accent-amber-50 px-3 py-1 rounded-full'>
+                        <span className='text-accent-amber-500 text-sm'>★</span>
+                        <span className='font-bold text-primary-800 text-sm'>
+                          {home.rating}
+                        </span>
+                        <span className='text-xs text-primary-600'>
+                          ({home.reviewCount || 0} reviews)
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className='flex flex-wrap gap-2 mt-3'>
-                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
-                      WiFi
-                    </span>
-                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
-                      Kitchen
-                    </span>
-                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
-                      Pool
-                    </span>
-                    <span className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'>
-                      Free Parking
-                    </span>
+                    {home.amenities &&
+                      home.amenities.map((amenity, idx) => (
+                        <span
+                          key={idx}
+                          className='bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-xs font-medium'
+                        >
+                          {amenity}
+                        </span>
+                      ))}
                   </div>
                 </div>
               </div>
@@ -780,7 +512,8 @@ const Cart = () => {
                         )}
                       </div>
                       <span className='font-bold text-primary-800'>
-                        Pay ₦{pricing.total?.toLocaleString()} now
+                        Pay {formatPrice(pricing.total, userSelectedCurrency)}{' '}
+                        now
                       </span>
                     </div>
                     <FaShieldAlt className='text-accent-green-500' />
@@ -817,8 +550,15 @@ const Cart = () => {
                     </span>
                   </div>
                   <p className='text-sm text-primary-600 ml-7'>
-                    ₦{Math.floor(pricing.total * 0.6)?.toLocaleString()} due
-                    today, ₦{Math.floor(pricing.total * 0.4)?.toLocaleString()}{' '}
+                    {formatPrice(
+                      Math.floor(pricing.total * 0.6),
+                      userSelectedCurrency
+                    )}{' '}
+                    due today,{' '}
+                    {formatPrice(
+                      Math.floor(pricing.total * 0.4),
+                      userSelectedCurrency
+                    )}{' '}
                     due next month
                   </p>
                 </div>
@@ -1127,26 +867,30 @@ const Cart = () => {
               {/* Property Image and Info - Second on Mobile, First on Desktop */}
               <div className='mb-6'>
                 <img
-                  src={image}
-                  alt='Apartment'
+                  src={home.image || image}
+                  alt={home.name || 'Accommodation'}
                   className='rounded-2xl w-full h-48 object-cover shadow-medium mb-4 hover:shadow-strong transition-all duration-300'
                 />
                 <div className='space-y-2'>
                   <h3 className='text-xl font-bold text-primary-800'>
-                    Luxury Banana Island Villa
+                    {home.name || 'Accommodation'}
                   </h3>
                   <p className='text-primary-600 font-medium'>
-                    Entire villa in Lagos
+                    {home.location || 'Location not specified'}
                   </p>
-                  <div className='flex items-center gap-2'>
+                  {home.badge && (
                     <span className='bg-accent-blue-100 text-accent-blue-700 px-3 py-1 rounded-full text-sm font-bold'>
-                      Superhost
+                      {home.badge}
                     </span>
+                  )}
+                  {home.rating && (
                     <div className='flex items-center gap-1 text-accent-amber-500'>
                       <span className='text-lg'>★</span>
-                      <span className='font-bold text-primary-800'>4.9</span>
+                      <span className='font-bold text-primary-800'>
+                        {home.rating}
+                      </span>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Dates Section - Hidden on Mobile, Shown on Desktop */}
@@ -1190,12 +934,15 @@ const Cart = () => {
                   <div className='space-y-3'>
                     <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
                       <span className='text-primary-700 underline'>
-                        ₦{pricing.pricePerNight?.toLocaleString()} ×{' '}
-                        {pricing.nights}{' '}
+                        {formatPrice(
+                          pricing.pricePerNight,
+                          userSelectedCurrency
+                        )}{' '}
+                        × {pricing.nights}{' '}
                         {pricing.nights === 1 ? 'night' : 'nights'}
                       </span>
                       <span className='font-bold text-primary-800'>
-                        ₦{pricing.basePrice?.toLocaleString()}
+                        {formatPrice(pricing.basePrice, userSelectedCurrency)}
                       </span>
                     </div>
 
@@ -1204,7 +951,7 @@ const Cart = () => {
                         Cleaning fee
                       </span>
                       <span className='font-bold text-primary-800'>
-                        ₦{pricing.cleaningFee?.toLocaleString()}
+                        {formatPrice(pricing.cleaningFee, userSelectedCurrency)}
                       </span>
                     </div>
 
@@ -1213,14 +960,14 @@ const Cart = () => {
                         Service fee
                       </span>
                       <span className='font-bold text-primary-800'>
-                        ₦{pricing.serviceFee?.toLocaleString()}
+                        {formatPrice(pricing.serviceFee, userSelectedCurrency)}
                       </span>
                     </div>
 
                     <div className='flex justify-between items-center p-3 bg-primary-25 rounded-xl'>
                       <span className='text-primary-700 underline'>Taxes</span>
                       <span className='font-bold text-primary-800'>
-                        ₦{pricing.taxes?.toLocaleString()}
+                        {formatPrice(pricing.taxes, userSelectedCurrency)}
                       </span>
                     </div>
                   </div>
@@ -1239,12 +986,12 @@ const Cart = () => {
               <div className='bg-gradient-to-r from-primary-100 to-primary-50 p-4 rounded-xl border border-primary-200'>
                 <div className='flex justify-between items-center'>
                   <span className='text-xl font-bold text-primary-800'>
-                    Total (NGN)
+                    Total ({userSelectedCurrency})
                   </span>
                   <span className='text-2xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
                     {pricing.total > 0
-                      ? `₦${pricing.total?.toLocaleString()}`
-                      : '₦0'}
+                      ? formatPrice(pricing.total, userSelectedCurrency)
+                      : formatPrice(0, userSelectedCurrency)}
                   </span>
                 </div>
                 <p className='text-sm text-primary-600 mt-2'>

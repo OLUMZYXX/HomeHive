@@ -193,6 +193,12 @@ export const APIProvider = ({ children }) => {
         const response = await axiosInstance.post('/auth/register', userData)
         const { user, tokens } = response.data
 
+        // Store tokens in localStorage
+        if (tokens) {
+          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
+          TokenManager.setUserData(user)
+        }
+
         dispatch({ type: actionTypes.SET_USER, payload: user })
         return response.data
       } catch (error) {
@@ -215,6 +221,12 @@ export const APIProvider = ({ children }) => {
         )
         const { host, tokens } = response.data
 
+        // Store tokens in localStorage
+        if (tokens) {
+          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
+          TokenManager.setUserData(host)
+        }
+
         dispatch({ type: actionTypes.SET_USER, payload: host })
         return response.data
       } catch (error) {
@@ -231,13 +243,22 @@ export const APIProvider = ({ children }) => {
         setLoading(true)
         clearError()
 
-        const response = await axiosInstance.post('/auth/login', {
-          email,
-          password,
-          isHost,
-        })
+        // Use different endpoint for host login
+        const endpoint = isHost ? '/auth/host-login' : '/auth/login'
+        const requestData = isHost
+          ? { email, password }
+          : { email, password, isHost }
+
+        const response = await axiosInstance.post(endpoint, requestData)
 
         const { user, tokens } = response.data
+
+        // Store tokens in localStorage
+        if (tokens) {
+          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
+          TokenManager.setUserData(user)
+        }
+
         dispatch({ type: actionTypes.SET_USER, payload: user })
         return response.data
       } catch (error) {
@@ -254,12 +275,22 @@ export const APIProvider = ({ children }) => {
         setLoading(true)
         clearError()
 
-        const response = await axiosInstance.post('/auth/google', {
+        // Use different endpoint for host Google auth
+        const endpoint = userData.isHost ? '/auth/google-host' : '/auth/google'
+
+        const response = await axiosInstance.post(endpoint, {
           idToken,
           userData,
         })
 
         const { user, tokens } = response.data
+
+        // Store tokens in localStorage
+        if (tokens) {
+          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
+          TokenManager.setUserData(user)
+        }
+
         dispatch({ type: actionTypes.SET_USER, payload: user })
         return response.data
       } catch (error) {
@@ -294,6 +325,9 @@ export const APIProvider = ({ children }) => {
 
       const response = await axiosInstance.get('/auth/me')
       const { user } = response.data
+
+      // Update user data in localStorage
+      TokenManager.setUserData(user)
 
       dispatch({ type: actionTypes.SET_USER, payload: user })
       return user
@@ -419,11 +453,14 @@ export const APIProvider = ({ children }) => {
         setLoading(true)
         clearError()
 
-        const response = await axiosInstance.post('/properties', propertyData)
-        const newProperty = { ...propertyData, id: response.data.propertyId }
+        const response = await axiosInstance.post(
+          '/auth/host/properties',
+          propertyData
+        )
+        const { data } = response.data
 
-        dispatch({ type: actionTypes.ADD_PROPERTY, payload: newProperty })
-        return response.data
+        dispatch({ type: actionTypes.ADD_PROPERTY, payload: data })
+        return data
       } catch (error) {
         setError(error)
         throw error
@@ -441,15 +478,16 @@ export const APIProvider = ({ children }) => {
         clearError()
 
         const response = await axiosInstance.put(
-          `/properties/${id}`,
+          `/auth/host/properties/${id}`,
           propertyData
         )
+        const { data } = response.data
 
         dispatch({
           type: actionTypes.UPDATE_PROPERTY,
-          payload: { id, ...propertyData },
+          payload: { id, ...data },
         })
-        return response.data
+        return data
       } catch (error) {
         setError(error)
         throw error
@@ -466,7 +504,9 @@ export const APIProvider = ({ children }) => {
         setLoading(true)
         clearError()
 
-        const response = await axiosInstance.delete(`/properties/${id}`)
+        const response = await axiosInstance.delete(
+          `/auth/host/properties/${id}`
+        )
 
         dispatch({ type: actionTypes.REMOVE_PROPERTY, payload: id })
         return response.data
@@ -485,16 +525,131 @@ export const APIProvider = ({ children }) => {
       setLoading(true)
       clearError()
 
-      const response = await axiosInstance.get('/host/properties')
-      const { properties } = response.data
+      console.log('🔍 Fetching host properties...')
+      console.log('📍 Endpoint: /auth/host/properties')
+      console.log('🔐 User token exists:', !!TokenManager.getAccessToken())
 
-      dispatch({ type: actionTypes.SET_HOST_PROPERTIES, payload: properties })
-      return properties
+      const response = await axiosInstance.get('/auth/host/properties')
+      console.log('✅ Host properties response:', response.data)
+
+      const { data } = response.data // The server returns { success, data, count, message }
+
+      dispatch({ type: actionTypes.SET_HOST_PROPERTIES, payload: data || [] })
+      return data || []
     } catch (error) {
-      setError(error)
+      console.error('❌ Error in getHostProperties:', error)
+      console.error('📄 Error response:', error.response?.data)
+      console.error('🔢 Error status:', error.response?.status)
+      console.error('🌐 Request URL:', error.config?.url)
+      console.error(
+        'Error loading properties:',
+        error.response?.data?.message || error.message
+      )
+      setError(new Error(`Endpoint not found: ${error.config?.url}`))
       throw error
+    } finally {
+      setLoading(false)
     }
   }, [setLoading, setError, clearError])
+
+  const getHostStats = useCallback(
+    async (hostId) => {
+      try {
+        setLoading(true)
+        clearError()
+
+        console.log('📊 Fetching host stats for:', hostId)
+
+        const response = await axiosInstance.get(
+          `/bookings/host/${hostId}/stats`
+        )
+        console.log('✅ Host stats response:', response.data)
+
+        return response.data
+      } catch (error) {
+        console.error('❌ Error in getHostStats:', error)
+        console.error('📄 Error response:', error.response?.data)
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            'Failed to fetch host statistics'
+        )
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setLoading, setError, clearError]
+  )
+
+  const checkBookingAvailability = useCallback(
+    async (propertyId, checkIn, checkOut) => {
+      try {
+        const response = await axiosInstance.post(
+          '/bookings/check-availability',
+          {
+            propertyId,
+            checkIn,
+            checkOut,
+          }
+        )
+
+        return response.data
+      } catch (error) {
+        console.error('❌ Error checking availability:', error)
+        throw error
+      }
+    },
+    []
+  )
+
+  const createBookingWithValidation = useCallback(
+    async (bookingData) => {
+      try {
+        setLoading(true)
+        clearError()
+
+        // First check availability
+        const availabilityCheck = await checkBookingAvailability(
+          bookingData.propertyId,
+          bookingData.checkIn,
+          bookingData.checkOut
+        )
+
+        if (!availabilityCheck.available) {
+          throw new Error(
+            availabilityCheck.message ||
+              'Property is not available for the selected dates'
+          )
+        }
+
+        // Create the booking
+        const response = await axiosInstance.post('/bookings', bookingData)
+        console.log('✅ Booking created:', response.data)
+
+        const newBooking = {
+          id: response.data.bookingId,
+          ...bookingData,
+          status: 'pending',
+          createdAt: new Date(),
+        }
+
+        dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking })
+        return response.data
+      } catch (error) {
+        console.error('❌ Error creating booking:', error)
+        setError(
+          error.response?.data?.message ||
+            error.message ||
+            'Failed to create booking'
+        )
+        throw error
+      } finally {
+        setLoading(false)
+      }
+    },
+    [setLoading, setError, clearError, checkBookingAvailability]
+  )
 
   const searchProperties = useCallback(
     async (searchCriteria) => {
@@ -803,6 +958,7 @@ export const APIProvider = ({ children }) => {
     updateProperty,
     deleteProperty,
     getHostProperties,
+    getHostStats,
     searchProperties,
     getFeaturedProperties,
     getPremiumImages,
@@ -822,6 +978,8 @@ export const APIProvider = ({ children }) => {
     // Bookings
     getBookings,
     createBooking,
+    createBookingWithValidation,
+    checkBookingAvailability,
     updateBookingStatus,
   }
 

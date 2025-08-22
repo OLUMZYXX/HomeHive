@@ -47,14 +47,23 @@ const Location = () => {
     const fetchAvailableLocations = async () => {
       try {
         const properties = await getProperties({ limit: 1000 }) // Get all to extract locations
+        // Only use string locations, not objects
         const locations = [
           ...new Set(
             properties
-              .map(
-                (property) =>
+              .map((property) => {
+                // If property.location is an object, format it as a string
+                const loc =
                   property.location || property.city || property.address
-              )
-              .filter(Boolean)
+                if (typeof loc === 'object' && loc !== null) {
+                  // Try to format as 'city, state, country' if possible
+                  return [loc.city, loc.state, loc.country]
+                    .filter(Boolean)
+                    .join(', ')
+                }
+                return loc
+              })
+              .filter((loc) => typeof loc === 'string' && loc.trim() !== '')
           ),
         ]
         setAvailableLocations(
@@ -65,7 +74,6 @@ const Location = () => {
         setAvailableLocations(defaultLocations)
       }
     }
-
     fetchAvailableLocations()
   }, [getProperties, defaultLocations])
 
@@ -143,7 +151,7 @@ const Location = () => {
         resultsCount: results.length.toString(),
       }).toString()
 
-      navigate(`/homepage?${queryParams}`, {
+      navigate(`/listings?${queryParams}`, {
         state: {
           searchResults: results,
           searchCriteria,
@@ -235,7 +243,7 @@ const Location = () => {
           })
         }
 
-        navigate(`/homepage?quick=${quickSearchType}`, {
+        navigate(`/listings?quick=${quickSearchType}`, {
           state: {
             searchResults: results,
             searchCriteria,
@@ -313,8 +321,8 @@ const Location = () => {
                       <option value='' disabled>
                         Choose location
                       </option>
-                      {availableLocations.map((loc) => (
-                        <option key={loc} value={loc}>
+                      {availableLocations.map((loc, idx) => (
+                        <option key={loc + '-' + idx} value={loc}>
                           {loc}
                         </option>
                       ))}

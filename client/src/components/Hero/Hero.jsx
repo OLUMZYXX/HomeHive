@@ -264,7 +264,7 @@ const Hero = () => {
                 <img
                   src={currentImage}
                   alt='Beautiful accommodation showcasing comfort and luxury'
-                  className='w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl object-cover transform group-hover:scale-105 transition-transform duration-700'
+                  className='w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl object-cover transform group-hover:scale-105 transition-all duration-700 ease-out'
                   loading='eager'
                   decoding='async'
                   width={1024}
@@ -272,7 +272,8 @@ const Hero = () => {
                   onError={handleImageError}
                   style={{
                     opacity: isLoading ? 0.3 : 1,
-                    transition: 'opacity 0.5s ease-in-out',
+                    transition:
+                      'opacity 0.5s ease-in-out, transform 0.7s ease-out',
                   }}
                 />
 

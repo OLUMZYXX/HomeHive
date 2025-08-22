@@ -72,13 +72,19 @@ const Featured = () => {
   const [favorites, setFavorites] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [displayedProperties, setDisplayedProperties] = useState([])
+  const [showingMore, setShowingMore] = useState(false)
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
       try {
         const featuredRes = await propertiesAPI.getFeaturedRandom(8)
-        setProperties(featuredRes.images || featuredRes.showcase || [])
+        const fetchedProperties =
+          featuredRes.images || featuredRes.showcase || []
+        setProperties(fetchedProperties)
+        // Initially show only 3 properties
+        setDisplayedProperties(fetchedProperties.slice(0, 3))
         const favRes = await favoritesAPI.getFavorites()
         setFavorites(
           favRes.favorites ? favRes.favorites.map((f) => f.propertyId) : []
@@ -103,6 +109,15 @@ const Featured = () => {
     } catch {
       // Optionally show toast
     }
+  }
+
+  const handleLoadMore = () => {
+    if (showingMore || properties.length <= 3) {
+      return
+    }
+    // Show all properties when load more is clicked
+    setDisplayedProperties(properties)
+    setShowingMore(true)
   }
 
   return (
@@ -163,14 +178,14 @@ const Featured = () => {
         {/* Properties Grid */}
         <StaggerContainer
           staggerDelay={0.2}
-          className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'
+          className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
         >
           {loading ? (
             <div className='col-span-4 text-center py-12 text-primary-600'>
               Loading featured properties...
             </div>
-          ) : error || properties.length === 0 ? (
-            fallbackProperties.map((property) => (
+          ) : error || displayedProperties.length === 0 ? (
+            fallbackProperties.slice(0, 3).map((property) => (
               <StaggerItem key={property.id}>
                 <AnimatedCard
                   className='group bg-white rounded-3xl shadow-soft hover:shadow-strong transition-all duration-500 overflow-hidden border border-primary-100'
@@ -268,7 +283,7 @@ const Featured = () => {
               </StaggerItem>
             ))
           ) : (
-            properties.map((property) => (
+            displayedProperties.map((property) => (
               <StaggerItem key={property.id || property.propertyId}>
                 <AnimatedCard
                   className='group bg-white rounded-3xl shadow-soft hover:shadow-strong transition-all duration-500 overflow-hidden border border-primary-100'
@@ -373,6 +388,21 @@ const Featured = () => {
             ))
           )}
         </StaggerContainer>
+
+        {/* Load More Button */}
+        {!showingMore && properties.length > 3 && (
+          <ScrollReveal direction='up' delay={0.3}>
+            <div className='text-center mt-12'>
+              <AnimatedButton
+                onClick={handleLoadMore}
+                className='group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center gap-3 mx-auto'
+              >
+                Load More Properties
+                <HiArrowRight className='text-lg group-hover:translate-x-1 transition-transform duration-300' />
+              </AnimatedButton>
+            </div>
+          </ScrollReveal>
+        )}
       </div>
     </section>
   )

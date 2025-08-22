@@ -1,10 +1,11 @@
 import 'react'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 
-import { FaRegUserCircle, FaCheck, FaChevronDown } from 'react-icons/fa'
-import { useEffect, useState } from 'react'
+import { FaCheck, FaChevronDown } from 'react-icons/fa'
+import { useEffect, useState, useRef } from 'react'
 import { MdOutlineArrowRightAlt } from 'react-icons/md'
 import { HiArrowRight, HiShieldCheck, HiStar, HiHome } from 'react-icons/hi'
+import { FaSignOutAlt } from 'react-icons/fa'
 import review from '../../assets/3d review.png'
 import sync from '../../assets/sync2.png'
 import search from '../../assets/searchvisible.png'
@@ -12,12 +13,25 @@ import img from '../../assets/livning room.jpg'
 import img2 from '../../assets/home.jpg'
 import { Link, useNavigate } from 'react-router-dom'
 import { hostAuth } from '../../config/firebaseConfig'
+import { useAPI } from '../../contexts/APIContext'
+import { toast } from '../../utils/toast.jsx'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const Host = () => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [openFaq, setOpenFaq] = useState(null)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileMenuRef = useRef(null)
+
+  // Get API context for authentication
+  const {
+    user: apiUser,
+    isAuthenticated,
+    logout: apiLogout,
+    loading,
+  } = useAPI()
 
   const faqs = [
     {
@@ -180,11 +194,21 @@ const Host = () => {
   ]
 
   useEffect(() => {
-    const unsubscribe = hostAuth.onAuthStateChanged((user) => {
-      setUser(user)
-    })
-    return () => unsubscribe()
-  }, [])
+    // Check if we have an authenticated host from the API context
+    if (apiUser && isAuthenticated && apiUser.userType === 'host') {
+      setUser(apiUser)
+    } else {
+      // Fallback to Firebase auth for backward compatibility
+      const unsubscribe = hostAuth.onAuthStateChanged((firebaseUser) => {
+        if (firebaseUser && !apiUser) {
+          setUser(firebaseUser)
+        } else if (!firebaseUser && !apiUser) {
+          setUser(null)
+        }
+      })
+      return () => unsubscribe()
+    }
+  }, [apiUser, isAuthenticated])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -194,8 +218,49 @@ const Host = () => {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const hostSignIn = () => navigate('/hostlogin')
-  const handleLogout = async () => await hostAuth.signOut()
+  // Close profile menu on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setProfileMenuOpen(false)
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [profileMenuOpen])
+
+  const hostSignIn = () => {
+    setProfileMenuOpen(false)
+    navigate('/hostlogin')
+  }
+
+  const hostSignUp = () => {
+    setProfileMenuOpen(false)
+    navigate('/host-signup')
+  }
+
+  const handleLogout = async () => {
+    try {
+      if (apiUser && isAuthenticated) {
+        // Use API logout for authenticated users
+        await apiLogout()
+        toast.success('Logged out successfully')
+      } else {
+        // Fallback to Firebase logout
+        await hostAuth.signOut()
+      }
+      setUser(null)
+      setProfileMenuOpen(false)
+    } catch (error) {
+      console.error('Logout error:', error)
+      toast.error('Logout failed. Please try again.')
+    }
+  }
 
   return (
     <div className='bg-white'>
@@ -227,25 +292,179 @@ const Host = () => {
               </div>
 
               <div className='hidden md:flex items-center gap-4'>
-                <div className='flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2'>
-                  {user ? (
-                    <div className='flex items-center gap-3'>
-                      <img
-                        src={user.photoURL}
-                        alt='User'
-                        className='w-8 h-8 rounded-full'
-                      />
-                      <button
-                        onClick={handleLogout}
-                        className='bg-white text-primary-800 px-4 py-2 rounded-full font-semibold text-sm hover:bg-primary-50 transition-colors duration-300'
+                {user ? (
+                  <div className='relative flex items-center gap-3'>
+                    {/* User Profile Button */}
+                    <button
+                      onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                      className='flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-2 hover:bg-white/20 transition-all duration-300'
+                    >
+                      {user.photoURL || user.profilePicture ? (
+                        <img
+                          src={user.photoURL || user.profilePicture}
+                          alt='Host Profile'
+                          className='w-8 h-8 rounded-full object-cover'
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.nextSibling.style.display = 'flex'
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className='w-8 h-8 rounded-full bg-gradient-to-br from-primary-300 to-primary-500 flex items-center justify-center text-white font-semibold text-sm'
+                        style={{
+                          display:
+                            user.photoURL || user.profilePicture
+                              ? 'none'
+                              : 'flex',
+                        }}
                       >
-                        Logout
-                      </button>
-                    </div>
-                  ) : (
-                    <FaRegUserCircle className='text-xl text-white' />
-                  )}
-                </div>
+                        {(
+                          user.displayName ||
+                          user.firstName ||
+                          user.email ||
+                          'H'
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                      <div className='text-left'>
+                        <div className='text-white text-sm font-medium'>
+                          {user.displayName || user.firstName || 'Host'}
+                        </div>
+                        <div className='text-white/70 text-xs'>
+                          Host Dashboard
+                        </div>
+                      </div>
+                      <FaChevronDown className='text-white/70 text-xs' />
+                    </button>
+
+                    {/* Profile Dropdown */}
+                    <AnimatePresence>
+                      {profileMenuOpen && (
+                        <motion.div
+                          ref={profileMenuRef}
+                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                          transition={{ duration: 0.2, ease: 'easeOut' }}
+                          className='absolute top-full right-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-strong z-50 overflow-hidden'
+                        >
+                          {/* User Info Section */}
+                          <div className='px-4 py-4 border-b border-gray-100 bg-gradient-to-r from-primary-50 to-primary-100'>
+                            <div className='flex items-center gap-3'>
+                              <div className='relative'>
+                                {user.photoURL || user.profilePicture ? (
+                                  <img
+                                    src={user.photoURL || user.profilePicture}
+                                    alt='Host Profile'
+                                    className='w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium'
+                                    onError={(e) => {
+                                      e.target.style.display = 'none'
+                                      e.target.nextSibling.style.display =
+                                        'flex'
+                                    }}
+                                  />
+                                ) : null}
+                                <div
+                                  className='w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-white shadow-medium'
+                                  style={{
+                                    display:
+                                      user.photoURL || user.profilePicture
+                                        ? 'none'
+                                        : 'flex',
+                                  }}
+                                >
+                                  {(
+                                    user.displayName ||
+                                    user.firstName ||
+                                    user.email ||
+                                    'H'
+                                  )
+                                    .charAt(0)
+                                    .toUpperCase()}
+                                </div>
+                              </div>
+                              <div className='flex-1 min-w-0'>
+                                <div className='font-semibold text-primary-900 text-lg truncate'>
+                                  {user.displayName || user.firstName || 'Host'}
+                                </div>
+                                <div className='text-sm text-primary-600 truncate'>
+                                  {user.email}
+                                </div>
+                                <div className='inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full'>
+                                  <div className='w-1.5 h-1.5 bg-primary-500 rounded-full'></div>
+                                  Host Active
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Menu Items */}
+                          <div className='py-2'>
+                            <button
+                              onClick={() => {
+                                navigate('/host-dashboard')
+                                setProfileMenuOpen(false)
+                              }}
+                              className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-900 transition-colors duration-200'
+                            >
+                              <div className='w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center'>
+                                <HiHome className='text-primary-600 text-sm' />
+                              </div>
+                              <div className='flex-1 text-left'>
+                                <div className='font-medium text-sm'>
+                                  Dashboard
+                                </div>
+                                <div className='text-xs text-gray-500'>
+                                  Manage properties
+                                </div>
+                              </div>
+                            </button>
+
+                            <button
+                              onClick={handleLogout}
+                              disabled={loading}
+                              className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 group ${
+                                loading ? 'opacity-50 cursor-not-allowed' : ''
+                              }`}
+                            >
+                              <div className='w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center'>
+                                <FaSignOutAlt className='text-red-600 text-sm' />
+                              </div>
+                              <div className='flex-1 text-left'>
+                                <div className='font-medium text-sm'>
+                                  {loading ? 'Logging out...' : 'Sign Out'}
+                                </div>
+                                <div className='text-xs text-red-500'>
+                                  End your session
+                                </div>
+                              </div>
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                ) : (
+                  <div className='flex items-center gap-3'>
+                    {/* Host Login Button */}
+                    <button
+                      onClick={hostSignIn}
+                      className='bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-6 py-2 text-white font-semibold hover:bg-white/20 transition-all duration-300'
+                    >
+                      Host Login
+                    </button>
+
+                    {/* Create Host Account Button */}
+                    <button
+                      onClick={hostSignUp}
+                      className='bg-white text-primary-800 px-6 py-2 rounded-full font-semibold hover:bg-primary-50 transition-all duration-300'
+                    >
+                      Create Account
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

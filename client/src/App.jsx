@@ -9,8 +9,9 @@ import Home from './Home'
 import Login from './components/Loginpage/login'
 import Createacct from './components/Create Account/Createacct'
 import CreateAccount from './components/HostCreate-Acct/CreateAccount'
-import Homepage from './components/home-page/Homepage'
-import ListingDetails from './components/HomepageDetails/ListingDetails'
+import Listings from './components/listings-page/Listings'
+import PropertyDetail from './components/PropertyDetail/PropertyDetail'
+import MyBookings from './components/MyBookings/MyBookings'
 import Cart from './components/Cart/Cart'
 import Host from './components/Become a Host/Host'
 import Hostlogin from './components/Host-Login/Hostlogin'
@@ -27,7 +28,7 @@ const AnimatedRoutes = () => {
       case '/signin':
       case '/signup':
         return 'scaleIn'
-      case '/homepage':
+      case '/listings':
       case '/listing':
         return 'slideInRight'
       default:
@@ -63,10 +64,10 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/homepage'
+          path='/listings'
           element={
             <PageWrapper variant={getPageVariant(location.pathname)}>
-              <Homepage />
+              <Listings />
             </PageWrapper>
           }
         />
@@ -74,7 +75,23 @@ const AnimatedRoutes = () => {
           path='/listing/:id'
           element={
             <PageWrapper variant={getPageVariant(location.pathname)}>
-              <ListingDetails />
+              <PropertyDetail />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path='/my-bookings'
+          element={
+            <PageWrapper variant='fadeInUp'>
+              <MyBookings />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path='/bookings'
+          element={
+            <PageWrapper variant='fadeInUp'>
+              <MyBookings />
             </PageWrapper>
           }
         />
@@ -115,6 +132,28 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper variant='scaleIn'>
               <CreateAccount />
+            </PageWrapper>
+          }
+        />
+        {/* Catch-all route for unknown paths */}
+        <Route
+          path='*'
+          element={
+            <PageWrapper variant='fadeInUp'>
+              <div
+                style={{
+                  minHeight: '60vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#c53030',
+                  fontWeight: 'bold',
+                  fontSize: '2rem',
+                }}
+              >
+                404 - Page Not Found
+              </div>
             </PageWrapper>
           }
         />

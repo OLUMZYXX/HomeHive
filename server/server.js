@@ -10,6 +10,11 @@ import mongoose from 'mongoose'
 import featuredRoutes from './routes/featured.js'
 import testimonialsRoutes from './routes/testimonials.js'
 import authRoutes from './routes/auth.js'
+import propertiesRoutes from './routes/properties.js'
+import bookingsRoutes from './routes/bookings.js'
+import favoritesRoutes from './routes/favorites.js'
+import premiumRoutes from './routes/premium.js'
+import uploadRoutes from './routes/upload.js'
 
 const app = express()
 
@@ -47,8 +52,6 @@ const connectMongoDB = async () => {
     if (!mongoUri)
       throw new Error('MONGODB_URI environment variable is not defined')
     await mongoose.connect(mongoUri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
       socketTimeoutMS: 45000,
@@ -83,12 +86,14 @@ app.use(express.urlencoded({ extended: true }))
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: process.env.NODE_ENV === 'production' ? 100 : 500, // Higher limit in development
   message: {
     success: false,
     message: 'Too many requests from this IP, please try again later.',
   },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
 app.use(limiter)
 
@@ -96,6 +101,11 @@ app.use(limiter)
 app.use('/api/auth', authRoutes)
 app.use('/api/featured', featuredRoutes)
 app.use('/api/testimonials', testimonialsRoutes)
+app.use('/api/properties', propertiesRoutes)
+app.use('/api/bookings', bookingsRoutes)
+app.use('/api/favorites', favoritesRoutes)
+app.use('/api/premium', premiumRoutes)
+app.use('/api/upload', uploadRoutes)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -118,39 +128,6 @@ app.get('/', (req, res) => {
     message: '🏠 Welcome to HomeHive API - Basic Server',
     version: '1.0.0',
     status: 'Server running, MongoDB will be added next',
-  })
-})
-
-// Luxury property endpoint (mock data)
-app.get('/api/featured/header-images', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Luxury properties for header',
-    data: [
-      {
-        id: 'luxury-1',
-        title: 'Luxury Penthouse Suite',
-        location: 'Victoria Island, Lagos',
-        price: 250000,
-        currency: '₦',
-        period: 'night',
-        image: '/src/assets/apartment1.jpg',
-        quality: 'premium',
-        category: 'luxury',
-      },
-      {
-        id: 'luxury-2',
-        title: 'Executive Villa',
-        location: 'Banana Island, Lagos',
-        price: 300000,
-        currency: '₦',
-        period: 'night',
-        image: '/src/assets/Apt1.webp',
-        quality: 'premium',
-        category: 'luxury',
-      },
-    ],
-    note: 'This is mock data. Real data will be available when MongoDB is connected.',
   })
 })
 

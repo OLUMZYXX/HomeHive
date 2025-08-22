@@ -132,6 +132,20 @@ export const propertyService = {
     }
   },
 
+  async updatePropertyBookingStats(propertyId) {
+    try {
+      // This would update booking count and other stats for the property
+      // Implementation depends on your property schema
+      const docRef = doc(db, 'properties', propertyId)
+      await updateDoc(docRef, {
+        lastBookingAt: new Date(),
+        updatedAt: new Date(),
+      })
+    } catch (error) {
+      console.error('Error updating property booking stats:', error)
+    }
+  },
+
   async incrementViews(propertyId) {
     try {
       const docRef = doc(db, 'properties', propertyId)
@@ -620,18 +634,191 @@ export const hostService = {
 export const bookingService = {
   async createBooking(bookingData) {
     try {
+      const { propertyId, checkIn, checkOut, userId, guests, totalAmount } =
+        bookingData
+
+      // Check for overlapping bookings
+      const hasConflict = await this.checkDateConflict(
+        propertyId,
+        checkIn,
+        checkOut
+      )
+      if (hasConflict) {
+        throw new Error(
+          'Property is already booked for the selected dates. Please choose different dates.'
+        )
+      }
+
+      // Get property to find hostId
+      const property = await propertyService.getPropertyById(propertyId)
+      if (!property) {
+        throw new Error('Property not found')
+      }
+
       const booking = {
-        ...bookingData,
+        propertyId,
+        userId,
+        hostId: property.hostId,
+        checkIn: new Date(checkIn),
+        checkOut: new Date(checkOut),
+        guests: parseInt(guests),
+        totalAmount: parseFloat(totalAmount),
         status: 'pending',
+        paymentStatus: 'pending',
         createdAt: new Date(),
         updatedAt: new Date(),
       }
 
       const docRef = await addDoc(collection(db, 'bookings'), booking)
+
+      // Update host statistics
+      await this.updateHostStats(property.hostId)
+
+      // Update property statistics
+      await propertyService.updatePropertyBookingStats(propertyId)
+
       return docRef.id
     } catch (error) {
       console.error('Error creating booking:', error)
-      throw new Error('Failed to create booking')
+      throw new Error(error.message || 'Failed to create booking')
+    }
+  },
+
+  async checkDateConflict(propertyId, checkIn, checkOut) {
+    try {
+      const startDate = new Date(checkIn)
+      const endDate = new Date(checkOut)
+
+      // Query for bookings that overlap with the requested dates
+      const q = query(
+        collection(db, 'bookings'),
+        where('propertyId', '==', propertyId),
+        where('status', 'in', ['pending', 'confirmed'])
+      )
+
+      const snapshot = await getDocs(q)
+
+      for (const doc of snapshot.docs) {
+        const booking = doc.data()
+        const bookingStart = booking.checkIn.toDate()
+        const bookingEnd = booking.checkOut.toDate()
+
+        // Check if dates overlap
+        if (startDate < bookingEnd && endDate > bookingStart) {
+          return true // Conflict found
+        }
+      }
+
+      return false // No conflict
+    } catch (error) {
+      console.error('Error checking date conflict:', error)
+      throw new Error('Failed to check date availability')
+    }
+  },
+
+  async updateHostStats(hostId) {
+    try {
+      const hostBookings = await this.getHostBookings(hostId)
+
+      // Calculate total bookings
+      const totalBookings = hostBookings.length
+
+      // Calculate monthly earnings (current month)
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+
+      const monthlyEarnings = hostBookings
+        .filter((booking) => {
+          const bookingDate = booking.createdAt.toDate
+            ? booking.createdAt.toDate()
+            : new Date(booking.createdAt)
+          return (
+            bookingDate.getMonth() === currentMonth &&
+            bookingDate.getFullYear() === currentYear &&
+            booking.status === 'confirmed'
+          )
+        })
+        .reduce((total, booking) => total + (booking.totalAmount || 0), 0)
+
+      // Calculate total earnings
+      const totalEarnings = hostBookings
+        .filter((booking) => booking.status === 'confirmed')
+        .reduce((total, booking) => total + (booking.totalAmount || 0), 0)
+
+      // Update host stats (if using MongoDB)
+      // Note: This would update a hosts collection if you have one
+      // For now, we'll store these stats with the bookings data
+
+      return {
+        totalBookings,
+        monthlyEarnings,
+        totalEarnings,
+      }
+    } catch (error) {
+      console.error('Error updating host stats:', error)
+      throw new Error('Failed to update host statistics')
+    }
+  },
+
+  async getHostStats(hostId) {
+    try {
+      const hostBookings = await this.getHostBookings(hostId)
+      const hostProperties = await propertyService.getHostProperties(hostId)
+
+      // Calculate statistics
+      const totalBookings = hostBookings.length
+      const confirmedBookings = hostBookings.filter(
+        (b) => b.status === 'confirmed'
+      )
+
+      // Monthly earnings (current month)
+      const currentMonth = new Date().getMonth()
+      const currentYear = new Date().getFullYear()
+
+      const monthlyEarnings = confirmedBookings
+        .filter((booking) => {
+          const bookingDate = booking.createdAt.toDate
+            ? booking.createdAt.toDate()
+            : new Date(booking.createdAt)
+          return (
+            bookingDate.getMonth() === currentMonth &&
+            bookingDate.getFullYear() === currentYear
+          )
+        })
+        .reduce((total, booking) => total + (booking.totalAmount || 0), 0)
+
+      // Total earnings
+      const totalEarnings = confirmedBookings.reduce(
+        (total, booking) => total + (booking.totalAmount || 0),
+        0
+      )
+
+      // Average rating across all properties
+      const avgRating =
+        hostProperties.length > 0
+          ? hostProperties.reduce(
+              (sum, prop) => sum + (prop.averageRating || 0),
+              0
+            ) / hostProperties.length
+          : 0
+
+      // Total reviews across all properties
+      const totalReviews = hostProperties.reduce(
+        (sum, prop) => sum + (prop.totalReviews || 0),
+        0
+      )
+
+      return {
+        totalListings: hostProperties.length,
+        totalBookings,
+        monthlyEarnings: Math.round(monthlyEarnings),
+        totalEarnings: Math.round(totalEarnings),
+        averageRating: Math.round(avgRating * 10) / 10,
+        totalReviews,
+      }
+    } catch (error) {
+      console.error('Error getting host stats:', error)
+      throw new Error('Failed to get host statistics')
     }
   },
 
@@ -695,6 +882,14 @@ export const bookingService = {
         status,
         updatedAt: new Date(),
       })
+
+      // If booking is confirmed, update host stats
+      if (status === 'confirmed') {
+        const booking = await this.getBooking(bookingId)
+        if (booking) {
+          await this.updateHostStats(booking.hostId)
+        }
+      }
     } catch (error) {
       console.error('Error updating booking status:', error)
       throw new Error('Failed to update booking status')
@@ -713,6 +908,43 @@ export const bookingService = {
     } catch (error) {
       console.error('Error fetching booking:', error)
       throw new Error('Failed to fetch booking')
+    }
+  },
+
+  async getPropertyAvailability(propertyId, month, year) {
+    try {
+      // Get all bookings for the property in the specified month
+      const startDate = new Date(year, month, 1)
+      const endDate = new Date(year, month + 1, 0)
+
+      const q = query(
+        collection(db, 'bookings'),
+        where('propertyId', '==', propertyId),
+        where('status', 'in', ['pending', 'confirmed'])
+      )
+
+      const snapshot = await getDocs(q)
+      const bookedDates = []
+
+      snapshot.docs.forEach((doc) => {
+        const booking = doc.data()
+        const checkIn = booking.checkIn.toDate()
+        const checkOut = booking.checkOut.toDate()
+
+        // Add all dates between checkIn and checkOut to bookedDates
+        const currentDate = new Date(checkIn)
+        while (currentDate <= checkOut) {
+          if (currentDate >= startDate && currentDate <= endDate) {
+            bookedDates.push(new Date(currentDate).toDateString())
+          }
+          currentDate.setDate(currentDate.getDate() + 1)
+        }
+      })
+
+      return bookedDates
+    } catch (error) {
+      console.error('Error getting property availability:', error)
+      throw new Error('Failed to get property availability')
     }
   },
 }

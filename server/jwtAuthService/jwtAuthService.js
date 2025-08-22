@@ -118,6 +118,7 @@ export class JWTAuthService {
         id: decoded.id,
         email: decoded.email,
         userType: decoded.userType,
+        role: decoded.userType, // Add role alias for compatibility
         iat: decoded.iat,
         exp: decoded.exp,
       }
@@ -137,6 +138,11 @@ export class JWTAuthService {
       refreshToken,
       expiresIn: JWT_EXPIRES_IN,
     }
+  }
+
+  // Get user info from token (alias for middleware compatibility)
+  static extractUserFromToken(token) {
+    return this.getUserFromToken(token)
   }
 
   // Refresh access token using refresh token

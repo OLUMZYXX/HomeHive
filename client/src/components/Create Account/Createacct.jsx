@@ -128,9 +128,18 @@ const Createacct = () => {
       setTimeout(() => navigate(redirectPath), 2000)
     } catch (error) {
       console.error('Google signup error:', error)
-      const errorMessage =
-        error.message || 'Google registration failed. Please try again.'
-      toast.error('Registration Error', {
+      let errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Google sign up failed. Please try again.'
+      if (
+        errorMessage.includes('429') ||
+        errorMessage.toLowerCase().includes('too many requests')
+      ) {
+        errorMessage = 'Too many requests. Please wait a moment and try again.'
+      }
+      setError(errorMessage)
+      toast.error('Google Signup Error', {
         description: errorMessage,
         duration: 4000,
       })
@@ -154,9 +163,9 @@ const Createacct = () => {
       <div className='w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100'>
         <div className='grid grid-cols-1 lg:grid-cols-2 min-h-[600px]'>
           {/* Left Side: Image & Branding */}
-          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white lg:flex hidden'>
+          <div className='relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white lg:flex sm:hidden'>
             <div className='absolute inset-0 opacity-20'>
-              <div className='w-full h-full bg-gradient-to-br from-primary-700/50 to-primary-900/50 bg-[url("https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center'></div>
+              <div className='w-full h-full from-primary-700/50 to-primary-900/50 bg-[url("https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center'></div>
             </div>
 
             <div className='relative z-10 text-center space-y-8'>

@@ -67,73 +67,16 @@ class SimpleGoogleAuth {
 
     return new Promise((resolve, reject) => {
       this.pendingPromise = { resolve, reject }
-
-      // Create visible Google button that user can click
-      const buttonContainer = document.createElement('div')
-      buttonContainer.style.position = 'fixed'
-      buttonContainer.style.top = '50%'
-      buttonContainer.style.left = '50%'
-      buttonContainer.style.transform = 'translate(-50%, -50%)'
-      buttonContainer.style.zIndex = '9999'
-      buttonContainer.style.backgroundColor = 'white'
-      buttonContainer.style.padding = '20px'
-      buttonContainer.style.borderRadius = '10px'
-      buttonContainer.style.boxShadow = '0 4px 20px rgba(0,0,0,0.3)'
-
-      const overlay = document.createElement('div')
-      overlay.style.position = 'fixed'
-      overlay.style.top = '0'
-      overlay.style.left = '0'
-      overlay.style.width = '100%'
-      overlay.style.height = '100%'
-      overlay.style.backgroundColor = 'rgba(0,0,0,0.5)'
-      overlay.style.zIndex = '9998'
-
-      const title = document.createElement('h3')
-      title.textContent = 'Sign in with Google'
-      title.style.marginBottom = '15px'
-      title.style.textAlign = 'center'
-
-      const cancelButton = document.createElement('button')
-      cancelButton.textContent = 'Cancel'
-      cancelButton.style.marginTop = '10px'
-      cancelButton.style.padding = '5px 15px'
-      cancelButton.style.marginLeft = '10px'
-      cancelButton.onclick = () => {
-        document.body.removeChild(overlay)
-        document.body.removeChild(buttonContainer)
-        reject(new Error('User cancelled'))
-      }
-
-      buttonContainer.appendChild(title)
-
-      // Render Google button
-      window.google.accounts.id.renderButton(buttonContainer, {
-        theme: 'outline',
-        size: 'large',
-        type: 'standard',
-        width: 250,
+      // Directly prompt Google sign-in
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          reject(new Error('Google sign-in was cancelled or blocked'))
+          this.pendingPromise = null
+        }
       })
-
-      buttonContainer.appendChild(cancelButton)
-
-      document.body.appendChild(overlay)
-      document.body.appendChild(buttonContainer)
-
-      // Cleanup function
-      this.cleanup = () => {
-        if (document.body.contains(overlay)) {
-          document.body.removeChild(overlay)
-        }
-        if (document.body.contains(buttonContainer)) {
-          document.body.removeChild(buttonContainer)
-        }
-      }
-
       // Timeout
       setTimeout(() => {
         if (this.pendingPromise) {
-          this.cleanup()
           this.pendingPromise.reject(new Error('Timeout'))
           this.pendingPromise = null
         }

@@ -319,6 +319,8 @@ export const FloatingElement = ({
   duration = 3,
   className = '',
 }) => {
+  // Fallback to empty fragment if children is undefined
+  const safeChildren = typeof children === 'undefined' ? <></> : children
   const floatingVariants = {
     y: {
       animate: {
@@ -348,7 +350,7 @@ export const FloatingElement = ({
       animate='animate'
       className={className}
     >
-      {children}
+      {safeChildren}
     </motion.div>
   )
 }

@@ -1,11 +1,14 @@
-import { APIProvider } from '../contexts/APIContext'
-import App from '../App'
+import { APIProvider } from './contexts/APIContext'
+import { CurrencyProvider } from './contexts/CurrencyContext'
+import App from './App'
 
-// Wrap your main App component with APIProvider
+// Wrap your main App component with APIProvider and CurrencyProvider
 const AppWithProvider = () => {
   return (
     <APIProvider>
-      <App />
+      <CurrencyProvider>
+        <App />
+      </CurrencyProvider>
     </APIProvider>
   )
 }

@@ -6,8 +6,7 @@ import {
   deleteObject,
   listAll,
 } from 'firebase/storage'
-// No change needed
-import { userStorage, hostStorage } from '../config/firebaseConfig'
+import { userStorage, hostStorage } from '../config/firebaseConfig.js'
 
 // Storage service for file uploads
 export class StorageService {
@@ -22,7 +21,9 @@ export class StorageService {
       const fullPath = this.basePath ? `${this.basePath}/${path}` : path
       const storageRef = ref(this.storage, fullPath)
 
-      const uploadResult = await uploadBytes(storageRef, file, metadata)
+      // Handle both File objects and buffer objects from multer
+      const fileData = file.buffer || file
+      const uploadResult = await uploadBytes(storageRef, fileData, metadata)
       const downloadURL = await getDownloadURL(uploadResult.ref)
 
       return {

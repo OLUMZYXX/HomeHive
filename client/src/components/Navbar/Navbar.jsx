@@ -16,6 +16,7 @@ import {
 import { navigateToHome } from '../../utils/navigation'
 import { AnimatedButton } from '../common/AnimatedComponents'
 import { useAPI } from '../../contexts/APIContext'
+import { useCurrency } from '../../contexts/CurrencyContext'
 import { TokenManager } from '../../services/jwtAuthService'
 import { toast } from '../../utils/toast.jsx'
 
@@ -28,12 +29,19 @@ const Navbar = () => {
     error,
     clearError,
   } = useAPI()
+  const {
+    selectedCurrency,
+    setSelectedCurrency,
+    selectedCurrencyData,
+    currencies,
+  } = useCurrency()
   const [menuOpen, setMenuOpen] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [lastScrollY, setLastScrollY] = useState(0)
   const [visible, setVisible] = useState(true)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const [currencyDropdownOpen, setCurrencyDropdownOpen] = useState(false)
   const profileMenuRef = useRef(null)
 
   const navigate = useNavigate()
@@ -72,12 +80,17 @@ const Navbar = () => {
       ) {
         setProfileMenuOpen(false)
       }
+
+      // Close currency dropdown when clicking outside
+      if (!event.target.closest('.currency-dropdown')) {
+        setCurrencyDropdownOpen(false)
+      }
     }
-    if (profileMenuOpen) {
+    if (profileMenuOpen || currencyDropdownOpen) {
       document.addEventListener('mousedown', handleClickOutside)
     }
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [profileMenuOpen])
+  }, [profileMenuOpen, currencyDropdownOpen])
 
   // Scroll behavior
   useEffect(() => {
@@ -115,12 +128,12 @@ const Navbar = () => {
   const handleBookingClick = (e) => {
     e.preventDefault()
     if (!user || !isAuthenticated) {
-      localStorage.setItem('redirectAfterLogin', '/homepage')
+      localStorage.setItem('redirectAfterLogin', '/listings')
       toast.info('Please log in to view your bookings')
       navigate('/signin')
       return
     }
-    navigate('/homepage', { state: { smoothScroll: true } })
+    navigate('/listings', { state: { smoothScroll: true } })
     setMenuOpen(false)
   }
 
@@ -308,6 +321,64 @@ const Navbar = () => {
 
             {user && isAuthenticated ? (
               <div className='relative flex items-center gap-4'>
+                {/* Currency Selector */}
+                <div className='relative currency-dropdown'>
+                  <button
+                    onClick={() =>
+                      setCurrencyDropdownOpen(!currencyDropdownOpen)
+                    }
+                    className='flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200'
+                  >
+                    <span className='text-lg'>
+                      {selectedCurrencyData?.symbol}
+                    </span>
+                    <span className='hidden sm:block'>{selectedCurrency}</span>
+                  </button>
+
+                  {/* Currency Dropdown */}
+                  <AnimatePresence>
+                    {currencyDropdownOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className='absolute top-full right-0 mt-2 w-56 bg-white border-2 border-gray-200 rounded-2xl shadow-strong z-50 overflow-hidden'
+                      >
+                        {currencies.map((currency) => (
+                          <button
+                            key={currency.code}
+                            onClick={() => {
+                              setSelectedCurrency(currency.code)
+                              setCurrencyDropdownOpen(false)
+                            }}
+                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all duration-200 text-left ${
+                              selectedCurrency === currency.code
+                                ? 'bg-gray-100 border-r-4 border-primary-500'
+                                : ''
+                            }`}
+                          >
+                            <span className='text-xl font-bold text-gray-800 w-8 text-center'>
+                              {currency.symbol}
+                            </span>
+                            <div className='flex-1'>
+                              <div className='font-bold text-gray-900 text-sm'>
+                                {currency.code}
+                              </div>
+                              <div className='text-xs text-gray-600 font-medium'>
+                                {currency.name}
+                              </div>
+                            </div>
+                            {selectedCurrency === currency.code && (
+                              <div className='w-2 h-2 bg-primary-800 rounded-full'></div>
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
                 <button
                   className='w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 overflow-hidden relative focus:outline-none'
                   onClick={() => setProfileMenuOpen((open) => !open)}

@@ -1,8 +1,10 @@
 import express from 'express'
 import MongoAuthService from '../authService/mongoAuthService.js'
+import HostAuthService from '../authService/hostAuthService.js'
 import JWTAuthService from '../jwtAuthService/jwtAuthService.js'
 import { authenticateToken } from '../middleware/authMiddleware.js'
 import { OAuth2Client } from 'google-auth-library'
+import { Property } from '../models/mongodb-models.js'
 
 const router = express.Router()
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
@@ -43,7 +45,7 @@ router.post('/register-host', async (req, res) => {
         message: 'Email, password, name, and business name are required',
       })
     }
-    const result = await MongoAuthService.registerHost({
+    const result = await HostAuthService.registerHost({
       email,
       password,
       name,
@@ -55,6 +57,24 @@ router.post('/register-host', async (req, res) => {
   } catch (error) {
     console.error('Host registration error:', error)
     res.status(400).json({ success: false, message: error.message })
+  }
+})
+
+// Host Login (specific endpoint for hosts)
+router.post('/host-login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email and password are required' })
+    }
+
+    const result = await HostAuthService.loginHost(email, password)
+    res.json(result)
+  } catch (error) {
+    console.error('Host login error:', error)
+    res.status(401).json({ success: false, message: error.message })
   }
 })
 
@@ -144,14 +164,22 @@ router.post('/reset-password', async (req, res) => {
   }
 })
 
-// Get Current User
+// Get Current User or Host
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const isHost = req.user.role === 'host'
-    const userProfile = await MongoAuthService.getUserProfile(
-      req.user.userId,
-      isHost
-    )
+    const userType = req.user.userType || req.user.role
+    let userProfile
+
+    if (userType === 'host') {
+      userProfile = await HostAuthService.getHostProfile(
+        req.user.userId || req.user.id
+      )
+    } else {
+      userProfile = await MongoAuthService.getUserProfile(
+        req.user.userId || req.user.id
+      )
+    }
+
     if (!userProfile) {
       return res
         .status(404)
@@ -161,6 +189,53 @@ router.get('/me', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Get current user error:', error)
     res.status(400).json({ success: false, message: error.message })
+  }
+})
+
+// Google OAuth Login/Register for Hosts
+router.post('/google-host', async (req, res) => {
+  try {
+    const { idToken, userData } = req.body
+
+    if (!idToken || !userData) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google ID token and user data are required',
+      })
+    }
+
+    // Verify Google ID token
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken: idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      })
+
+      const payload = ticket.getPayload()
+      console.log('Google OAuth payload verified for host:', payload.email)
+
+      // Use verified data from Google
+      const { email, name, given_name, family_name, picture } = payload
+
+      // Use the new HostAuthService for Google OAuth
+      const result = await HostAuthService.googleAuthHost({
+        email,
+        name: name || `${given_name} ${family_name}`,
+        googleId: payload.sub,
+        picture,
+      })
+
+      res.json(result)
+    } catch (verificationError) {
+      console.error('Google token verification failed:', verificationError)
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid Google token',
+      })
+    }
+  } catch (error) {
+    console.error('Google host auth error:', error)
+    res.status(500).json({ success: false, message: error.message })
   }
 })
 
@@ -233,6 +308,205 @@ router.post('/google', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Google authentication failed',
+    })
+  }
+})
+
+// Host Property Management Routes
+
+// Get all properties for authenticated host
+router.get('/host/properties', authenticateToken, async (req, res) => {
+  try {
+    // Check if user is a host
+    if (req.user.userType !== 'host' && req.user.role !== 'host') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Host privileges required.',
+      })
+    }
+
+    // Get properties belonging to this host
+    const hostId = req.user.id || req.user.userId
+    console.log('🏠 Looking for properties with hostId:', hostId)
+    console.log('🔍 Host user info:', {
+      userType: req.user.userType,
+      role: req.user.role,
+    })
+
+    const properties = await Property.find({
+      hostId: hostId,
+      isActive: { $ne: false },
+    }).sort({ createdAt: -1 })
+
+    console.log('📊 Found properties:', properties.length)
+
+    res.json({
+      success: true,
+      data: properties,
+      count: properties.length,
+      message: `Found ${properties.length} properties`,
+    })
+  } catch (error) {
+    console.error('Error fetching host properties:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch properties',
+      error: error.message,
+    })
+  }
+})
+
+// Create a new property
+router.post('/host/properties', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.userType !== 'host' && req.user.role !== 'host') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Host privileges required.',
+      })
+    }
+
+    const hostId = req.user.id || req.user.userId
+    console.log('🏗️ Creating property for hostId:', hostId)
+
+    const propertyData = {
+      ...req.body,
+      hostId: hostId,
+      hostName: req.user.name || req.user.firstName || 'Host',
+      isActive: true,
+      isAvailable: true,
+    }
+
+    const property = new Property(propertyData)
+    await property.save()
+
+    res.status(201).json({
+      success: true,
+      data: property,
+      message: 'Property created successfully',
+    })
+  } catch (error) {
+    console.error('Error creating property:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create property',
+      error: error.message,
+    })
+  }
+})
+
+// Update a property
+router.put('/host/properties/:id', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.userType !== 'host' && req.user.role !== 'host') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Host privileges required.',
+      })
+    }
+
+    const property = await Property.findOne({
+      _id: req.params.id,
+      hostId: req.user.id,
+    })
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: 'Property not found',
+      })
+    }
+
+    Object.assign(property, req.body)
+    await property.save()
+
+    res.json({
+      success: true,
+      data: property,
+      message: 'Property updated successfully',
+    })
+  } catch (error) {
+    console.error('Error updating property:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update property',
+      error: error.message,
+    })
+  }
+})
+
+// Delete a property
+router.delete('/host/properties/:id', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.userType !== 'host' && req.user.role !== 'host') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Host privileges required.',
+      })
+    }
+
+    const property = await Property.findOne({
+      _id: req.params.id,
+      hostId: req.user.id,
+    })
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: 'Property not found',
+      })
+    }
+
+    // Soft delete - just mark as inactive
+    property.isActive = false
+    await property.save()
+
+    res.json({
+      success: true,
+      message: 'Property deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error deleting property:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete property',
+      error: error.message,
+    })
+  }
+})
+
+// Get a single property by ID
+router.get('/host/properties/:id', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.userType !== 'host' && req.user.role !== 'host') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Host privileges required.',
+      })
+    }
+
+    const property = await Property.findOne({
+      _id: req.params.id,
+      hostId: req.user.id,
+    })
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: 'Property not found',
+      })
+    }
+
+    res.json({
+      success: true,
+      data: property,
+    })
+  } catch (error) {
+    console.error('Error fetching property:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch property',
+      error: error.message,
     })
   }
 })

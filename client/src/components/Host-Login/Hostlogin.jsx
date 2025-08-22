@@ -6,6 +6,7 @@ import { HiHome } from 'react-icons/hi2'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { toast } from 'sonner'
+import { useAPI } from '../../contexts/APIContext'
 
 const Hostlogin = () => {
   // Use scroll to top hook
@@ -20,6 +21,9 @@ const Hostlogin = () => {
   const [errors, setErrors] = useState({})
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Get API functions
+  const { login, googleAuth, loading } = useAPI()
 
   // Smart home navigation handler
   const handleHomeNavigation = () => {
@@ -56,22 +60,37 @@ const Hostlogin = () => {
       return
     }
 
-    // Simulate API call
     try {
-      console.log('Host login:', { email, password })
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      toast.success('Login successful! Redirecting to host dashboard...', {
-        duration: 2000,
-        className: 'text-sm font-medium',
-      })
-      setTimeout(() => {
-        navigate('/host-dashboard')
-      }, 1000)
-    } catch {
-      toast.error('Login failed. Please check your credentials.', {
+      // Call the actual API login with isHost = true
+      const result = await login(email, password, true)
+
+      if (result.success) {
+        toast.success('Login successful! Welcome back to your dashboard!', {
+          duration: 2000,
+          className: 'text-sm font-medium',
+        })
+
+        // Navigate to host dashboard
+        setTimeout(() => {
+          navigate('/host-dashboard')
+        }, 1000)
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Login failed. Please check your credentials.'
+      toast.error(errorMessage, {
         duration: 3000,
         className: 'text-sm font-medium',
       })
+
+      // Set form errors if available
+      if (error.response?.data?.field) {
+        setErrors({
+          [error.response.data.field]: errorMessage,
+        })
+      }
     } finally {
       setIsLoading(false)
     }
@@ -80,19 +99,39 @@ const Hostlogin = () => {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true)
     try {
-      console.log('Google host login')
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-      toast.success('Google login successful! Welcome back!', {
-        duration: 2000,
-        className: 'text-sm font-medium',
+      // Import Google Auth configuration
+      const { signInWithGoogle } = await import('../../config/googleAuth')
+
+      // Get Google credentials
+      const { user, credential } = await signInWithGoogle()
+
+      // Call API with Google token
+      const result = await googleAuth(credential.idToken, {
+        email: user.email,
+        name: user.displayName,
+        firstName: user.displayName?.split(' ')[0] || '',
+        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
+        profilePicture: user.photoURL,
+        isHost: true,
       })
-      setTimeout(() => {
-        setIsGoogleLoading(false)
-        navigate('/host-dashboard')
-      }, 1000)
-    } catch {
-      console.error('Google login failed')
-      toast.error('Google login failed. Please try again.', {
+
+      if (result.success) {
+        toast.success('Google login successful! Welcome to your dashboard!', {
+          duration: 2000,
+          className: 'text-sm font-medium',
+        })
+
+        setTimeout(() => {
+          navigate('/host-dashboard')
+        }, 1000)
+      }
+    } catch (error) {
+      console.error('Google login error:', error)
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Google login failed. Please try again.'
+      toast.error(errorMessage, {
         duration: 3000,
         className: 'text-sm font-medium',
       })
@@ -378,22 +417,22 @@ const Hostlogin = () => {
                   {/* Submit Button - Smaller Proportions to Match Signup */}
                   <button
                     type='submit'
-                    disabled={isLoading}
+                    disabled={isLoading || loading}
                     className={`w-full py-3 sm:py-4 md:py-5 text-sm sm:text-base md:text-lg rounded-lg sm:rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden ${
-                      isLoading
+                      isLoading || loading
                         ? 'bg-neutral-400 cursor-not-allowed'
                         : 'bg-gradient-to-r from-primary-600 to-primary-800 hover:from-primary-700 hover:to-primary-900 hover:scale-[1.02] active:scale-[0.98] shadow-medium hover:shadow-strong'
                     }`}
                   >
                     <div
                       className={`flex items-center justify-center gap-2 sm:gap-3 ${
-                        isLoading ? 'opacity-0' : 'opacity-100'
+                        isLoading || loading ? 'opacity-0' : 'opacity-100'
                       } transition-opacity duration-300`}
                     >
                       <HiHome className='text-base sm:text-lg md:text-xl' />
                       <span>Sign In to Dashboard</span>
                     </div>
-                    {isLoading && (
+                    {(isLoading || loading) && (
                       <div className='absolute inset-0 flex items-center justify-center'>
                         <div className='w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 border-2 border-white/30 border-t-white rounded-full animate-spin'></div>
                       </div>
@@ -416,10 +455,10 @@ const Hostlogin = () => {
                   <button
                     type='button'
                     onClick={handleGoogleLogin}
-                    disabled={isGoogleLoading}
-                    className='w-full py-3 sm:py-4 md:py-5 px-3 sm:px-4 text-sm sm:text-base md:text-lg border-2 border-primary-200 hover:border-primary-300 rounded-lg sm:rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium'
+                    disabled={isGoogleLoading || loading}
+                    className='w-full py-3 sm:py-4 md:py-5 px-3 sm:px-4 text-sm sm:text-base md:text-lg border-2 border-primary-200 hover:border-primary-300 rounded-lg sm:rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
                   >
-                    {isGoogleLoading ? (
+                    {isGoogleLoading || loading ? (
                       <>
                         <div className='w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 border-2 border-slate-600 border-t-transparent rounded-full animate-spin'></div>
                         <span>Connecting...</span>

@@ -73,68 +73,14 @@ export class MongoAuthService {
     }
   }
 
-  // Host Registration
-  static async registerHost(hostData) {
+  // Login (Regular Users Only)
+  static async login(email, password) {
     try {
-      const { email, password, name, businessName, businessType, phone } =
-        hostData
-
-      // Check if host already exists
-      const existingHost = await User.findOne({ email }).lean()
-      if (existingHost) {
-        throw new Error('Host with this email already exists')
-      }
-
-      // Hash password
-      const saltRounds = 12
-      const hashedPassword = await bcrypt.hash(password, saltRounds)
-
-      // Create new host user
-      const newHost = new User({
+      // Find user (only regular users, not hosts)
+      const user = await User.findOne({
         email,
-        password: hashedPassword,
-        firstName: name.split(' ')[0] || name,
-        lastName: name.split(' ').slice(1).join(' ') || '',
-        name,
-        phone,
-        role: 'host',
-        isActive: true,
-        // Additional host-specific fields can be stored in a separate collection if needed
-      })
-
-      const savedHost = await newHost.save()
-
-      // Generate JWT tokens
-      const tokens = JWTAuthService.generateTokenPair({
-        id: savedHost._id.toString(),
-        email: savedHost.email,
-        userType: savedHost.role,
-      })
-
-      // Return host data without password
-      const { password: _, ...hostWithoutPassword } = savedHost.toObject()
-
-      return {
-        success: true,
-        message: 'Host registered successfully',
-        user: {
-          ...hostWithoutPassword,
-          userId: savedHost._id.toString(),
-        },
-        tokens,
-      }
-    } catch (error) {
-      console.error('Host registration error:', error)
-      throw error
-    }
-  }
-
-  // Login
-  static async login(email, password, isHost = false) {
-    try {
-      // Find user in appropriate collection
-      const UserModel = isHost ? Host : User
-      const user = await UserModel.findOne({ email }).lean()
+        role: { $ne: 'host' }, // Exclude hosts from regular login
+      }).lean()
 
       if (!user) {
         throw new Error('Invalid email or password')
@@ -157,7 +103,7 @@ export class MongoAuthService {
       }
 
       // Update last login
-      await UserModel.findByIdAndUpdate(user._id, { lastLogin: new Date() })
+      await User.findByIdAndUpdate(user._id, { lastLogin: new Date() })
 
       // Generate JWT tokens
       const tokens = JWTAuthService.generateTokenPair({
@@ -225,14 +171,18 @@ export class MongoAuthService {
     }
   }
 
-  // Get user profile
-  static async getUserProfile(userId, isHost = false) {
+  // Get user profile (Regular Users Only)
+  static async getUserProfile(userId) {
     try {
-      const UserModel = isHost ? Host : User
-      const user = await UserModel.findById(userId).select('-password').lean()
+      const user = await User.findById(userId).select('-password').lean()
 
       if (!user) {
         throw new Error('User not found')
+      }
+
+      // Ensure this is not a host account
+      if (user.role === 'host') {
+        throw new Error('Host account should use host authentication')
       }
 
       return {
@@ -278,11 +228,15 @@ export class MongoAuthService {
     isHost = false
   ) {
     try {
-      const UserModel = isHost ? Host : User
-      const user = await UserModel.findById(userId)
+      const user = await User.findById(userId)
 
       if (!user) {
         throw new Error('User not found')
+      }
+
+      // Optionally verify role if isHost is specified
+      if (isHost && user.role !== 'host') {
+        throw new Error('Host account not found')
       }
 
       // Verify current password
@@ -317,11 +271,15 @@ export class MongoAuthService {
   // Reset password (placeholder for email-based reset)
   static async resetPassword(email, isHost = false) {
     try {
-      const UserModel = isHost ? Host : User
-      const user = await UserModel.findOne({ email })
+      const user = await User.findOne({
+        email,
+        ...(isHost ? { role: 'host' } : {}),
+      })
 
       if (!user) {
-        throw new Error('User not found')
+        throw new Error(
+          isHost ? 'Host account not found with this email' : 'User not found'
+        )
       }
 
       // In a real implementation, you would:

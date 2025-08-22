@@ -91,6 +91,46 @@ const userSchema = new mongoose.Schema(
   }
 )
 
+// Host Schema (Separate from User)
+const hostSchema = new mongoose.Schema(
+  {
+    email: { type: String, required: true, unique: true },
+    password: { type: String, required: true },
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    name: String, // Full name (can be derived from firstName + lastName)
+    phone: String,
+    avatar: String,
+    profilePicture: String, // For Google OAuth profile pictures
+
+    // Business Information
+    businessName: { type: String, required: true },
+    businessType: { type: String, default: 'Individual' }, // Individual, Company, etc.
+    businessAddress: String,
+    businessPhone: String,
+
+    // Host Status
+    isActive: { type: Boolean, default: true },
+    isPremium: { type: Boolean, default: false },
+    premiumExpiresAt: Date,
+    isVerified: { type: Boolean, default: false },
+
+    // Statistics
+    totalProperties: { type: Number, default: 0 },
+    totalBookings: { type: Number, default: 0 },
+    averageRating: { type: Number, default: 0 },
+    totalReviews: { type: Number, default: 0 },
+
+    // OAuth fields
+    provider: { type: String, enum: ['local', 'google'], default: 'local' },
+    googleId: String, // Google user ID for OAuth users
+    lastLogin: Date,
+  },
+  {
+    timestamps: true,
+  }
+)
+
 // Booking Schema
 const bookingSchema = new mongoose.Schema(
   {
@@ -144,7 +184,13 @@ const featuredSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      enum: ['weekly-header', 'hero-rotation', 'premium-showcase'],
+      enum: [
+        'weekly-header',
+        'hero-rotation',
+        'premium-showcase',
+        'used-header',
+        'used-hero',
+      ],
       required: true,
     },
     images: [
@@ -168,6 +214,8 @@ const featuredSchema = new mongoose.Schema(
         propertyId: String,
       },
     ],
+    // Simple URLs storage for used images tracking
+    urls: [String],
     week: Number,
     lastUpdated: { type: Date, default: Date.now },
     isActive: { type: Boolean, default: true },
@@ -244,6 +292,7 @@ const testimonialSchema = new mongoose.Schema(
 // Export Models
 export const Property = mongoose.model('Property', propertySchema)
 export const User = mongoose.model('User', userSchema)
+export const Host = mongoose.model('Host', hostSchema)
 export const Booking = mongoose.model('Booking', bookingSchema)
 export const Favorite = mongoose.model('Favorite', favoriteSchema)
 export const Featured = mongoose.model('Featured', featuredSchema)

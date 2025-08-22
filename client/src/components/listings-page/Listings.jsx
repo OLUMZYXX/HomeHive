@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useAPI } from '../../contexts/APIContext'
+import { useCurrency } from '../../contexts/CurrencyContext'
 import {
   FaRegUserCircle,
   FaStar,
@@ -15,58 +17,34 @@ import {
   FaCog,
 } from 'react-icons/fa'
 import { HiLocationMarker, HiHome, HiSparkles } from 'react-icons/hi'
-// ...existing code...
 import { motion, AnimatePresence } from 'framer-motion'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import Footer from '../Footer/Footer'
-import { onAuthStateChanged } from 'firebase/auth'
-import { userAuth } from '../../config/firebaseConfig'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { AnimatedButton } from '../common/AnimatedComponents'
+import { truncateText } from '../../utils/textUtils'
 
-const Homepage = () => {
-  // Listen for real user authentication state
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(userAuth, (currentUser) => {
-      setUser(currentUser)
-    })
-    return unsubscribe
-  }, [])
+const Listings = () => {
   // Use scroll to top hook
   useScrollToTop()
 
   const navigate = useNavigate()
   const location = useLocation()
+  const { user, logout } = useAPI()
+  const {
+    selectedCurrency,
+    setSelectedCurrency,
+    selectedCurrencyData,
+    currencies,
+    convertFromCurrency,
+  } = useCurrency()
 
   // Smart home navigation handler
   const handleHomeNavigation = () => {
     navigateToHome(navigate, location)
   }
 
-  // Fetch currency rates from a free API
-  useEffect(() => {
-    async function fetchRates() {
-      try {
-        // Using ExchangeRate.host (free, no API key required)
-        const res = await fetch(
-          'https://api.exchangerate.host/latest?base=USD&symbols=USD,NGN,GBP'
-        )
-        const data = await res.json()
-        if (data && data.rates) {
-          setExchangeRates({
-            USD: data.rates.USD,
-            NGN: data.rates.NGN,
-            GBP: data.rates.GBP,
-          })
-        }
-      } catch (err) {
-        console.error('Failed to fetch currency rates', err)
-      }
-    }
-    fetchRates()
-  }, [])
-  const [user, setUser] = useState(null)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const profileMenuRef = useRef(null)
 
@@ -90,32 +68,12 @@ const Homepage = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [favorites, setFavorites] = useState(new Set())
-  const [selectedCurrency, setSelectedCurrency] = useState('NGN')
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false)
 
-  // Currency conversion rates
-  const [exchangeRates, setExchangeRates] = useState({
-    USD: 1,
-    NGN: 1650,
-    GBP: 0.79,
-  })
-
-  const currencies = [
-    { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
-    { code: 'USD', symbol: '$', name: 'US Dollar' },
-    { code: 'GBP', symbol: '£', name: 'British Pound' },
-  ]
-
-  const selectedCurrencyData = currencies.find(
-    (curr) => curr.code === selectedCurrency
-  )
-
-  // Convert base USD price to selected currency
-  const convertPrice = (usdPrice) => {
-    const rate = exchangeRates[selectedCurrency] || 1
-    const converted = Math.round(usdPrice * rate)
-    if (selectedCurrency === 'NGN') return converted.toLocaleString()
-    return converted.toString()
+  // Convert price based on property currency and selected currency
+  const convertPrice = (price, fromCurrency = 'NGN') => {
+    if (!price) return '0'
+    return convertFromCurrency(price, fromCurrency, selectedCurrency)
   }
 
   // Close currency dropdown when clicking outside
@@ -129,50 +87,76 @@ const Homepage = () => {
     return () => document.removeEventListener('click', handleClickOutside)
   }, [showCurrencyDropdown])
 
-  const listingData = [
-    {
-      id: 1,
-      name: 'Luxury Banana Island Villa',
-      location: 'Banana Island, Lagos',
-      text: '4-6 guests · Entire Villa · 5 beds · 3 bath',
-      amenities: ['Wifi', 'Kitchen', 'Free Parking', 'Pool', 'Security'],
-      rating: 4.9,
-      reviewCount: 312,
-      priceUSD: 325,
-      image:
-        'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      badge: 'Superhost',
-      category: 'luxury',
-    },
-    {
-      id: 2,
-      name: 'Modern Lekki Apartment',
-      location: 'Lekki Phase 1, Lagos',
-      text: '2-4 guests · Entire Apartment · 3 beds · 2 bath',
-      amenities: ['Wifi', 'Kitchen', 'Gym', 'Security'],
-      rating: 4.8,
-      reviewCount: 156,
-      priceUSD: 180,
-      image:
-        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      badge: 'Popular',
-      category: 'apartment',
-    },
-    {
-      id: 3,
-      name: 'Cozy Victoria Island Studio',
-      location: 'Victoria Island, Lagos',
-      text: '1-2 guests · Studio · 1 bed · 1 bath',
-      amenities: ['Wifi', 'Kitchen', 'AC'],
-      rating: 4.7,
-      reviewCount: 89,
-      priceUSD: 120,
-      image:
-        'https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
-      badge: 'Great Value',
-      category: 'studio',
-    },
-  ]
+  // Properties state from backend
+  const [properties, setProperties] = useState([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
+  const [loadingProperties, setLoadingProperties] = useState(false)
+
+  // Ref to prevent multiple simultaneous requests
+  const fetchingRef = useRef(false)
+
+  // Fetch properties from backend API
+  useEffect(() => {
+    const fetchProperties = async () => {
+      // Prevent multiple simultaneous requests
+      if (fetchingRef.current) {
+        console.log('⏳ Request already in progress, skipping...')
+        return
+      }
+
+      fetchingRef.current = true
+      setLoadingProperties(true)
+
+      try {
+        console.log(
+          `🚀 Fetching properties from /api/properties?page=${page}&limit=3`
+        )
+        const res = await fetch(`/api/properties?page=${page}&limit=3`)
+
+        if (!res.ok) {
+          if (res.status === 429) {
+            console.warn('⚠️ Rate limit exceeded, retrying in 2 seconds...')
+            setTimeout(() => {
+              fetchingRef.current = false
+              setLoadingProperties(false)
+            }, 2000)
+            return
+          }
+          throw new Error(`HTTP error! status: ${res.status}`)
+        }
+
+        const data = await res.json()
+        console.log('📊 Received properties data:', data)
+
+        if (data && data.success && Array.isArray(data.properties)) {
+          setProperties((prev) =>
+            page === 1 ? data.properties : [...prev, ...data.properties]
+          )
+          setHasMore(data.hasMore || false)
+          console.log(
+            `✅ Successfully loaded ${data.properties.length} properties`
+          )
+        } else {
+          console.warn('❌ Invalid data structure received:', data)
+        }
+      } catch (err) {
+        console.error('❌ Failed to fetch properties:', err)
+        // Show user-friendly error message
+        if (err.message.includes('429')) {
+          console.warn('Rate limit exceeded. Please wait and try again.')
+        }
+      } finally {
+        fetchingRef.current = false
+        setLoadingProperties(false)
+      }
+    }
+
+    // Debounce the API call to prevent rapid successive calls
+    const timeoutId = setTimeout(fetchProperties, 300)
+
+    return () => clearTimeout(timeoutId)
+  }, [page])
 
   const filters = [
     { id: 'all', name: 'All', icon: HiHome },
@@ -182,10 +166,20 @@ const Homepage = () => {
   ]
 
   const handleLogout = async () => {
-    console.log('Logout clicked')
+    await logout()
+    setProfileMenuOpen(false)
+    navigate('/')
   }
 
   const handleClick = (listingId) => {
+    console.log('🔍 Navigating to property with ID:', listingId)
+
+    // Validate the listing ID before navigation
+    if (!listingId || listingId === 'undefined' || listingId === 'null') {
+      console.error('❌ Invalid listing ID provided:', listingId)
+      return
+    }
+
     navigate(`/listing/${listingId}`)
   }
 
@@ -204,10 +198,18 @@ const Homepage = () => {
     setFavorites(newFavorites)
   }
 
+  // Filter properties by category
   const filteredListings =
     activeFilter === 'all'
-      ? listingData
-      : listingData.filter((listing) => listing.category === activeFilter)
+      ? properties
+      : properties.filter((property) => property.category === activeFilter)
+
+  // Demo images fallback array
+  const demoImages = [
+    'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1493809842364-78817add7ffb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+  ]
 
   return (
     <div className='bg-white min-h-screen overflow-x-hidden'>
@@ -430,7 +432,10 @@ const Homepage = () => {
                                 </div>
                               </button>
 
-                              <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
+                              <button
+                                onClick={() => navigate('/my-bookings')}
+                                className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
+                              >
                                 <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-blue-100 rounded-xl transition-colors duration-200'>
                                   <FaBook className='text-neutral-600 group-hover:text-accent-blue-600 text-sm' />
                                 </div>
@@ -599,32 +604,43 @@ const Homepage = () => {
 
             {/* Listings Grid */}
             <div className='space-y-4 sm:space-y-6'>
-              {filteredListings.map((listing) => (
+              {filteredListings.map((property, idx) => (
                 <div
-                  key={listing.id}
+                  key={property._id}
                   className='bg-white border border-primary-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-soft hover:shadow-strong transition-all duration-500 transform hover:-translate-y-1'
                 >
                   <div className='flex flex-col lg:flex-row'>
                     {/* Image */}
                     <div className='lg:w-2/5 relative group'>
                       <img
-                        src={listing.image}
-                        alt={listing.name}
+                        src={
+                          property.images &&
+                          property.images.length > 0 &&
+                          property.images[0]
+                            ? typeof property.images[0] === 'object' &&
+                              property.images[0].data
+                              ? property.images[0].data
+                              : property.images[0]
+                            : demoImages[idx % demoImages.length]
+                        }
+                        alt={property.title}
                         className='w-full h-48 sm:h-56 lg:h-72 object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105'
-                        onClick={() => handleClick(listing.id)}
+                        onClick={() => handleClick(property._id)}
                       />
 
                       {/* Badge */}
-                      <div className='absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold text-primary-800 shadow-md'>
-                        {listing.badge}
-                      </div>
+                      {property.badge && (
+                        <div className='absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold text-primary-800 shadow-md'>
+                          {property.badge}
+                        </div>
+                      )}
 
                       {/* Action Buttons */}
                       <div className='absolute top-3 right-3 flex gap-2'>
                         <button
-                          onClick={() => toggleFavorite(listing.id)}
+                          onClick={() => toggleFavorite(property._id)}
                           className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300 ${
-                            favorites.has(listing.id)
+                            favorites.has(property._id)
                               ? 'bg-red-500 text-white'
                               : 'bg-white/90 text-primary-600 hover:bg-white'
                           }`}
@@ -644,38 +660,51 @@ const Homepage = () => {
                           <div className='flex items-center gap-1.5 mb-2'>
                             <HiLocationMarker className='text-primary-500 text-sm' />
                             <span className='text-primary-600 font-medium text-sm'>
-                              {listing.location}
+                              {property.address?.city || property.location}
                             </span>
                           </div>
                           <h2
                             className='text-lg sm:text-xl lg:text-2xl font-bold text-primary-900 cursor-pointer hover:text-primary-800 transition-colors duration-300 leading-tight'
-                            onClick={() => handleClick(listing.id)}
+                            onClick={() => handleClick(property._id)}
                           >
-                            {listing.name}
+                            {property.title}
                           </h2>
                         </div>
 
                         <p className='text-primary-600 text-sm sm:text-base leading-relaxed'>
-                          {listing.text}
+                          {truncateText(property.description, 150)}
                         </p>
 
                         {/* Amenities */}
                         <div className='flex flex-wrap gap-1.5'>
-                          {listing.amenities
-                            .slice(0, 4)
-                            .map((amenity, index) => (
-                              <span
-                                key={index}
-                                className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'
-                              >
-                                {amenity}
+                          {property.amenities &&
+                            property.amenities
+                              .slice(0, 4)
+                              .map((amenity, index) => (
+                                <span
+                                  key={index}
+                                  className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'
+                                >
+                                  {amenity}
+                                </span>
+                              ))}
+                          {property.amenities &&
+                            property.amenities.length > 4 && (
+                              <span className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'>
+                                +{property.amenities.length - 4} more
                               </span>
-                            ))}
-                          {listing.amenities.length > 4 && (
-                            <span className='bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'>
-                              +{listing.amenities.length - 4} more
-                            </span>
-                          )}
+                            )}
+                        </div>
+                        <div className='flex flex-wrap gap-2 mt-2'>
+                          <span className='bg-primary-50 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'>
+                            {property.bedrooms} Bedrooms
+                          </span>
+                          <span className='bg-primary-50 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'>
+                            {property.bathrooms} Bathrooms
+                          </span>
+                          <span className='bg-primary-50 text-primary-700 px-2 py-1 rounded-full text-xs font-medium'>
+                            {property.type}
+                          </span>
                         </div>
                       </div>
 
@@ -685,18 +714,21 @@ const Homepage = () => {
                           <div className='flex items-center gap-1'>
                             <FaStar className='text-amber-400 text-sm' />
                             <span className='font-bold text-primary-900 text-sm'>
-                              {listing.rating}
+                              {property.averageRating || 'New'}
                             </span>
                           </div>
                           <span className='text-primary-600 text-xs sm:text-sm'>
-                            ({listing.reviewCount} reviews)
+                            ({property.totalReviews || 0} reviews)
                           </span>
                         </div>
 
                         <div className='text-right'>
                           <div className='text-lg sm:text-xl lg:text-2xl font-black text-primary-900'>
                             {selectedCurrencyData?.symbol}
-                            {convertPrice(listing.priceUSD)}
+                            {convertPrice(
+                              property.price || 0,
+                              property.currency || 'NGN'
+                            )}
                           </div>
                           <div className='text-primary-600 text-xs sm:text-sm'>
                             per night
@@ -707,14 +739,25 @@ const Homepage = () => {
                   </div>
                 </div>
               ))}
+              {loadingProperties && (
+                <div className='text-center py-6 text-primary-600'>
+                  Loading properties...
+                </div>
+              )}
             </div>
 
             {/* Load More Button */}
-            <div className='text-center mt-8 sm:mt-12'>
-              <button className='bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 text-sm sm:text-base'>
-                Load More Properties
-              </button>
-            </div>
+            {hasMore && (
+              <div className='text-center mt-8 sm:mt-12'>
+                <button
+                  className='bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3 px-6 sm:py-4 sm:px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 text-sm sm:text-base'
+                  onClick={() => setPage((prev) => prev + 1)}
+                  disabled={loadingProperties}
+                >
+                  {loadingProperties ? 'Loading...' : 'Load More Properties'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Right Sidebar - Map */}
@@ -730,16 +773,45 @@ const Homepage = () => {
                   </p>
                 </div>
                 <div className='relative'>
-                  <iframe
-                    src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.6254076347154!2d3.3792057!3d6.4281395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b2ae68280c1%3A0xdc9e87a367c3d9cb!2sLagos%2C%20Nigeria!5e0!3m2!1sen!2sng!4v1640000000000!5m2!1sen!2sng'
-                    width='100%'
-                    height='500'
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading='lazy'
-                    referrerPolicy='no-referrer-when-downgrade'
-                    className='w-full'
-                  ></iframe>
+                  {/* Render map with all property markers, fallback to Lagos if none */}
+                  {(() => {
+                    const markers = filteredListings
+                      .filter((p) => p.locationLat && p.locationLng)
+                      .map((p) => `${p.locationLat},${p.locationLng}`)
+                    if (markers.length > 0) {
+                      // Use Google Maps embed with multiple markers (centered on first property)
+                      const center = markers[0]
+                      const markerParams = markers
+                        .map((m) => `&markers=color:red%7C${m}`)
+                        .join('')
+                      const mapUrl = `https://maps.google.com/maps?q=${center}&z=12${markerParams}&output=embed`
+                      return (
+                        <iframe
+                          src={mapUrl}
+                          width='100%'
+                          height='500'
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading='lazy'
+                          referrerPolicy='no-referrer-when-downgrade'
+                          className='w-full'
+                        ></iframe>
+                      )
+                    } else {
+                      return (
+                        <iframe
+                          src='https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.6254076347154!2d3.3792057!3d6.4281395!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b2ae68280c1%3A0xdc9e87a367c3d9cb!2sLagos%2C%20Nigeria!5e0!3m2!1sen!2sng!4v1640000000000!5m2!1sen!2sng'
+                          width='100%'
+                          height='500'
+                          style={{ border: 0 }}
+                          allowFullScreen
+                          loading='lazy'
+                          referrerPolicy='no-referrer-when-downgrade'
+                          className='w-full'
+                        ></iframe>
+                      )
+                    }
+                  })()}
 
                   <div className='absolute top-4 left-4 right-4 flex justify-between'>
                     <button className='bg-white/95 backdrop-blur-sm px-4 py-2 rounded-full text-primary-800 font-semibold shadow-md hover:bg-white transition-all duration-300'>
@@ -762,4 +834,4 @@ const Homepage = () => {
   )
 }
 
-export default Homepage
+export default Listings
