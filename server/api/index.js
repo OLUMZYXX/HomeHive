@@ -96,7 +96,7 @@ app.get('/api/test', (req, res) => {
   res.json({
     success: true,
     message: 'API is working!',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   })
 })
 
@@ -110,7 +110,9 @@ app.get('/api/health', async (req, res) => {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'production',
       database:
-        mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ⚠️',
+        mongoose.connection.readyState === 1
+          ? 'Connected ✅'
+          : 'Disconnected ⚠️',
       databaseState: mongoose.connection.readyState,
     })
   } catch (error) {
@@ -118,7 +120,7 @@ app.get('/api/health', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Health check failed',
-      error: error.message
+      error: error.message,
     })
   }
 })
@@ -134,14 +136,16 @@ app.get('/', async (req, res) => {
       status: 'Server running on Vercel',
       timestamp: new Date().toISOString(),
       database:
-        mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ⚠️',
+        mongoose.connection.readyState === 1
+          ? 'Connected ✅'
+          : 'Disconnected ⚠️',
     })
   } catch (error) {
     console.error('Root endpoint error:', error)
     res.status(500).json({
       success: false,
       message: 'Server error',
-      error: error.message
+      error: error.message,
     })
   }
 })
