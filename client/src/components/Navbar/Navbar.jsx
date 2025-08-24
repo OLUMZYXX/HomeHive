@@ -127,7 +127,7 @@ const Navbar = () => {
 
   const handleBookingClick = (e) => {
     e.preventDefault()
-    if (!user || !isAuthenticated) {
+    if (!isAuthenticated) {
       localStorage.setItem('redirectAfterLogin', '/listings')
       toast.info('Please log in to view your bookings')
       navigate('/signin')
@@ -138,7 +138,7 @@ const Navbar = () => {
   }
 
   const handleFavoritesClick = () => {
-    if (!user || !isAuthenticated) {
+    if (!isAuthenticated) {
       localStorage.setItem('redirectAfterLogin', '/favorites')
       toast.info('Please log in to view your favorites')
       navigate('/signin')
@@ -150,19 +150,27 @@ const Navbar = () => {
   }
 
   const handleBookingsClick = () => {
-    if (!user || !isAuthenticated) {
-      localStorage.setItem('redirectAfterLogin', '/bookings')
+    console.log('Navbar - Bookings clicked, authentication state:', {
+      isAuthenticated,
+      user,
+    })
+
+    if (!isAuthenticated) {
+      console.log('Navbar - User not authenticated, redirecting to signin')
+      localStorage.setItem('redirectAfterLogin', '/my-bookings')
       toast.info('Please log in to view your bookings')
       navigate('/signin')
       return
     }
-    navigate('/bookings')
+
+    console.log('Navbar - User authenticated, navigating to my-bookings')
+    navigate('/my-bookings')
     setMenuOpen(false)
     setProfileMenuOpen(false)
   }
 
   const handleSettingsClick = () => {
-    if (!user || !isAuthenticated) {
+    if (!isAuthenticated) {
       toast.info('Please log in to access settings')
       navigate('/signin')
       return

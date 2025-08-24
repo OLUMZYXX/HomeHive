@@ -2,8 +2,11 @@ import axios from 'axios'
 import { TokenManager } from '../services/jwtAuthService'
 
 // Create axios instance with base configuration
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api'
+console.log('🔧 Axios baseURL configured:', baseURL)
+
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api',
+  baseURL,
   timeout: 30000, // 30 seconds timeout - increased from 10 seconds
   headers: {
     'Content-Type': 'application/json',

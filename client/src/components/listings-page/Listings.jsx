@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAPI } from '../../contexts/APIContext'
 import { useCurrency } from '../../contexts/CurrencyContext'
 import {
-  FaRegUserCircle,
   FaStar,
   FaHeart,
   FaShare,
@@ -13,11 +12,8 @@ import {
   FaHome,
   FaUsers,
   FaCalendarAlt,
-  FaBook,
-  FaCog,
 } from 'react-icons/fa'
 import { HiLocationMarker, HiHome, HiSparkles } from 'react-icons/hi'
-import { motion, AnimatePresence } from 'framer-motion'
 import HomeHiveLogo from '../../assets/HomeHiveLogo'
 import Footer from '../Footer/Footer'
 import { navigateToHome } from '../../utils/navigation'
@@ -40,43 +36,18 @@ const Listings = () => {
     convertFromCurrency,
   } = useCurrency()
 
-  // Smart home navigation handler
-  const handleHomeNavigation = () => {
-    navigateToHome(navigate, location)
-  }
-
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
-  const profileMenuRef = useRef(null)
-
-  // Remove demo sign-in logic. Use real user state if available.
-
-  // Close profile menu on outside click
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (
-        profileMenuRef.current &&
-        !profileMenuRef.current.contains(event.target)
-      ) {
-        setProfileMenuOpen(false)
-      }
-    }
-    if (profileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [profileMenuOpen])
+  // State declarations - moved to top to avoid initialization errors
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [favorites, setFavorites] = useState(new Set())
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false)
 
-  // Convert price based on property currency and selected currency
-  const convertPrice = (price, fromCurrency = 'NGN') => {
-    if (!price) return '0'
-    return convertFromCurrency(price, fromCurrency, selectedCurrency)
+  // Smart home navigation handler
+  const handleHomeNavigation = () => {
+    navigateToHome(navigate, location)
   }
 
-  // Close currency dropdown when clicking outside
+  // Close profile menu on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showCurrencyDropdown && !event.target.closest('.currency-selector')) {
@@ -86,6 +57,12 @@ const Listings = () => {
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [showCurrencyDropdown])
+
+  // Convert price based on property currency and selected currency
+  const convertPrice = (price, fromCurrency = 'NGN') => {
+    if (!price) return '0'
+    return convertFromCurrency(price, fromCurrency, selectedCurrency)
+  }
 
   // Properties state from backend
   const [properties, setProperties] = useState([])
@@ -164,12 +141,6 @@ const Listings = () => {
     { id: 'apartment', name: 'Apartments', icon: HiHome },
     { id: 'studio', name: 'Studios', icon: HiHome },
   ]
-
-  const handleLogout = async () => {
-    await logout()
-    setProfileMenuOpen(false)
-    navigate('/')
-  }
 
   const handleClick = (listingId) => {
     console.log('🔍 Navigating to property with ID:', listingId)
@@ -348,146 +319,59 @@ const Listings = () => {
                   <div className='relative flex items-center gap-4'>
                     <button
                       className='w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 overflow-hidden relative focus:outline-none'
-                      onClick={() => setProfileMenuOpen((open) => !open)}
                       aria-label='Profile menu'
                     >
-                      <img
-                        src={user.photoURL}
-                        alt='User'
-                        className='w-full h-full object-cover'
-                      />
-                      {/* Dot indicator when logged in */}
+                      {user.profilePicture || user.photoURL ? (
+                        <img
+                          src={user.profilePicture || user.photoURL}
+                          alt='User Profile'
+                          className='w-full h-full object-cover'
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.nextSibling.style.display = 'flex'
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className='w-full h-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg'
+                        style={{
+                          display:
+                            user.profilePicture || user.photoURL
+                              ? 'none'
+                              : 'flex',
+                        }}
+                      >
+                        {(
+                          user.displayName ||
+                          user.firstName ||
+                          user.email ||
+                          'U'
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                      {/* Status indicator for authenticated users */}
                       <span className='absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-white'></span>
                     </button>
 
-                    {/* Logout Button - Desktop */}
                     <button
-                      onClick={handleLogout}
-                      className='hidden sm:block bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-2 px-4 lg:py-3 lg:px-6 rounded-full font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105'
+                      onClick={logout}
+                      className='bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-2 px-4 lg:py-3 lg:px-6 rounded-full font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105'
                     >
                       Logout
                     </button>
-
-                    {/* Profile Dropdown - Consistent with Navbar */}
-                    <AnimatePresence>
-                      {profileMenuOpen && (
-                        <motion.div
-                          ref={profileMenuRef}
-                          initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                          transition={{
-                            duration: 0.2,
-                            ease: [0.25, 0.46, 0.45, 0.94],
-                          }}
-                          className='absolute top-14 right-0 w-96 bg-white/95 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-strong z-50 overflow-hidden'
-                        >
-                          {/* Profile Header */}
-                          <div className='p-6 bg-gradient-to-r from-neutral-50 to-primary-50 border-b border-neutral-200/30'>
-                            <div className='flex items-center gap-4'>
-                              <div className='relative'>
-                                <img
-                                  src={user.photoURL}
-                                  alt='User'
-                                  className='w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium'
-                                />
-                                {/* Enhanced status indicator */}
-                                <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-success-500 rounded-full border-2 border-white shadow-sm'>
-                                  <div className='w-full h-full bg-success-400 rounded-full animate-ping opacity-75'></div>
-                                </div>
-                              </div>
-                              <div className='flex-1 min-w-0'>
-                                <div className='font-semibold text-neutral-800 text-lg truncate'>
-                                  {user.displayName || 'User'}
-                                </div>
-                                <div className='text-sm text-neutral-500 truncate'>
-                                  {user.email}
-                                </div>
-                                <div className='inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-success-100 text-success-700 text-xs font-medium rounded-full'>
-                                  <div className='w-1.5 h-1.5 bg-success-500 rounded-full'></div>
-                                  Active
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Menu Items */}
-                          <div className='py-2'>
-                            {/* Account Section */}
-                            <div className='px-2 pb-2'>
-                              <div className='text-xs font-semibold text-neutral-400 uppercase tracking-wider px-4 py-2'>
-                                Account
-                              </div>
-                              <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
-                                <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-primary-100 rounded-xl transition-colors duration-200'>
-                                  <FaCog className='text-neutral-600 group-hover:text-primary-600 text-sm' />
-                                </div>
-                                <div className='flex-1 text-left'>
-                                  <div className='font-medium text-sm'>
-                                    Settings
-                                  </div>
-                                  <div className='text-xs text-neutral-500'>
-                                    Manage preferences
-                                  </div>
-                                </div>
-                              </button>
-
-                              <button
-                                onClick={() => navigate('/my-bookings')}
-                                className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
-                              >
-                                <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-blue-100 rounded-xl transition-colors duration-200'>
-                                  <FaBook className='text-neutral-600 group-hover:text-accent-blue-600 text-sm' />
-                                </div>
-                                <div className='flex-1 text-left'>
-                                  <div className='font-medium text-sm'>
-                                    My Bookings
-                                  </div>
-                                  <div className='text-xs text-neutral-500'>
-                                    View reservations
-                                  </div>
-                                </div>
-                              </button>
-
-                              <button className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'>
-                                <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-red-100 rounded-xl transition-colors duration-200'>
-                                  <FaHeart className='text-neutral-600 group-hover:text-accent-red-500 text-sm' />
-                                </div>
-                                <div className='flex-1 text-left'>
-                                  <div className='font-medium text-sm'>
-                                    Favorites
-                                  </div>
-                                  <div className='text-xs text-neutral-500'>
-                                    Saved properties
-                                  </div>
-                                </div>
-                              </button>
-                            </div>
-
-                            {/* Divider */}
-                            <div className='my-2 mx-6 border-t border-neutral-200/50'></div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 ) : (
                   <div className='flex items-center gap-4'>
-                    {/* Sign In Button */}
                     <button
                       onClick={() => navigate('/signin')}
-                      className='flex items-center gap-2 bg-white/80 hover:bg-white/90 backdrop-blur-sm rounded-full px-3 sm:px-4 py-2 sm:py-3 transition-all duration-300 cursor-pointer border border-primary-200 hover:border-primary-300 shadow-soft hover:shadow-medium'
+                      className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-800 rounded-full transition-all duration-200'
                     >
-                      <FaRegUserCircle className='text-lg sm:text-2xl text-primary-600' />
-                      <span className='hidden sm:block text-sm font-semibold text-primary-700'>
-                        Sign in
-                      </span>
+                      Login
                     </button>
-
-                    {/* Sign Up Button - Desktop Only */}
                     <button
                       onClick={() => navigate('/signup')}
-                      className='hidden sm:block bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-2 px-4 lg:py-3 lg:px-6 rounded-full font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105'
+                      className='px-6 py-2.5 text-base font-medium bg-gray-800 text-white rounded-full hover:bg-gray-900 transition-all duration-200'
                     >
                       Sign Up
                     </button>

@@ -12,10 +12,12 @@ import CreateAccount from './components/HostCreate-Acct/CreateAccount'
 import Listings from './components/listings-page/Listings'
 import PropertyDetail from './components/PropertyDetail/PropertyDetail'
 import MyBookings from './components/MyBookings/MyBookings'
-import Cart from './components/Cart/Cart'
+import Checkout from './components/Checkout/Checkout'
+import BookingConfirmation from './components/BookingConfirmation/BookingConfirmation'
 import Host from './components/Become a Host/Host'
 import Hostlogin from './components/Host-Login/Hostlogin'
 import Dashboard from './components/Host-dashboard/Dashboard'
+import PaymentPage from './pages/PaymentPage'
 import ScrollToTop from './components/ScrollToTop'
 
 const AnimatedRoutes = () => {
@@ -96,10 +98,26 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/cart'
+          path='/checkout'
           element={
             <PageWrapper variant='fadeInUp'>
-              <Cart />
+              <Checkout />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path='/booking-confirmation'
+          element={
+            <PageWrapper variant='fadeInUp'>
+              <BookingConfirmation />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path='/my-bookings'
+          element={
+            <PageWrapper variant='fadeInUp'>
+              <MyBookings />
             </PageWrapper>
           }
         />
@@ -132,6 +150,14 @@ const AnimatedRoutes = () => {
           element={
             <PageWrapper variant='scaleIn'>
               <CreateAccount />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path='/payment'
+          element={
+            <PageWrapper variant='fadeInUp'>
+              <PaymentPage />
             </PageWrapper>
           }
         />

@@ -20,15 +20,13 @@ import {
   FaPaw,
   FaChevronLeft,
   FaChevronRight,
-  FaCalendarAlt,
   FaArrowLeft,
   FaCheck,
   FaTimes,
   FaExclamationTriangle,
 } from 'react-icons/fa'
-import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
-import AvailabilityCalendar from '../common/AvailabilityCalendar'
+import PropTypes from 'prop-types'
 
 // Date picker component
 const DatePicker = ({ label, value, onChange, min, disabled, error }) => {
@@ -59,6 +57,15 @@ const DatePicker = ({ label, value, onChange, min, disabled, error }) => {
       )}
     </div>
   )
+}
+
+DatePicker.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  min: PropTypes.string,
+  disabled: PropTypes.bool,
+  error: PropTypes.string,
 }
 
 // Guest counter component
@@ -113,14 +120,20 @@ const GuestCounter = ({ guests, onGuestsChange, maxGuests = 10 }) => {
   )
 }
 
+GuestCounter.propTypes = {
+  guests: PropTypes.number.isRequired,
+  onGuestsChange: PropTypes.func.isRequired,
+  maxGuests: PropTypes.number,
+}
+
 const PropertyDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const {
     getProperty,
-    user,
     isAuthenticated,
-    createBookingWithValidation,
+    user,
+    createBooking,
     checkBookingAvailability,
   } = useAPI()
   const { convertFromCurrency, selectedCurrencyData } = useCurrency()
@@ -132,7 +145,6 @@ const PropertyDetail = () => {
 
   // Image gallery state
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [showAllImages, setShowAllImages] = useState(false)
 
   // Booking form state
   const [bookingForm, setBookingForm] = useState({
@@ -153,10 +165,31 @@ const PropertyDetail = () => {
     const checkIn = new Date(bookingForm.checkIn)
     const checkOut = new Date(bookingForm.checkOut)
     const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24))
-    const pricePerNight = convertFromCurrency(
-      property.pricePerNight,
-      property.currency
+
+    // Get base price - handle multiple possible field names
+    let basePrice = 0
+    if (property.pricePerNight) basePrice = property.pricePerNight
+    else if (property.price) basePrice = property.price
+    else if (property.nightlyRate) basePrice = property.nightlyRate
+    else basePrice = 0
+
+    console.log('💰 Base price from property:', basePrice)
+    console.log('📊 Property currency:', property.currency || 'NGN')
+
+    // Convert price to selected currency - get numeric value
+    const convertedPrice = convertFromCurrency(
+      basePrice,
+      property.currency || 'NGN'
     )
+
+    // Parse the converted price to handle comma formatting
+    const pricePerNight =
+      typeof convertedPrice === 'string'
+        ? parseFloat(convertedPrice.replace(/,/g, ''))
+        : convertedPrice
+
+    console.log('🔄 Converted price per night:', pricePerNight)
+
     const totalAmount = nights * pricePerNight
 
     return { nights, totalAmount, pricePerNight }
@@ -182,6 +215,14 @@ const PropertyDetail = () => {
         }
 
         console.log('✅ Property loaded successfully:', propertyData.title)
+        console.log('💰 Property data:', {
+          title: propertyData.title,
+          price: propertyData.price,
+          pricePerNight: propertyData.pricePerNight,
+          currency: propertyData.currency,
+          id: propertyData.id || propertyData._id,
+          maxGuests: propertyData.maxGuests || propertyData.guests,
+        })
         setProperty(propertyData)
       } catch (err) {
         console.error('❌ Error fetching property:', err)
@@ -226,8 +267,13 @@ const PropertyDetail = () => {
 
     if (bookingForm.guests < 1) {
       errors.guests = 'At least 1 guest is required'
-    } else if (property && bookingForm.guests > property.maxGuests) {
-      errors.guests = `Maximum ${property.maxGuests} guests allowed`
+    } else if (
+      property &&
+      bookingForm.guests > (property.maxGuests || property.guests || 10)
+    ) {
+      errors.guests = `Maximum ${
+        property.maxGuests || property.guests || 10
+      } guests allowed`
     }
 
     return errors
@@ -239,81 +285,261 @@ const PropertyDetail = () => {
     setBookingErrors(validationErrors)
 
     if (Object.keys(validationErrors).length > 0) {
+      toast.error('Please fix the form errors before checking availability')
       return
     }
 
     try {
       setAvailabilityLoading(true)
-      const availability = await checkBookingAvailability(
-        property.id,
+      setBookingErrors({}) // Clear previous errors
+
+      console.log(
+        '🔍 Checking availability for property:',
+        property._id || property.id
+      )
+      console.log('📅 Dates:', {
+        checkIn: bookingForm.checkIn,
+        checkOut: bookingForm.checkOut,
+      })
+
+      const response = await checkBookingAvailability(
+        property._id || property.id,
         bookingForm.checkIn,
         bookingForm.checkOut
       )
 
-      if (availability.available) {
+      console.log('✅ Availability response:', response)
+
+      if (response && response.available === true) {
         toast.success('Property is available for these dates! ✅')
+        setBookingErrors({}) // Clear errors on success
       } else {
-        toast.error(
-          availability.message || 'Property is not available for these dates'
-        )
-        setBookingErrors({
-          general:
-            availability.message || 'Property is not available for these dates',
-        })
+        const errorMessage =
+          response?.message || 'Property is not available for these dates'
+        toast.error(errorMessage)
+        setBookingErrors({ general: errorMessage })
       }
     } catch (err) {
-      toast.error('Failed to check availability')
-      setBookingErrors({ general: 'Failed to check availability' })
+      console.error('❌ Availability check error:', err)
+      console.error('📄 Error response:', err.response?.data)
+      console.error('🔢 Error status:', err.response?.status)
+
+      let errorMessage = 'Failed to check availability'
+
+      if (err.response?.status === 400) {
+        errorMessage =
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Invalid request parameters'
+      } else if (err.response?.status === 404) {
+        errorMessage = 'Property not found'
+      } else if (err.response?.status >= 500) {
+        errorMessage = 'Server error. Please try again later.'
+      } else {
+        errorMessage =
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          err.message ||
+          'Failed to check availability'
+      }
+
+      toast.error(errorMessage)
+      setBookingErrors({ general: errorMessage })
     } finally {
       setAvailabilityLoading(false)
     }
+  }
+
+  // Handle Book Now - Navigate to checkout
+  const handleBookNow = () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to continue booking')
+      navigate('/signin')
+      return
+    }
+
+    // Validate form before proceeding to checkout
+    const validationErrors = validateBookingForm()
+    if (Object.keys(validationErrors).length > 0) {
+      setBookingErrors(validationErrors)
+      toast.error('Please fix the form errors before proceeding')
+      return
+    }
+
+    const { nights, totalAmount, pricePerNight } = calculateBookingDetails()
+
+    if (!pricePerNight || pricePerNight <= 0) {
+      toast.error('Unable to calculate booking price. Please try again.')
+      return
+    }
+
+    // Create booking data for checkout
+    const checkoutBookingData = {
+      propertyId: property._id || property.id,
+      propertyTitle: property.title,
+      propertyImage: property.images?.[0],
+      propertyLocation: `${
+        property.address?.city || property.location?.city
+      }, ${property.address?.state || property.location?.state}`,
+      checkIn: bookingForm.checkIn,
+      checkOut: bookingForm.checkOut,
+      guests: bookingForm.guests,
+      nights,
+      pricePerNight: Math.round(pricePerNight),
+      totalAmount: Math.round(totalAmount),
+      currency: selectedCurrencyData?.code || 'NGN',
+      currencySymbol: selectedCurrencyData?.symbol || '\u20a6',
+    }
+
+    // Navigate to checkout with booking data
+    navigate('/checkout', {
+      state: {
+        bookingData: checkoutBookingData,
+        fromProperty: property._id || property.id,
+      },
+    })
   }
 
   // Handle booking submission
   const handleBooking = async () => {
     if (!isAuthenticated) {
       toast.error('Please login to make a booking')
-      navigate('/login')
+      navigate('/signin')
       return
     }
 
+    // Debugging: Log booking form values
+    console.log('Booking form values before validation:', bookingForm)
+
+    // Validate form fields
     const validationErrors = validateBookingForm()
-    setBookingErrors(validationErrors)
-
     if (Object.keys(validationErrors).length > 0) {
+      setBookingErrors(validationErrors)
+      toast.error('Please fix the form errors before proceeding')
       return
     }
 
-    const { nights, totalAmount } = calculateBookingDetails()
+    // Ensure `checkIn` and `checkOut` are populated
+    if (!bookingForm.checkIn || !bookingForm.checkOut) {
+      toast.error('Check-in and Check-out dates are required')
+      setBookingErrors({
+        checkIn: !bookingForm.checkIn ? 'Check-in date is required' : undefined,
+        checkOut: !bookingForm.checkOut
+          ? 'Check-out date is required'
+          : undefined,
+      })
+      return
+    }
 
     try {
       setBookingLoading(true)
+      setBookingErrors({}) // Clear previous errors
 
-      const bookingData = {
-        propertyId: property.id,
+      console.log('🔍 Pre-checking availability before booking...')
+
+      // Show user that we're checking availability
+      toast.loading('Checking availability...', { id: 'availability-check' })
+
+      let availabilityCheck
+      try {
+        availabilityCheck = await checkBookingAvailability(
+          property._id || property.id,
+          bookingForm.checkIn,
+          bookingForm.checkOut
+        )
+      } catch (availabilityError) {
+        console.error('❌ Availability check failed:', availabilityError)
+        toast.dismiss('availability-check')
+        toast.error('Failed to check availability. Please try again.')
+        setBookingErrors({
+          general: 'Failed to check availability. Please try again.',
+        })
+        setBookingLoading(false)
+        return
+      }
+
+      console.log('📋 Availability check result:', availabilityCheck)
+
+      // Dismiss the loading toast
+      toast.dismiss('availability-check')
+
+      if (!availabilityCheck || !availabilityCheck.available) {
+        const errorMessage =
+          availabilityCheck?.message ||
+          'Property is not available for these dates'
+        toast.error(errorMessage)
+        setBookingErrors({ general: errorMessage })
+        setBookingLoading(false) // Reset loading state
+        return
+      }
+
+      // Show success for availability
+      toast.success('Dates available! Processing booking...', {
+        duration: 2000,
+      })
+
+      const { nights, totalAmount, pricePerNight } = calculateBookingDetails()
+
+      if (!pricePerNight || pricePerNight <= 0) {
+        toast.error('Unable to calculate booking price. Please try again.')
+        setBookingErrors({ general: 'Invalid price calculation' })
+        setBookingLoading(false) // Reset loading state
+        return
+      }
+
+      console.log('🎯 Creating booking with data:', {
+        propertyId: property._id || property.id,
         checkIn: bookingForm.checkIn,
         checkOut: bookingForm.checkOut,
         guests: bookingForm.guests,
-        totalAmount,
         nights,
+        totalAmount,
+        pricePerNight,
+      })
+
+      const bookingData = {
+        propertyId: property._id || property.id,
+        propertyTitle: property.title,
+        checkIn: bookingForm.checkIn,
+        checkOut: bookingForm.checkOut,
+        guests: bookingForm.guests,
+        totalAmount: Math.round(totalAmount),
+        nights,
+        status: 'pending', // Set as pending until payment
+        userEmail: user?.email, // Include user email
       }
 
-      await createBookingWithValidation(bookingData)
+      // Create pending booking
+      const result = await createBooking(bookingData)
+      console.log('✅ Pending booking created successfully:', result)
 
-      toast.success('Booking request submitted successfully! 🎉')
+      toast.success('Booking reserved! You can pay later from My Bookings.', {
+        duration: 3000,
+      })
 
-      // Reset form
+      // Reset form on success
       setBookingForm({
         checkIn: '',
         checkOut: '',
         guests: 1,
       })
+      setBookingErrors({}) // Clear any remaining errors
 
-      // Navigate to bookings page or show success message
-      // navigate('/my-bookings')
+      // Navigate to My Bookings page
+      navigate('/my-bookings')
     } catch (err) {
-      toast.error(err.message || 'Failed to create booking')
-      setBookingErrors({ general: err.message || 'Failed to create booking' })
+      console.error('❌ Booking creation error:', err)
+      console.error('📄 Error response:', err.response?.data)
+      console.error('🔢 Error status:', err.response?.status)
+
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        err.message ||
+        'Failed to create booking'
+
+      toast.error(errorMessage)
+      setBookingErrors({ general: errorMessage })
     } finally {
       setBookingLoading(false)
     }
@@ -419,7 +645,7 @@ const PropertyDetail = () => {
     <div className='min-h-screen bg-gradient-to-br from-primary-25 to-white'>
       {/* Enhanced Header */}
       <div className='bg-white/80 backdrop-blur-md shadow-medium border-b border-primary-200 sticky top-0 z-40'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+        <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex items-center justify-between h-16'>
             <button
               onClick={() => navigate('/listings')}
@@ -443,7 +669,7 @@ const PropertyDetail = () => {
         </div>
       </div>
 
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+      <div className='max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
           {/* Left Column - Property Details */}
           <div className='lg:col-span-2 space-y-8'>
@@ -475,7 +701,7 @@ const PropertyDetail = () => {
                   <div className='flex items-center gap-4 text-sm text-primary-700'>
                     <span className='flex items-center gap-1'>
                       <FaUsers className='text-xs' />
-                      {property.maxGuests} Guests
+                      {property.maxGuests || property.guests || 4} Guests
                     </span>
                     <span className='flex items-center gap-1'>
                       <FaBed className='text-xs' />
@@ -556,12 +782,12 @@ const PropertyDetail = () => {
             </div>
 
             {/* Property Details */}
-            <div className='bg-white rounded-2xl p-6 shadow-soft border border-primary-100 space-y-8'>
+            <div className='bg-white rounded-2xl p-6 shadow-soft border border-primary-100 space-y-6'>
               <div>
                 <h3 className='text-2xl font-bold text-primary-900 mb-4'>
                   About this place
                 </h3>
-                <p className='text-primary-700 leading-relaxed text-lg'>
+                <p className='text-primary-700 leading-relaxed text-base'>
                   {property.description}
                 </p>
               </div>
@@ -569,19 +795,21 @@ const PropertyDetail = () => {
               {/* Amenities */}
               {property.amenities?.length > 0 && (
                 <div>
-                  <h3 className='text-2xl font-bold text-primary-900 mb-4'>
+                  <h3 className='text-2xl font-bold text-primary-900 mb-6'>
                     What this place offers
                   </h3>
-                  <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'>
                     {property.amenities.map((amenity, index) => {
                       const IconComponent = amenityIcons[amenity] || FaCheck
                       return (
                         <div
                           key={index}
-                          className='flex items-center gap-3 p-3 bg-primary-50 rounded-xl'
+                          className='flex items-center gap-3 p-4 bg-gradient-to-r from-primary-50 to-primary-25 rounded-xl border border-primary-100 hover:border-primary-200 transition-all duration-300 hover:shadow-soft'
                         >
-                          <IconComponent className='text-primary-600 text-lg' />
-                          <span className='text-primary-800 font-medium'>
+                          <div className='w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center'>
+                            <IconComponent className='text-primary-600 text-lg' />
+                          </div>
+                          <span className='text-primary-800 font-medium text-sm'>
                             {amenity}
                           </span>
                         </div>
@@ -593,37 +821,56 @@ const PropertyDetail = () => {
 
               {/* Property Features */}
               <div>
-                <h3 className='text-2xl font-bold text-primary-900 mb-4'>
+                <h3 className='text-2xl font-bold text-primary-900 mb-6'>
                   Property Features
                 </h3>
-                <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-                  <div className='bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-4 text-center'>
-                    <FaUsers className='text-primary-600 text-2xl mx-auto mb-2' />
-                    <div className='font-bold text-primary-900'>
-                      {property.maxGuests}
+                <div className='grid grid-cols-2 lg:grid-cols-4 gap-4'>
+                  <div className='bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 text-center border border-blue-200 hover:shadow-medium transition-all duration-300'>
+                    <div className='w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3'>
+                      <FaUsers className='text-white text-xl' />
                     </div>
-                    <div className='text-sm text-primary-600'>Guests</div>
+                    <div className='font-bold text-2xl text-blue-900 mb-1'>
+                      {property.maxGuests || property.guests || 'N/A'}
+                    </div>
+                    <div className='text-sm text-blue-600 font-medium'>
+                      Guests
+                    </div>
                   </div>
-                  <div className='bg-gradient-to-br from-accent-blue-50 to-accent-blue-100 rounded-xl p-4 text-center'>
-                    <FaBed className='text-accent-blue-600 text-2xl mx-auto mb-2' />
-                    <div className='font-bold text-accent-blue-900'>
-                      {property.bedrooms}
+
+                  <div className='bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 text-center border border-green-200 hover:shadow-medium transition-all duration-300'>
+                    <div className='w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3'>
+                      <FaBed className='text-white text-xl' />
                     </div>
-                    <div className='text-sm text-accent-blue-600'>Bedrooms</div>
+                    <div className='font-bold text-2xl text-green-900 mb-1'>
+                      {property.bedrooms || 'N/A'}
+                    </div>
+                    <div className='text-sm text-green-600 font-medium'>
+                      Bedrooms
+                    </div>
                   </div>
-                  <div className='bg-gradient-to-br from-success-50 to-success-100 rounded-xl p-4 text-center'>
-                    <FaBath className='text-success-600 text-2xl mx-auto mb-2' />
-                    <div className='font-bold text-success-900'>
-                      {property.bathrooms}
+
+                  <div className='bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 text-center border border-purple-200 hover:shadow-medium transition-all duration-300'>
+                    <div className='w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3'>
+                      <FaBath className='text-white text-xl' />
                     </div>
-                    <div className='text-sm text-success-600'>Bathrooms</div>
+                    <div className='font-bold text-2xl text-purple-900 mb-1'>
+                      {property.bathrooms || 'N/A'}
+                    </div>
+                    <div className='text-sm text-purple-600 font-medium'>
+                      Bathrooms
+                    </div>
                   </div>
-                  <div className='bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-4 text-center'>
-                    <FaMapMarkerAlt className='text-amber-600 text-2xl mx-auto mb-2' />
-                    <div className='font-bold text-amber-900 text-sm'>
-                      {property.propertyType || property.type}
+
+                  <div className='bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-6 text-center border border-orange-200 hover:shadow-medium transition-all duration-300'>
+                    <div className='w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center mx-auto mb-3'>
+                      <FaMapMarkerAlt className='text-white text-xl' />
                     </div>
-                    <div className='text-sm text-amber-600'>Type</div>
+                    <div className='font-bold text-lg text-orange-900 mb-1'>
+                      {property.propertyType || property.type || 'N/A'}
+                    </div>
+                    <div className='text-sm text-orange-600 font-medium'>
+                      Type
+                    </div>
                   </div>
                 </div>
               </div>
@@ -635,8 +882,10 @@ const PropertyDetail = () => {
             <div className='bg-white rounded-2xl p-6 shadow-strong border border-primary-100 sticky top-24'>
               <div className='text-center mb-6'>
                 <div className='text-4xl font-black text-primary-900'>
-                  {selectedCurrencyData.symbol}
-                  {Math.round(pricePerNight).toLocaleString()}
+                  {selectedCurrencyData?.symbol || '₦'}
+                  {pricePerNight && pricePerNight > 0
+                    ? Math.round(pricePerNight).toLocaleString()
+                    : '0'}
                 </div>
                 <div className='text-primary-600'>per night</div>
               </div>
@@ -672,20 +921,20 @@ const PropertyDetail = () => {
                   onGuestsChange={(value) =>
                     setBookingForm((prev) => ({ ...prev, guests: value }))
                   }
-                  maxGuests={property.maxGuests}
+                  maxGuests={property.maxGuests || property.guests || 10}
                 />
 
                 {/* Booking Summary */}
-                {nights > 0 && (
+                {nights > 0 && pricePerNight > 0 && (
                   <div className='bg-primary-50 p-4 rounded-xl space-y-2'>
                     <div className='flex justify-between text-primary-700'>
                       <span>
-                        {selectedCurrencyData.symbol}
+                        {selectedCurrencyData?.symbol || '₦'}
                         {Math.round(pricePerNight).toLocaleString()} × {nights}{' '}
                         nights
                       </span>
                       <span>
-                        {selectedCurrencyData.symbol}
+                        {selectedCurrencyData?.symbol || '₦'}
                         {Math.round(nights * pricePerNight).toLocaleString()}
                       </span>
                     </div>
@@ -693,7 +942,7 @@ const PropertyDetail = () => {
                     <div className='flex justify-between font-bold text-primary-900'>
                       <span>Total</span>
                       <span>
-                        {selectedCurrencyData.symbol}
+                        {selectedCurrencyData?.symbol || '₦'}
                         {Math.round(totalAmount).toLocaleString()}
                       </span>
                     </div>
@@ -722,6 +971,7 @@ const PropertyDetail = () => {
                     {availabilityLoading ? 'Checking...' : 'Check Availability'}
                   </button>
 
+                  {/* Reserve Now - Direct booking */}
                   <button
                     onClick={handleBooking}
                     disabled={
@@ -740,19 +990,32 @@ const PropertyDetail = () => {
                       'Reserve Now'
                     )}
                   </button>
+
+                  {/* Book Now - Go to checkout */}
+                  <button
+                    onClick={handleBookNow}
+                    disabled={
+                      !bookingForm.checkIn ||
+                      !bookingForm.checkOut ||
+                      !isAuthenticated
+                    }
+                    className='w-full bg-gradient-to-r from-neutral-800 to-neutral-700 hover:from-neutral-900 hover:to-neutral-800 text-white font-semibold py-3 px-4 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-medium hover:shadow-strong transform hover:scale-105 active:scale-95'
+                  >
+                    Book Now
+                  </button>
                 </div>
 
                 {!isAuthenticated && (
                   <div className='text-center text-sm text-primary-600 bg-primary-50 p-3 rounded-xl'>
                     <button
-                      onClick={() => navigate('/login')}
+                      onClick={() => navigate('/signin')}
                       className='text-accent-blue-600 hover:text-accent-blue-700 font-medium hover:underline'
                     >
                       Login
                     </button>
                     {' or '}
                     <button
-                      onClick={() => navigate('/register')}
+                      onClick={() => navigate('/signup')}
                       className='text-accent-blue-600 hover:text-accent-blue-700 font-medium hover:underline'
                     >
                       Register
@@ -761,43 +1024,6 @@ const PropertyDetail = () => {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Availability Calendar */}
-            <div className='mt-6'>
-              <AvailabilityCalendar
-                propertyId={property.id}
-                selectedDates={{
-                  checkIn: bookingForm.checkIn,
-                  checkOut: bookingForm.checkOut,
-                }}
-                onDateSelect={(dateString) => {
-                  if (
-                    !bookingForm.checkIn ||
-                    (bookingForm.checkIn && bookingForm.checkOut)
-                  ) {
-                    // Set as check-in date
-                    setBookingForm((prev) => ({
-                      ...prev,
-                      checkIn: dateString,
-                      checkOut: '',
-                    }))
-                  } else if (dateString > bookingForm.checkIn) {
-                    // Set as check-out date
-                    setBookingForm((prev) => ({
-                      ...prev,
-                      checkOut: dateString,
-                    }))
-                  } else {
-                    // Reset and set as new check-in date
-                    setBookingForm((prev) => ({
-                      ...prev,
-                      checkIn: dateString,
-                      checkOut: '',
-                    }))
-                  }
-                }}
-              />
             </div>
           </div>
         </div>

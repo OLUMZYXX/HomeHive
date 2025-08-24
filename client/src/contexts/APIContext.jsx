@@ -282,6 +282,7 @@ export const APIProvider = ({ children }) => {
           idToken,
           userData,
         })
+        console.log('✅ Google auth API response:', response.data)
 
         const { user, tokens } = response.data
 
@@ -289,9 +290,11 @@ export const APIProvider = ({ children }) => {
         if (tokens) {
           TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
           TokenManager.setUserData(user)
+          console.log('✅ Tokens stored in localStorage')
         }
 
         dispatch({ type: actionTypes.SET_USER, payload: user })
+        console.log('✅ User state updated:', user)
         return response.data
       } catch (error) {
         setError(error)
@@ -800,6 +803,53 @@ export const APIProvider = ({ children }) => {
   }, [])
 
   // ================================
+  // ADDITIONAL BOOKING METHODS
+  // ================================
+
+  // Get booking by ID
+  const getBookingById = useCallback(async (bookingId) => {
+    try {
+      const response = await axiosInstance.get(`/bookings/${bookingId}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching booking:', error)
+      throw error
+    }
+  }, [])
+
+  // Cancel booking
+  const cancelBooking = useCallback(async (bookingId) => {
+    try {
+      const response = await axiosInstance.put(
+        `/bookings/${bookingId}/status`,
+        {
+          status: 'cancelled',
+        }
+      )
+
+      dispatch({ type: actionTypes.UPDATE_BOOKING, payload: response.data })
+      return response.data
+    } catch (error) {
+      console.error('Error cancelling booking:', error)
+      throw error
+    }
+  }, [])
+
+  // Send booking confirmation email
+  const sendBookingEmail = useCallback(async (bookingId) => {
+    try {
+      const response = await axiosInstance.post(
+        `/bookings/${bookingId}/send-email`
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error sending booking email:', error)
+      // Don't throw error for email sending failures
+      return null
+    }
+  }, [])
+
+  // ================================
   // FAVORITES API CALLS
   // ================================
 
@@ -981,6 +1031,10 @@ export const APIProvider = ({ children }) => {
     createBookingWithValidation,
     checkBookingAvailability,
     updateBookingStatus,
+    getUserBookings: getBookings, // Alias for consistency
+    getBookingById,
+    cancelBooking,
+    sendBookingEmail,
   }
 
   return (

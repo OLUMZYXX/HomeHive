@@ -78,19 +78,20 @@ router.post('/host-login', async (req, res) => {
   }
 })
 
-// Login
+// User Login (separate from host login)
 router.post('/login', async (req, res) => {
   try {
-    const { email, password, isHost = false } = req.body
+    const { email, password } = req.body
     if (!email || !password) {
       return res
         .status(400)
         .json({ success: false, message: 'Email and password are required' })
     }
-    const result = await MongoAuthService.login(email, password, isHost)
+    // Only allow user login, not hosts
+    const result = await MongoAuthService.login(email, password)
     res.json(result)
   } catch (error) {
-    console.error('Login error:', error)
+    console.error('User login error:', error)
     res.status(401).json({ success: false, message: error.message })
   }
 })

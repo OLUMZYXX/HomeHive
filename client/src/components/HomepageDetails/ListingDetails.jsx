@@ -254,18 +254,18 @@ const ListingDetails = () => {
       return
     }
 
-    toast.success('Booking Successful! 🎉', {
+    toast.success('Booking Successful! \ud83c\udf89', {
       description:
-        'Your accommodation has been added to cart. Redirecting you now...',
+        'Your accommodation has been added to checkout. Redirecting you now...',
       duration: 3000,
       action: {
-        label: 'View Cart',
-        onClick: () => navigate('/cart'),
+        label: 'View Checkout',
+        onClick: () => navigate('/checkout'),
       },
     })
 
     setTimeout(() => {
-      navigate('/cart', {
+      navigate('/checkout', {
         state: {
           checkIn,
           checkout,

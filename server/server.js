@@ -15,6 +15,7 @@ import bookingsRoutes from './routes/bookings.js'
 import favoritesRoutes from './routes/favorites.js'
 import premiumRoutes from './routes/premium.js'
 import uploadRoutes from './routes/upload.js'
+import paymentRoutes from './routes/payments.js'
 
 const app = express()
 
@@ -46,6 +47,7 @@ app.use(
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
+      'http://localhost:5176',
       'http://localhost:4173',
       'https://homehive-client.vercel.app',
       'https://home-hive-client.vercel.app',
@@ -83,6 +85,7 @@ app.use('/api/bookings', bookingsRoutes)
 app.use('/api/favorites', favoritesRoutes)
 app.use('/api/premium', premiumRoutes)
 app.use('/api/upload', uploadRoutes)
+app.use('/api/payments', paymentRoutes)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

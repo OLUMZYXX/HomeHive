@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { FaEye, FaEyeSlash, FaArrowLeft } from 'react-icons/fa'
-import { FcGoogle } from 'react-icons/fc'
 import { HiMail, HiLockClosed } from 'react-icons/hi'
 import loginImg from '../../assets/login.jpg'
 import { toast } from '../../utils/toast.jsx'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { useAPI } from '../../contexts/APIContext'
-import GoogleAuth from '../../config/googleAuthSimple'
+import GoogleAuth from '../../config/googleAuth'
 
 const Login = () => {
   // Use scroll to top hook
@@ -74,9 +73,14 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true)
     try {
+      console.log('🔄 Starting Google login process...')
+
       // Initialize and sign in with Google
       await GoogleAuth.initialize()
+      console.log('✅ Google Auth initialized')
+
       const googleUser = await GoogleAuth.signIn()
+      console.log('✅ Google user signed in:', googleUser.email)
 
       // Send to backend for authentication/registration
       const result = await googleAuth(googleUser.idToken, {
@@ -86,24 +90,31 @@ const Login = () => {
         lastName: googleUser.lastName,
         picture: googleUser.picture,
         googleId: googleUser.id,
+        isHost: false, // Explicitly set for user authentication
       })
+      console.log('✅ Backend authentication successful:', result)
 
-      toast.success(`Welcome ${googleUser.name}!`, {
-        description: 'Google login successful! Redirecting you now...',
-        duration: 3000,
-      })
+      toast.success(
+        'Google login successful! Redirecting you now...',
+        `Welcome ${googleUser.name}!`,
+        { autoClose: 3000 }
+      )
+      console.log('✅ Toast notification shown')
 
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
+      console.log('🔄 Redirecting to:', redirectPath)
       setTimeout(() => navigate(redirectPath), 1500)
     } catch (error) {
-      console.error('Google login error:', error)
+      console.error('❌ Google login error:', error)
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      })
       const errorMessage =
         error.message || 'Google login failed. Please try again.'
-      toast.error('Authentication Error', {
-        description: errorMessage,
-        duration: 4000,
-      })
+      toast.error(errorMessage, 'Authentication Error', { autoClose: 4000 })
     } finally {
       setIsGoogleLoading(false)
     }
@@ -281,17 +292,17 @@ const Login = () => {
                 <button
                   onClick={handleGoogleLogin}
                   disabled={isGoogleLoading}
-                  className='w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3 shadow-soft hover:shadow-medium'
+                  className='w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium'
                 >
                   {isGoogleLoading ? (
                     <>
                       <div className='w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin'></div>
-                      <span>Connecting...</span>
+                      <span>Signing in...</span>
                     </>
                   ) : (
                     <>
-                      <FcGoogle className='text-xl' />
-                      <span>Sign in with Google</span>
+                      <div className='w-6 h-6 border-2 border-primary-600 border-r-transparent rounded-full'></div>
+                      <span>Continue with Google</span>
                     </>
                   )}
                 </button>

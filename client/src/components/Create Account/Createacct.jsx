@@ -77,23 +77,26 @@ const Createacct = () => {
 
       const result = await register(userData)
 
-      toast.success('Account created successfully! Welcome to HomeHive!', {
-        duration: 4000,
-      })
+      toast.success(
+        'Account created successfully! Welcome to HomeHive!',
+        null,
+        { autoClose: 4000 }
+      )
 
       // Redirect after successful registration
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 2000)
     } catch (error) {
+      console.error('Registration error:', error)
+      if (error.response) {
+        console.error('Backend response:', error.response.data)
+      }
       const errorMessage =
         error.response?.data?.message ||
         'Failed to create account. Please try again.'
       setError(errorMessage)
-      toast.error('Registration Failed', {
-        description: errorMessage,
-        duration: 4000,
-      })
+      toast.error(errorMessage, 'Registration Failed', { autoClose: 4000 })
     } finally {
       setIsLoading(false)
     }
@@ -114,13 +117,14 @@ const Createacct = () => {
         lastName: googleUser.lastName,
         picture: googleUser.picture,
         googleId: googleUser.id,
+        isHost: false, // Explicitly set for user registration
       })
 
-      toast.success(`Welcome ${googleUser.name}!`, {
-        description:
-          'Account created successfully with Google! Welcome to HomeHive!',
-        duration: 4000,
-      })
+      toast.success(
+        'Account created successfully with Google! Welcome to HomeHive!',
+        `Welcome ${googleUser.name}!`,
+        { autoClose: 4000 }
+      )
 
       // Redirect after successful registration
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
@@ -139,10 +143,7 @@ const Createacct = () => {
         errorMessage = 'Too many requests. Please wait a moment and try again.'
       }
       setError(errorMessage)
-      toast.error('Google Signup Error', {
-        description: errorMessage,
-        duration: 4000,
-      })
+      toast.error(errorMessage, 'Google Signup Error', { autoClose: 4000 })
     } finally {
       setIsGoogleLoading(false)
     }
