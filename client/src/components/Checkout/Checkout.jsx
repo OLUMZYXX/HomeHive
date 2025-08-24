@@ -20,6 +20,15 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { useCurrency } from '../../contexts/CurrencyContext'
 import { useAPI } from '../../contexts/APIContext'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements } from '@stripe/react-stripe-js'
+import StripeCheckoutForm from './StripeCheckoutForm'
+
+// Initialize Stripe
+const stripePromise = loadStripe(
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    'pk_test_51QOGwYEnTmUaGP9VnrZNGgFiKqaHLLZaHqcKINQKOTFVRNsLIYWKOJo3oq6MWfPgPNAW4q8vGgGcJaBkdwTjd4H800YxNE4LVA'
+)
 
 const countries = [
   'United States',
@@ -42,12 +51,13 @@ const Checkout = () => {
 
   const [open, setOpen] = useState(false)
   const [selectedPayment, setSelectedPayment] = useState({
-    name: 'PayPal',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg',
+    name: 'Stripe',
+    logo: '',
   })
-  const [showCardDetails, setShowCardDetails] = useState(false)
+  const [showCardDetails, setShowCardDetails] = useState(false) // Don't show manual card details by default (Stripe has its own form)
   const [loading, setLoading] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
+  const [showStripePayment, setShowStripePayment] = useState(true) // Show Stripe form by default since Stripe is pre-selected
   const [billingDetails, setBillingDetails] = useState({
     cardNumber: '',
     expiryDate: '',
@@ -101,27 +111,126 @@ const Checkout = () => {
       })
       return
     }
-    try {
-      // Simulate booking success
-      toast.success('Booking Successful!', {
-        description: 'Your booking has been processed.',
+
+    // Validate payment method is selected
+    if (!selectedPayment?.name) {
+      toast.error('Payment Method Required', {
+        description: 'Please select a payment provider',
         duration: 4000,
       })
-      // Reset form after success
-      setCheckIn('')
-      setCheckOut('')
-      setGuest(1)
-      setBillingDetails({
-        cardNumber: '',
-        expiryDate: '',
-        cvv: '',
-        name: '',
-        address: '',
-        city: '',
-        state: '',
-        zip: '',
-        country: '',
+      return
+    }
+
+    // Validate card details for Mastercard only (Stripe handles its own validation)
+    if (selectedPayment.name === 'Mastercard' && showCardDetails) {
+      if (
+        !billingDetails.cardNumber ||
+        !billingDetails.expiryDate ||
+        !billingDetails.cvv ||
+        !billingDetails.name
+      ) {
+        toast.error('Card Details Required', {
+          description: 'Please fill in all card details',
+          duration: 4000,
+        })
+        return
+      }
+    }
+
+    // Validate terms acceptance
+    if (!termsAccepted) {
+      toast.error('Terms & Conditions', {
+        description: 'Please accept the terms and conditions',
+        duration: 4000,
       })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Process different payment methods
+      if (selectedPayment.name === 'Stripe') {
+        console.log(
+          'Processing Stripe payment - form should already be visible'
+        )
+        // Stripe form is already visible, just validate that it's filled
+        toast.error('Complete Payment', {
+          description:
+            'Please fill in your card details in the Stripe form below',
+          duration: 4000,
+        })
+        setIsLoading(false)
+        return
+      }
+
+      // For other payment methods, redirect accordingly
+      if (selectedPayment.name === 'PayPal') {
+        toast.info('Redirecting to PayPal', {
+          description: 'You will be redirected to PayPal to complete payment',
+          duration: 3000,
+        })
+        // Simulate PayPal redirect - replace with actual PayPal integration
+        setTimeout(() => {
+          toast.success('Booking Successful!', {
+            description: 'Payment processed successfully via PayPal',
+            duration: 4000,
+          })
+          navigate('/my-bookings')
+        }, 2000)
+        return
+      }
+
+      if (selectedPayment.name === 'Paystack') {
+        toast.info('Redirecting to Paystack', {
+          description: 'You will be redirected to Paystack to complete payment',
+          duration: 3000,
+        })
+        // Simulate Paystack redirect - replace with actual Paystack integration
+        setTimeout(() => {
+          toast.success('Booking Successful!', {
+            description: 'Payment processed successfully via Paystack',
+            duration: 4000,
+          })
+          navigate('/my-bookings')
+        }, 2000)
+        return
+      }
+
+      // For Mastercard (manual card processing)
+      if (selectedPayment.name === 'Mastercard') {
+        // Simulate card processing
+        toast.info('Processing Payment', {
+          description: 'Processing your card payment...',
+          duration: 3000,
+        })
+
+        // Simulate payment processing delay
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+
+        toast.success('Booking Successful!', {
+          description: 'Payment processed successfully',
+          duration: 4000,
+        })
+
+        // Reset form after success
+        setCheckIn('')
+        setCheckOut('')
+        setGuest(1)
+        setBillingDetails({
+          cardNumber: '',
+          expiryDate: '',
+          cvv: '',
+          name: '',
+          address: '',
+          city: '',
+          state: '',
+          zip: '',
+          country: '',
+        })
+
+        navigate('/my-bookings')
+      }
     } catch (err) {
       console.error('Booking error:', err)
       toast.error('Booking Failed', {
@@ -133,9 +242,56 @@ const Checkout = () => {
     }
   }
 
+  // Handle successful Stripe payment
+  const handleStripePaymentSuccess = (paymentIntent) => {
+    setShowStripePayment(false)
+    setIsLoading(false)
+
+    toast.success('Booking Successful!', {
+      description: 'Payment processed successfully via Stripe',
+      duration: 4000,
+    })
+
+    // Reset form after success
+    setCheckIn('')
+    setCheckOut('')
+    setGuest(1)
+    setBillingDetails({
+      cardNumber: '',
+      expiryDate: '',
+      cvv: '',
+      name: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      country: '',
+    })
+    setTermsAccepted(false)
+
+    // Navigate to my bookings
+    setTimeout(() => {
+      navigate('/my-bookings')
+    }, 1000)
+  }
+
   const paymentOption = (method) => {
-    setSelectedPayment(method)
-    setShowCardDetails(method === 'Mastercard')
+    console.log('paymentOption called with method:', method)
+    setShowCardDetails(method === 'Mastercard') // Only show manual card details for Mastercard
+
+    // Show Stripe payment form immediately when Stripe is selected
+    if (method === 'Stripe') {
+      console.log('Stripe selected, showing payment form immediately')
+      setShowStripePayment(true)
+      toast.info('Payment Method', {
+        description: 'Stripe selected. Enter your payment details below.',
+        duration: 3000,
+      })
+    } else {
+      // Hide Stripe form when other methods are selected
+      setShowStripePayment(false)
+    }
+
     if (method === 'PayPal') {
       toast.info('Payment Method', {
         description: 'Redirecting to PayPal...',
@@ -155,6 +311,7 @@ const Checkout = () => {
   }
 
   const handleSelectPayment = (option) => {
+    console.log('handleSelectPayment called with:', option)
     setSelectedPayment(option)
     setOpen(false)
     paymentOption(option.name)
@@ -232,16 +389,20 @@ const Checkout = () => {
 
   const paymentOptions = [
     {
+      name: 'Stripe',
+      logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMTciIHZpZXdCb3g9IjAgMCA0MCAxNyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yNS4xMSA2LjczQzI0LjkgNi4xNSAyNC4zNCA1Ljc3IDIzLjY5IDUuNzdDMjIuMzkgNS43NyAyMS40NCA2LjcxIDIxLjQ0IDguMTRDMjEuNDQgMTAuMjEgMjIuNzMgMTAuOTMgMjQuMTkgMTAuOTNDMjQuOCAxMC45MyAyNS4zNSAxMC43OCAyNS43NyAxMC41M1Y5LjE0SDI0LjAzVjguMDlIMjdWMTJIMjUuOTNWMTEuNTRDMjUuNDkgMTEuODEgMjQuODYgMTEuOTcgMjQuMDcgMTEuOTdDMjEuNDEgMTEuOTcgMTkuNDUgMTAuMDggMTkuNDUgNy45M0MxOS40NSA1Ljc4IDIxLjQ3IDMuODkgMjMuODIgMy44OUMyNS4xOCAzLjg5IDI2LjMxIDQuNTUgMjYuODYgNS42NEwyNS4xMSA2LjczWiIgZmlsbD0iIzYzNTJGRiIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTE3LjUgMy45M0MxNS45NyAzLjkzIDE0Ljc1IDUuMTQgMTQuNzUgNi42N1Y3LjkzQzE0Ljc1IDEwLjA4IDE2LjcgMTEuOTcgMTkuMzYgMTEuOTdDMjAuMTUgMTEuOTcgMjAuNzggMTEuODEgMjEuMjIgMTEuNTRWMTJIMjIuMjlWMy45M0gxNy41Wk0yMC4xNiA1LjY4VjYuNjdDMjAuMTYgNy41MiAxOS40OCA4LjIgMTguNjMgOC4yUzE3LjEgNy41MiAxNy4xIDYuNjdWNS42OEMxNy4xIDQuODMgMTcuNzggNC4xNSAxOC42MyA0LjE1UzIwLjE2IDQuODMgMjAuMTYgNS42OFoiIGZpbGw9IiM2MzUyRkYiLz4KPHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMTciIHZpZXdCb3g9IjAgMCA0MCAxNyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHA+',
+    },
+    {
       name: 'Mastercard',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b7/MasterCard_Logo.svg',
+      logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTUiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNFQjAwMUIiLz4KPGNpcmNsZSBjeD0iMjUiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNGRkE1MDAiLz4KPHBhdGggZD0iTTIwIDEyYzAgLTUuNTIyIDQuNDc4IC0xMCAxMCAtMTBzMTAgNC40NzggMTAgMTBzLTQuNDc4IDEwIC0xMCAxMHMtMTAgLTQuNDc4IC0xMCAtMTB6IiBmaWxsPSIjRkZBNTAwIi8+Cjwvc3ZnPg==',
     },
     {
       name: 'PayPal',
-      logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg',
+      logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHA+UGF5UGFsPC9wPgo8L3N2Zz4=',
     },
     {
       name: 'Paystack',
-      logo: 'https://cdn.brandfetch.io/idM5mrwtDs/w/800/h/782/theme/dark/symbol.png?c=1dxbfHSJFAPEGdCLU4o5B',
+      logo: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHA+UGF5c3RhY2s8L3A+Cjwvc3ZnPg==',
     },
   ]
 
@@ -588,50 +749,63 @@ const Checkout = () => {
               </div>
 
               {/* Payment Options Grid */}
-              <div className='grid grid-cols-3 gap-4 mb-6'>
+              <div className='grid grid-cols-2 gap-4 mb-6'>
                 {paymentOptions.map((option, index) => (
                   <button
                     key={index}
-                    onClick={() => handleSelectPayment(option)}
-                    className={`p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-medium ${
+                    onClick={() => {
+                      console.log('Payment option clicked:', option.name)
+                      handleSelectPayment(option)
+                    }}
+                    className={`p-4 border-2 rounded-xl transition-all duration-300 hover:shadow-medium flex items-center justify-center gap-3 ${
                       selectedPayment.name === option.name
-                        ? 'border-primary-500 bg-primary-50'
+                        ? 'border-primary-500 bg-primary-50 shadow-medium'
                         : 'border-primary-200 bg-white hover:border-primary-300'
                     }`}
                   >
-                    <img
-                      src={option.logo}
-                      alt={`${option.name} Logo`}
-                      className='w-full h-8 object-contain'
-                    />
+                    <div
+                      className={`w-3 h-3 rounded-full border-2 ${
+                        selectedPayment.name === option.name
+                          ? 'border-primary-500 bg-primary-500'
+                          : 'border-primary-300'
+                      }`}
+                    >
+                      {selectedPayment.name === option.name && (
+                        <div className='w-1.5 h-1.5 bg-white rounded-full mx-auto mt-0.5'></div>
+                      )}
+                    </div>
+                    <span
+                      className={`font-semibold ${
+                        selectedPayment.name === option.name
+                          ? 'text-primary-700'
+                          : 'text-primary-600'
+                      }`}
+                    >
+                      {option.name}
+                    </span>
                   </button>
                 ))}
               </div>
 
-              {/* Selected Payment Method */}
-              <div
-                className='border-2 border-primary-200 p-4 rounded-xl flex justify-between items-center cursor-pointer hover:border-primary-300 transition-all duration-300 bg-primary-25'
-                onClick={toggleDropdown}
-              >
-                <div className='flex items-center gap-4'>
-                  <img
-                    src={selectedPayment.logo}
-                    alt='Selected Logo'
-                    className='w-12 h-6 object-contain'
-                  />
-                  <span className='text-lg font-bold text-primary-800'>
-                    {selectedPayment.name}
-                  </span>
-                  <div className='flex items-center gap-1 text-accent-green-600'>
-                    <FaLock className='text-sm' />
-                    <span className='text-xs font-medium'>Secure</span>
+              {/* Selected Payment Method Display */}
+              <div className='bg-primary-25 p-4 rounded-xl border border-primary-200'>
+                <div className='flex items-center justify-between'>
+                  <div className='flex items-center gap-3'>
+                    <div
+                      className={`w-4 h-4 rounded-full border-2 border-primary-500 bg-primary-500`}
+                    >
+                      <div className='w-2 h-2 bg-white rounded-full mx-auto mt-0.5'></div>
+                    </div>
+                    <span className='font-bold text-primary-800'>
+                      {selectedPayment.name} Selected
+                    </span>
+                    <div className='flex items-center gap-1 text-accent-green-600'>
+                      <FaLock className='text-sm' />
+                      <span className='text-xs font-medium'>Secure</span>
+                    </div>
                   </div>
+                  <FaCheck className='text-primary-600' />
                 </div>
-                <RiArrowDropDownLine
-                  className={`text-4xl text-primary-600 transition-transform duration-300 ${
-                    open ? 'rotate-180' : ''
-                  }`}
-                />
               </div>
 
               {/* Enhanced Dropdown Animation */}
@@ -819,24 +993,95 @@ const Checkout = () => {
               </AnimatePresence>
             </div>
 
-            {/* Enhanced Book Button */}
-            <button
-              className='w-full bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 disabled:from-primary-300 disabled:to-primary-300 text-white py-5 rounded-2xl font-bold text-lg shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:scale-100 disabled:cursor-not-allowed'
-              onClick={handleBooking}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <FaShieldAlt />
-                  Request to Book
-                </>
+            {/* Terms and Conditions */}
+            <div className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft p-6 border border-primary-200'>
+              <div className='flex items-start gap-3'>
+                <input
+                  type='checkbox'
+                  id='terms'
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className='mt-1 h-4 w-4 text-primary-600 border-2 border-primary-300 rounded focus:ring-primary-500'
+                />
+                <label htmlFor='terms' className='text-sm text-primary-700'>
+                  I agree to the{' '}
+                  <button
+                    type='button'
+                    className='text-primary-600 hover:text-primary-800 underline font-medium'
+                    onClick={() => window.open('/terms', '_blank')}
+                  >
+                    Terms of Service
+                  </button>{' '}
+                  and{' '}
+                  <button
+                    type='button'
+                    className='text-primary-600 hover:text-primary-800 underline font-medium'
+                    onClick={() => window.open('/privacy', '_blank')}
+                  >
+                    Privacy Policy
+                  </button>
+                </label>
+              </div>
+            </div>
+
+            {/* Stripe Payment Form - Show when user clicks confirm & pay for Stripe */}
+            <AnimatePresence>
+              {(() => {
+                console.log('Stripe form condition check:', {
+                  showStripePayment,
+                  selectedPaymentName: selectedPayment.name,
+                  shouldShow:
+                    showStripePayment && selectedPayment.name === 'Stripe',
+                })
+                return showStripePayment && selectedPayment.name === 'Stripe'
+              })() && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className='bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-primary-200'
+                >
+                  <Elements stripe={stripePromise}>
+                    <StripeCheckoutForm
+                      bookingData={{
+                        ...bookingData,
+                        checkIn,
+                        checkOut,
+                        guests: guest,
+                        totalAmount:
+                          bookingData?.totalAmount || originalPrice * nights,
+                        userEmail: 'user@example.com', // You might need to get this from auth context
+                      }}
+                      onPaymentSuccess={handleStripePaymentSuccess}
+                    />
+                  </Elements>
+                </motion.div>
               )}
-            </button>
+            </AnimatePresence>
+
+            {/* Enhanced Book Button */}
+            {!showStripePayment && (
+              <button
+                className='w-full bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 disabled:from-primary-300 disabled:to-primary-300 text-white py-5 rounded-2xl font-bold text-lg shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-3 disabled:scale-100 disabled:cursor-not-allowed'
+                onClick={handleBooking}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <div className='animate-spin rounded-full h-5 w-5 border-b-2 border-white'></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <FaShieldAlt />
+                    {selectedPayment.name === 'Stripe'
+                      ? 'Confirm Booking Details'
+                      : 'Confirm & Pay'}
+                  </>
+                )}
+              </button>
+            )}
           </div>
 
           {/* Right Side: Enhanced Cart Summary - Mobile First Order */}

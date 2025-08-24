@@ -199,11 +199,46 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking }) => {
 
   const navigate = useNavigate()
 
+  // Handle card click for desktop - navigate to property details
+  const handleCardClick = (e) => {
+    // Only handle clicks on desktop (screens larger than mobile)
+    if (window.innerWidth >= 768) {
+      // Don't trigger if clicking on buttons or interactive elements
+      if (
+        e.target.closest('button') ||
+        e.target.closest('a') ||
+        e.target.closest('[role="button"]')
+      ) {
+        return
+      }
+
+      // Navigate to property if available
+      if (booking.propertyId) {
+        onViewProperty(booking.propertyId)
+      }
+    }
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className='bg-white rounded-2xl shadow-strong border border-primary-100 overflow-hidden hover:shadow-intense transition-all duration-500 hover:scale-[1.02] group'
+      className={`bg-white rounded-2xl shadow-strong border border-primary-100 overflow-hidden hover:shadow-intense transition-all duration-500 hover:scale-[1.02] group ${
+        booking.propertyId && window.innerWidth >= 768
+          ? 'cursor-pointer md:hover:cursor-pointer'
+          : ''
+      }`}
+      onClick={handleCardClick}
+      role='article'
+      tabIndex={booking.propertyId && window.innerWidth >= 768 ? 0 : -1}
+      onKeyDown={(e) => {
+        if ((e.key === 'Enter' || e.key === ' ') && window.innerWidth >= 768) {
+          e.preventDefault()
+          if (booking.propertyId) {
+            onViewProperty(booking.propertyId)
+          }
+        }
+      }}
     >
       {/* Property Image Header */}
       <div className='relative h-48 overflow-hidden'>
@@ -230,6 +265,15 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking }) => {
           <FaHome className='text-6xl text-primary-400' />
         </div>
         <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
+
+        {/* Desktop Click Indicator - only visible on larger screens */}
+        {booking.propertyId && (
+          <div className='hidden md:flex absolute top-4 left-4 z-10 items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-semibold text-primary-700 group-hover:bg-primary-100 transition-all duration-300'>
+            <FaEye className='text-xs' />
+            Click to view property
+          </div>
+        )}
+
         <div className='absolute top-4 right-4 z-10'>
           <BookingStatus status={booking.status} />
         </div>
@@ -331,8 +375,11 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking }) => {
         <div className='flex flex-col sm:flex-row gap-3'>
           {booking.propertyId && (
             <button
-              onClick={() => onViewProperty(booking.propertyId)}
-              className='flex-1 flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-primary-700 bg-gradient-to-r from-primary-50 to-primary-25 border-2 border-primary-200 rounded-xl hover:from-primary-100 hover:to-primary-50 hover:border-primary-300 transition-all duration-300 hover:scale-105 hover:shadow-medium'
+              onClick={(e) => {
+                e.stopPropagation() // Prevent card click
+                onViewProperty(booking.propertyId)
+              }}
+              className='flex-1 flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-primary-700 bg-gradient-to-r from-primary-50 to-primary-25 border-2 border-primary-200 rounded-xl hover:from-primary-100 hover:to-primary-50 hover:border-primary-300 transition-all duration-300 hover:scale-105 hover:shadow-medium md:relative md:z-10'
             >
               <FaEye className='text-sm' />
               View Property
@@ -342,17 +389,21 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking }) => {
           {booking.status === 'pending' && (
             <>
               <button
-                onClick={() => onCancelBooking(booking)}
-                className='flex-1 flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-error-700 bg-gradient-to-r from-error-50 to-error-100 border-2 border-error-200 rounded-xl hover:from-error-100 hover:to-error-200 hover:border-error-300 transition-all duration-300 hover:scale-105 hover:shadow-medium'
+                onClick={(e) => {
+                  e.stopPropagation() // Prevent card click
+                  onCancelBooking(booking)
+                }}
+                className='flex-1 flex items-center justify-center gap-2 px-6 py-3 text-sm font-semibold text-error-700 bg-gradient-to-r from-error-50 to-error-100 border-2 border-error-200 rounded-xl hover:from-error-100 hover:to-error-200 hover:border-error-300 transition-all duration-300 hover:scale-105 hover:shadow-medium md:relative md:z-10'
               >
                 <FaTimesCircle className='text-sm' />
                 Cancel Booking
               </button>
               <button
-                className='flex-1 flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-primary-600 to-primary-700 border-2 border-primary-500 rounded-xl hover:from-primary-700 hover:to-primary-800 hover:border-primary-600 transition-all duration-300 hover:scale-105 hover:shadow-strong transform active:scale-95'
-                onClick={() =>
+                className='flex-1 flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-primary-600 to-primary-700 border-2 border-primary-500 rounded-xl hover:from-primary-700 hover:to-primary-800 hover:border-primary-600 transition-all duration-300 hover:scale-105 hover:shadow-strong transform active:scale-95 md:relative md:z-10'
+                onClick={(e) => {
+                  e.stopPropagation() // Prevent card click
                   navigate('/checkout', { state: { bookingData: booking } })
-                }
+                }}
               >
                 💳 Pay Now
               </button>

@@ -4,9 +4,10 @@ import { Elements } from '@stripe/react-stripe-js'
 import PaymentForm from './PaymentForm'
 import PaymentSuccess from './PaymentSuccess'
 
-// Initialize Stripe - you'll need to add your publishable key here
+// Initialize Stripe - Using test key for development
 const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51234567890'
+  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
+    'pk_test_51QOGwYEnTmUaGP9VnrZNGgFiKqaHLLZaHqcKINQKOTFVRNsLIYWKOJo3oq6MWfPgPNAW4q8vGgGcJaBkdwTjd4H800YxNE4LVA'
 )
 
 const PaymentContainer = ({ booking, onCancel }) => {

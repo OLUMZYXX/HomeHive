@@ -11,7 +11,7 @@ import {
   FaHeart,
   FaHome,
   FaBook,
-  FaStar,
+  FaCalendarCheck,
 } from 'react-icons/fa'
 import { navigateToHome } from '../../utils/navigation'
 import { AnimatedButton } from '../common/AnimatedComponents'
@@ -180,11 +180,6 @@ const Navbar = () => {
     setProfileMenuOpen(false)
   }
 
-  const scrollToSection = (sectionId) => {
-    document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth' })
-    setMenuOpen(false)
-  }
-
   const handleSearch = async (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -214,19 +209,9 @@ const Navbar = () => {
       action: handleBookingClick,
     },
     {
-      name: 'Reviews',
-      icon: <FaStar />,
-      action: () => scrollToSection('testimonial'),
-    },
-    // {
-    //   name: 'Bookings',
-    //   icon: <FaBook />,
-    //   action: handleBookingClick,
-    // },
-    {
-      name: 'Support',
-      icon: <FaHeart />,
-      action: () => scrollToSection('support'),
+      name: 'My Bookings',
+      icon: <FaCalendarCheck />,
+      action: handleBookingsClick,
     },
   ]
 
@@ -320,12 +305,15 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className='hidden lg:flex items-center gap-4'>
-            <AnimatedButton
-              onClick={navigateToHost}
-              className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200'
-            >
-              Become a Host
-            </AnimatedButton>
+            {/* Show Become a Host button only on home page */}
+            {location.pathname === '/' && (
+              <AnimatedButton
+                onClick={navigateToHost}
+                className='px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200'
+              >
+                Become a Host
+              </AnimatedButton>
+            )}
 
             {user && isAuthenticated ? (
               <div className='relative flex items-center gap-4'>
@@ -527,21 +515,6 @@ const Navbar = () => {
                   </button>
 
                   <button
-                    onClick={handleBookingsClick}
-                    className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
-                  >
-                    <div className='flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-blue-100 rounded-xl transition-colors duration-200'>
-                      <FaBook className='text-neutral-600 group-hover:text-accent-blue-600 text-sm' />
-                    </div>
-                    <div className='flex-1 text-left'>
-                      <div className='font-medium text-sm'>My Bookings</div>
-                      <div className='text-xs text-neutral-500'>
-                        View reservations
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
                     onClick={handleFavoritesClick}
                     className='w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2'
                   >
@@ -633,13 +606,16 @@ const Navbar = () => {
                     </button>
                   ))}
 
-                  <button
-                    onClick={navigateToHost}
-                    className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
-                  >
-                    <FaHome />
-                    <span className='font-medium'>Become a Host</span>
-                  </button>
+                  {/* Show Become a Host button only on home page */}
+                  {location.pathname === '/' && (
+                    <button
+                      onClick={navigateToHost}
+                      className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
+                    >
+                      <FaHome />
+                      <span className='font-medium'>Become a Host</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Authentication Section - Mobile */}
@@ -695,14 +671,6 @@ const Navbar = () => {
                         >
                           <FaCog />
                           <span className='font-medium'>Settings</span>
-                        </button>
-
-                        <button
-                          onClick={handleBookingsClick}
-                          className='w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg'
-                        >
-                          <FaBook />
-                          <span className='font-medium'>My Bookings</span>
                         </button>
 
                         <button

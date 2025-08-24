@@ -19,6 +19,7 @@ import Hostlogin from './components/Host-Login/Hostlogin'
 import Dashboard from './components/Host-dashboard/Dashboard'
 import PaymentPage from './pages/PaymentPage'
 import ScrollToTop from './components/ScrollToTop'
+import FloatingSupportChat from './components/common/FloatingSupportChat'
 
 const AnimatedRoutes = () => {
   const location = useLocation()
@@ -193,6 +194,7 @@ function App() {
     <>
       <ScrollToTop />
       <AnimatedRoutes />
+      <FloatingSupportChat />
       <Toaster
         position='top-right'
         richColors

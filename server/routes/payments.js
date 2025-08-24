@@ -5,8 +5,14 @@ import { mongoBookingService } from '../services/mongoBookingService.js'
 
 const router = express.Router()
 
-// Initialize Stripe with your secret key
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_...')
+// Check if Stripe secret key is configured
+if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('STRIPE_SECRET_KEY environment variable is not set')
+  throw new Error('Stripe configuration missing')
+}
+
+// Initialize Stripe with secret key from environment variables
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 
 // Create payment intent
 router.post('/create-intent', authenticateToken, async (req, res) => {
