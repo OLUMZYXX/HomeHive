@@ -7,6 +7,7 @@ import { toast } from '../../utils/toast.jsx'
 import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { useAPI } from '../../contexts/APIContext'
+import { FcGoogle } from 'react-icons/fc'
 import GoogleAuth from '../../config/googleAuth'
 
 const Login = () => {
@@ -264,7 +265,7 @@ const Login = () => {
                 <button
                   onClick={handleLogin}
                   disabled={isLoading}
-                  className='w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3'
+                  className='w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl border border-primary-200 hover:border-primary-300 shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3'
                 >
                   {isLoading ? (
                     <>
@@ -294,17 +295,10 @@ const Login = () => {
                   disabled={isGoogleLoading}
                   className='w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium'
                 >
-                  {isGoogleLoading ? (
-                    <>
-                      <div className='w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin'></div>
-                      <span>Signing in...</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className='w-6 h-6 border-2 border-primary-600 border-r-transparent rounded-full'></div>
-                      <span>Continue with Google</span>
-                    </>
-                  )}
+                  <FcGoogle className='w-6 h-6' />
+                  <span>
+                    {isGoogleLoading ? 'Signing in...' : 'Continue with Google'}
+                  </span>
                 </button>
               </div>
 

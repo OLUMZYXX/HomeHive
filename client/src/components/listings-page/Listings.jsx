@@ -64,76 +64,71 @@ const Listings = () => {
     return convertFromCurrency(price, fromCurrency, selectedCurrency)
   }
 
-  // Properties state from backend
+  // Properties state from backend or search
   const [properties, setProperties] = useState([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [loadingProperties, setLoadingProperties] = useState(false)
-
-  // Ref to prevent multiple simultaneous requests
   const fetchingRef = useRef(false)
 
-  // Fetch properties from backend API
+  // On mount, check for search results in location.state
   useEffect(() => {
-    const fetchProperties = async () => {
-      // Prevent multiple simultaneous requests
-      if (fetchingRef.current) {
-        console.log('⏳ Request already in progress, skipping...')
-        return
-      }
-
-      fetchingRef.current = true
-      setLoadingProperties(true)
-
-      try {
-        console.log(
-          `🚀 Fetching properties from /api/properties?page=${page}&limit=3`
-        )
-        const res = await fetch(`/api/properties?page=${page}&limit=3`)
-
-        if (!res.ok) {
-          if (res.status === 429) {
-            console.warn('⚠️ Rate limit exceeded, retrying in 2 seconds...')
-            setTimeout(() => {
-              fetchingRef.current = false
-              setLoadingProperties(false)
-            }, 2000)
-            return
-          }
-          throw new Error(`HTTP error! status: ${res.status}`)
+    if (location.state && Array.isArray(location.state.searchResults)) {
+      setProperties(location.state.searchResults)
+      setHasMore(false)
+      setLoadingProperties(false)
+    } else {
+      // Fetch properties from backend API
+      const fetchProperties = async () => {
+        if (fetchingRef.current) {
+          console.log('⏳ Request already in progress, skipping...')
+          return
         }
-
-        const data = await res.json()
-        console.log('📊 Received properties data:', data)
-
-        if (data && data.success && Array.isArray(data.properties)) {
-          setProperties((prev) =>
-            page === 1 ? data.properties : [...prev, ...data.properties]
-          )
-          setHasMore(data.hasMore || false)
+        fetchingRef.current = true
+        setLoadingProperties(true)
+        try {
           console.log(
-            `✅ Successfully loaded ${data.properties.length} properties`
+            `🚀 Fetching properties from /api/properties?page=${page}&limit=3`
           )
-        } else {
-          console.warn('❌ Invalid data structure received:', data)
+          const res = await fetch(`/api/properties?page=${page}&limit=3`)
+          if (!res.ok) {
+            if (res.status === 429) {
+              console.warn('⚠️ Rate limit exceeded, retrying in 2 seconds...')
+              setTimeout(() => {
+                fetchingRef.current = false
+                setLoadingProperties(false)
+              }, 2000)
+              return
+            }
+            throw new Error(`HTTP error! status: ${res.status}`)
+          }
+          const data = await res.json()
+          console.log('📊 Received properties data:', data)
+          if (data && data.success && Array.isArray(data.properties)) {
+            setProperties((prev) =>
+              page === 1 ? data.properties : [...prev, ...data.properties]
+            )
+            setHasMore(data.hasMore || false)
+            console.log(
+              `✅ Successfully loaded ${data.properties.length} properties`
+            )
+          } else {
+            console.warn('❌ Invalid data structure received:', data)
+          }
+        } catch (err) {
+          console.error('❌ Failed to fetch properties:', err)
+          if (err.message.includes('429')) {
+            console.warn('Rate limit exceeded. Please wait and try again.')
+          }
+        } finally {
+          fetchingRef.current = false
+          setLoadingProperties(false)
         }
-      } catch (err) {
-        console.error('❌ Failed to fetch properties:', err)
-        // Show user-friendly error message
-        if (err.message.includes('429')) {
-          console.warn('Rate limit exceeded. Please wait and try again.')
-        }
-      } finally {
-        fetchingRef.current = false
-        setLoadingProperties(false)
       }
+      const timeoutId = setTimeout(fetchProperties, 300)
+      return () => clearTimeout(timeoutId)
     }
-
-    // Debounce the API call to prevent rapid successive calls
-    const timeoutId = setTimeout(fetchProperties, 300)
-
-    return () => clearTimeout(timeoutId)
-  }, [page])
+  }, [location.state, page])
 
   const filters = [
     { id: 'all', name: 'All', icon: HiHome },
@@ -493,9 +488,9 @@ const Listings = () => {
                   key={property._id}
                   className='bg-white border border-primary-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-soft hover:shadow-strong transition-all duration-500 transform hover:-translate-y-1'
                 >
-                  <div className='flex flex-col lg:flex-row'>
-                    {/* Image */}
-                    <div className='lg:w-2/5 relative group'>
+                  <div className='flex flex-col lg:flex-row items-stretch'>
+                    {/* Image - max height, matches content up to limit */}
+                    <div className='lg:w-2/5 relative group flex-shrink-0 flex items-stretch'>
                       <img
                         src={
                           property.images &&
@@ -508,7 +503,8 @@ const Listings = () => {
                             : demoImages[idx % demoImages.length]
                         }
                         alt={property.title}
-                        className='w-full h-48 sm:h-56 lg:h-72 object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105'
+                        className='w-full h-full max-h-72 object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105 rounded-none flex-1'
+                        style={{ maxHeight: '18rem' }}
                         onClick={() => handleClick(property._id)}
                       />
 

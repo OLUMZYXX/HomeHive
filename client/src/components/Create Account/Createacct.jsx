@@ -359,7 +359,7 @@ const Createacct = () => {
                 <button
                   type='submit'
                   disabled={isLoading}
-                  className='w-full bg-neutral-800 hover:bg-neutral-900 disabled:bg-neutral-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3'
+                  className='w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3'
                 >
                   {isLoading ? (
                     <>
@@ -393,17 +393,12 @@ const Createacct = () => {
                 disabled={isGoogleLoading}
                 className='w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium'
               >
-                {isGoogleLoading ? (
-                  <>
-                    <div className='w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin'></div>
-                    <span>Creating Account...</span>
-                  </>
-                ) : (
-                  <>
-                    <div className='w-6 h-6 border-2 border-primary-600 border-r-transparent rounded-full'></div>
-                    <span>Continue with Google</span>
-                  </>
-                )}
+                <FcGoogle className='w-6 h-6' />
+                <span>
+                  {isGoogleLoading
+                    ? 'Creating Account...'
+                    : 'Continue with Google'}
+                </span>
               </button>
 
               {/* Already have an account link */}
