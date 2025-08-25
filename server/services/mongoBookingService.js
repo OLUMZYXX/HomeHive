@@ -16,6 +16,46 @@ export const mongoBookingService = {
         hostId: property.hostId,
       }
 
+      // Prevent duplicate reservation for same user/property/date
+      const existingReservation = await Booking.findOne({
+        propertyId: completeBookingData.propertyId,
+        userId: completeBookingData.userId,
+        checkIn: completeBookingData.checkIn,
+        checkOut: completeBookingData.checkOut,
+      })
+      if (existingReservation) {
+        throw new Error(
+          'You have already reserved this property for these dates.'
+        )
+      }
+
+      // Prevent booking if any paid booking exists for property/date range
+      const paidConflict = await Booking.findOne({
+        propertyId: completeBookingData.propertyId,
+        paymentStatus: 'paid',
+        $or: [
+          {
+            checkIn: { $lte: completeBookingData.checkIn },
+            checkOut: { $gt: completeBookingData.checkIn },
+          },
+          {
+            checkIn: { $lt: completeBookingData.checkOut },
+            checkOut: { $gte: completeBookingData.checkOut },
+          },
+          {
+            checkIn: { $gte: completeBookingData.checkIn },
+            checkOut: { $lte: completeBookingData.checkOut },
+          },
+          {
+            checkIn: { $lte: completeBookingData.checkIn },
+            checkOut: { $gte: completeBookingData.checkOut },
+          },
+        ],
+      })
+      if (paidConflict) {
+        throw new Error('This property is already booked for these dates.')
+      }
+
       console.log('📝 Creating booking with complete data:', {
         propertyId: completeBookingData.propertyId,
         userId: completeBookingData.userId,
@@ -45,45 +85,23 @@ export const mongoBookingService = {
       console.log('📅 Check-in:', startDate)
       console.log('📅 Check-out:', endDate)
 
-      // Query for bookings that overlap with the requested dates
-      const conflictingBookings = await Booking.find({
+      // Only block if a paid booking exists for the date range
+      const paidBookings = await Booking.find({
         propertyId: propertyId,
-        status: { $in: ['pending', 'confirmed'] },
+        paymentStatus: 'paid',
         $or: [
-          // Case 1: New booking starts during existing booking
-          {
-            checkIn: { $lte: startDate },
-            checkOut: { $gt: startDate },
-          },
-          // Case 2: New booking ends during existing booking
-          {
-            checkIn: { $lt: endDate },
-            checkOut: { $gte: endDate },
-          },
-          // Case 3: New booking contains existing booking
-          {
-            checkIn: { $gte: startDate },
-            checkOut: { $lte: endDate },
-          },
-          // Case 4: Existing booking contains new booking
-          {
-            checkIn: { $lte: startDate },
-            checkOut: { $gte: endDate },
-          },
+          { checkIn: { $lte: startDate }, checkOut: { $gt: startDate } },
+          { checkIn: { $lt: endDate }, checkOut: { $gte: endDate } },
+          { checkIn: { $gte: startDate }, checkOut: { $lte: endDate } },
+          { checkIn: { $lte: startDate }, checkOut: { $gte: endDate } },
         ],
       })
-
-      const hasConflict = conflictingBookings.length > 0
-
-      console.log(
-        '📊 Found',
-        conflictingBookings.length,
-        'conflicting bookings'
-      )
+      const hasConflict = paidBookings.length > 0
+      console.log('📊 Found', paidBookings.length, 'paid conflicting bookings')
       if (hasConflict) {
         console.log(
           '❌ Date conflict found:',
-          conflictingBookings.map((b) => ({
+          paidBookings.map((b) => ({
             id: b._id,
             checkIn: b.checkIn,
             checkOut: b.checkOut,
@@ -91,9 +109,8 @@ export const mongoBookingService = {
           }))
         )
       } else {
-        console.log('✅ No date conflicts found')
+        console.log('✅ No paid date conflicts found')
       }
-
       return hasConflict
     } catch (error) {
       console.error('❌ Error checking date conflict:', error)

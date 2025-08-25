@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { toast } from 'sonner'
-import { useAPI } from '../../contexts/APIContext'
 import { FaLock } from 'react-icons/fa'
+import axiosInstance from '../../config/axios'
 
 const StripeCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
   const stripe = useStripe()
   const elements = useElements()
-  const { apiCall } = useAPI()
   const [processing, setProcessing] = useState(false)
   const [clientSecret, setClientSecret] = useState('')
   const [billingDetails, setBillingDetails] = useState({
@@ -33,21 +32,21 @@ const StripeCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
     const createPaymentIntent = async () => {
       try {
         const amount = bookingData.totalAmount * 100 // Convert to cents
-        const response = await apiCall('/payments/create-intent', 'POST', {
+        const response = await axiosInstance.post('/payments/create-intent', {
           amount,
-          bookingId: 'pending', // We'll create the booking first or use a different approach
+          bookingId: bookingData.bookingId || bookingData._id,
         })
-        setClientSecret(response.clientSecret)
+        setClientSecret(response.data.clientSecret)
       } catch (error) {
         console.error('Error creating payment intent:', error)
         toast.error('Failed to initialize payment. Please try again.')
       }
     }
 
-    if (bookingData) {
+    if (bookingData && (bookingData.bookingId || bookingData._id)) {
       createPaymentIntent()
     }
-  }, [bookingData, apiCall])
+  }, [bookingData])
 
   const handleSubmit = async (event) => {
     event.preventDefault()

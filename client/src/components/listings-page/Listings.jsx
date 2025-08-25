@@ -59,9 +59,11 @@ const Listings = () => {
   }, [showCurrencyDropdown])
 
   // Convert price based on property currency and selected currency
+  // Ensure price and currency always have valid defaults
   const convertPrice = (price, fromCurrency = 'NGN') => {
-    if (!price) return '0'
-    return convertFromCurrency(price, fromCurrency, selectedCurrency)
+    const validPrice = typeof price === 'number' && !isNaN(price) ? price : 0
+    const validCurrency = fromCurrency || 'NGN'
+    return convertFromCurrency(validPrice, validCurrency, selectedCurrency)
   }
 
   // Properties state from backend or search
@@ -606,7 +608,10 @@ const Listings = () => {
                           <div className='text-lg sm:text-xl lg:text-2xl font-black text-primary-900'>
                             {selectedCurrencyData?.symbol}
                             {convertPrice(
-                              property.price || 0,
+                              typeof property.price === 'number' &&
+                                !isNaN(property.price)
+                                ? property.price
+                                : 0,
                               property.currency || 'NGN'
                             )}
                           </div>

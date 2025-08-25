@@ -193,9 +193,11 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking }) => {
   }
 
   const nights = calculateNights()
-  const convertedAmount = booking.totalAmount
-    ? convertFromCurrency(booking.totalAmount, booking.currency || 'NGN')
-    : 0
+  let amount = Number(booking.totalAmount)
+  if (isNaN(amount) || amount < 0) amount = 0
+  const currency = booking.currency || 'NGN'
+  let convertedAmount = convertFromCurrency(amount, currency)
+  if (isNaN(convertedAmount) || convertedAmount < 0) convertedAmount = 0
 
   const navigate = useNavigate()
 

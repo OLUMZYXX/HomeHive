@@ -41,7 +41,36 @@ router.get('/', authenticateToken, async (req, res) => {
     } else {
       bookings = await mongoBookingService.getUserBookings(req.user.id)
     }
-    res.json({ success: true, bookings, count: bookings.length })
+
+    // Populate property details for each booking
+    const populatedBookings = await Promise.all(
+      bookings.map(async (booking) => {
+        let property = null
+        try {
+          property = await (
+            await import('../models/mongodb-models.js')
+          ).Property.findById(booking.propertyId)
+        } catch {}
+        return {
+          ...booking.toObject(),
+          propertyImages: property?.images || [],
+          propertyTitle: property?.title || '',
+          propertyLocation: property?.address?.city
+            ? `${property.address.city}${
+                property.address.state ? ', ' + property.address.state : ''
+              }${
+                property.address.country ? ', ' + property.address.country : ''
+              }`
+            : '',
+          currency: booking.currency || property?.currency || 'NGN',
+        }
+      })
+    )
+    res.json({
+      success: true,
+      bookings: populatedBookings,
+      count: populatedBookings.length,
+    })
   } catch (error) {
     res.status(400).json({ success: false, message: error.message })
   }
