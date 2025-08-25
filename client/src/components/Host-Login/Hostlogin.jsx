@@ -63,13 +63,14 @@ const Hostlogin = () => {
     try {
       // Call the actual API login with isHost = true
       const result = await login(email, password, true)
-
+      if (result?.token) {
+        localStorage.setItem('homehive_host_access_token', result.token)
+      }
       if (result.success) {
         toast.success('Login successful! Welcome back to your dashboard!', {
           duration: 2000,
           className: 'text-sm font-medium',
         })
-
         // Navigate to host dashboard
         setTimeout(() => {
           navigate('/host-dashboard')
@@ -84,7 +85,6 @@ const Hostlogin = () => {
         duration: 3000,
         className: 'text-sm font-medium',
       })
-
       // Set form errors if available
       if (error.response?.data?.field) {
         setErrors({
@@ -114,13 +114,14 @@ const Hostlogin = () => {
         profilePicture: user.photoURL,
         isHost: true,
       })
-
+      if (result?.token) {
+        localStorage.setItem('homehive_host_access_token', result.token)
+      }
       if (result.success) {
         toast.success('Google login successful! Welcome to your dashboard!', {
           duration: 2000,
           className: 'text-sm font-medium',
         })
-
         setTimeout(() => {
           navigate('/host-dashboard')
         }, 1000)

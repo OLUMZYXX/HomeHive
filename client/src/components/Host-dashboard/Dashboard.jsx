@@ -1398,35 +1398,40 @@ const Dashboard = () => {
               <label className='block text-sm font-bold text-primary-700 mb-2'>
                 Description
                 <span className='text-primary-500 text-xs ml-2'>
-                  ({formData.description.length}/500 characters)
+                  ({formData.description.length}/100 characters)
                 </span>
               </label>
               <textarea
                 value={formData.description}
                 onChange={(e) => {
                   const value = e.target.value
-                  if (value.length <= 500) {
+                  if (value.length <= 100) {
                     setFormData((prev) => ({
                       ...prev,
                       description: value,
                     }))
                   }
                 }}
-                placeholder='Describe your space, what makes it special, and what guests can expect... (Maximum 500 characters)'
+                placeholder='Describe your space, what makes it special, and what guests can expect... (Maximum 100 characters)'
                 rows={6}
-                maxLength={500}
-                className={`w-full p-3 md:p-4 border-2 rounded-xl focus:outline-none transition-colors duration-300 resize-none ${getTextValidationClasses(
-                  validateTextLength(formData.description, 50, 500).status
-                )}`}
+                maxLength={100}
+                className={`w-full p-3 md:p-4 border-2 rounded-xl transition-colors duration-300 resize-none ${
+                  validateTextLength(formData.description, 20, 100).status ===
+                  'error'
+                    ? ''
+                    : getTextValidationClasses(
+                        validateTextLength(formData.description, 20, 100).status
+                      )
+                }`}
               />
               {(() => {
                 const validation = validateTextLength(
                   formData.description,
-                  50,
-                  500
+                  20,
+                  100
                 )
                 return validation.status !== 'success' ||
-                  formData.description.length > 450 ? (
+                  formData.description.length > 90 ? (
                   <p
                     className={`text-xs mt-1 ${getTextValidationTextClasses(
                       validation.status
@@ -1941,6 +1946,18 @@ const Dashboard = () => {
                               {property.type}
                             </span>
                           </div>
+                          {/* Truncated Description */}
+                          {property.description && (
+                            <p className='text-primary-600 mt-2 text-xs md:text-sm'>
+                              {property.description
+                                .split(' ')
+                                .slice(0, 25)
+                                .join(' ')}
+                              {property.description.split(' ').length > 25
+                                ? '...'
+                                : ''}
+                            </p>
+                          )}
                         </div>
                         <div className='flex items-center gap-2 self-start sm:self-center'>
                           <ButtonTooltip content='View listing details'>

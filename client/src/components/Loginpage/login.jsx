@@ -48,12 +48,13 @@ const Login = () => {
 
     try {
       const result = await login(email, password, false) // false for regular user
-
+      if (result?.token) {
+        localStorage.setItem('homehive_user_access_token', result.token)
+      }
       toast.success(`Welcome back!`, {
         description: 'Login successful! Redirecting you now...',
         duration: 3000,
       })
-
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       setTimeout(() => navigate(redirectPath), 1500)
@@ -94,14 +95,15 @@ const Login = () => {
         isHost: false, // Explicitly set for user authentication
       })
       console.log('✅ Backend authentication successful:', result)
-
+      if (result?.token) {
+        localStorage.setItem('homehive_user_access_token', result.token)
+      }
       toast.success(
         'Google login successful! Redirecting you now...',
         `Welcome ${googleUser.name}!`,
         { autoClose: 3000 }
       )
       console.log('✅ Toast notification shown')
-
       const redirectPath = localStorage.getItem('redirectAfterLogin') || '/'
       localStorage.removeItem('redirectAfterLogin')
       console.log('🔄 Redirecting to:', redirectPath)
