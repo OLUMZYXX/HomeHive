@@ -1,49 +1,49 @@
 /* eslint-disable no-unused-vars */
-import React from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence } from 'framer-motion'
-import { Toaster } from 'sonner'
-import { PageWrapper } from './components/common/AnimatedComponents'
+import React from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Toaster } from "sonner";
+import { PageWrapper } from "./components/common/AnimatedComponents";
 
-import Home from './Home'
-import Login from './components/Loginpage/login'
-import Createacct from './components/Create Account/Createacct'
-import CreateAccount from './components/HostCreate-Acct/CreateAccount'
-import Listings from './components/listings-page/Listings'
-import PropertyDetail from './components/PropertyDetail/PropertyDetail'
-import MyBookings from './components/MyBookings/MyBookings'
-import Checkout from './components/Checkout/Checkout'
-import BookingConfirmation from './components/BookingConfirmation/BookingConfirmation'
-import Host from './components/Become a Host/Host'
-import Hostlogin from './components/Host-Login/Hostlogin'
-import Dashboard from './components/Host-dashboard/Dashboard'
-import PaymentPage from './pages/PaymentPage'
-import ScrollToTop from './components/ScrollToTop'
-import FloatingSupportChat from './components/common/FloatingSupportChat'
+import Home from "./Home";
+import Login from "./components/Loginpage/login";
+import Createacct from "./components/Create Account/Createacct";
+import CreateAccount from "./components/HostCreate-Acct/CreateAccount";
+import Listings from "./components/listings-page/Listings";
+import PropertyDetail from "./components/PropertyDetail/PropertyDetail";
+import MyBookings from "./components/MyBookings/MyBookings";
+import Checkout from "./components/Checkout/Checkout";
+import BookingConfirmation from "./components/BookingConfirmation/BookingConfirmation";
+import Host from "./components/Become a Host/Host";
+import Hostlogin from "./components/Host-Login/Hostlogin";
+import Dashboard from "./components/Host-dashboard/Dashboard";
+import PaymentPage from "./pages/PaymentPage";
+import ScrollToTop from "./components/ScrollToTop";
+import FloatingSupportChat from "./components/common/FloatingSupportChat";
 
 const AnimatedRoutes = () => {
-  const location = useLocation()
+  const location = useLocation();
 
   const getPageVariant = (pathname) => {
     switch (pathname) {
-      case '/':
-        return 'fadeInUp'
-      case '/signin':
-      case '/signup':
-        return 'scaleIn'
-      case '/listings':
-      case '/listing':
-        return 'slideInRight'
+      case "/":
+        return "fadeInUp";
+      case "/signin":
+      case "/signup":
+        return "scaleIn";
+      case "/listings":
+      case "/listing":
+        return "slideInRight";
       default:
-        return 'fadeInUp'
+        return "fadeInUp";
     }
-  }
+  };
 
   return (
-    <AnimatePresence mode='wait'>
+    <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route
-          path='/'
+          path="/"
           element={
             <PageWrapper variant={getPageVariant(location.pathname)}>
               <Home />
@@ -51,7 +51,7 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/signin'
+          path="/signin"
           element={
             <PageWrapper variant={getPageVariant(location.pathname)}>
               <Login />
@@ -59,7 +59,7 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/signup'
+          path="/signup"
           element={
             <PageWrapper variant={getPageVariant(location.pathname)}>
               <Createacct />
@@ -67,15 +67,18 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/listings'
+          path="/listings"
           element={
-            <PageWrapper variant={getPageVariant(location.pathname)}>
+            <PageWrapper
+              variant={getPageVariant(location.pathname)}
+              showLoader={false}
+            >
               <Listings />
             </PageWrapper>
           }
         />
         <Route
-          path='/listing/:id'
+          path="/listing/:id"
           element={
             <PageWrapper variant={getPageVariant(location.pathname)}>
               <PropertyDetail />
@@ -83,100 +86,100 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path='/my-bookings'
+          path="/my-bookings"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <MyBookings />
             </PageWrapper>
           }
         />
         <Route
-          path='/bookings'
+          path="/bookings"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <MyBookings />
             </PageWrapper>
           }
         />
         <Route
-          path='/checkout'
+          path="/checkout"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <Checkout />
             </PageWrapper>
           }
         />
         <Route
-          path='/booking-confirmation'
+          path="/booking-confirmation"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <BookingConfirmation />
             </PageWrapper>
           }
         />
         <Route
-          path='/my-bookings'
+          path="/my-bookings"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <MyBookings />
             </PageWrapper>
           }
         />
         <Route
-          path='/host'
+          path="/host"
           element={
-            <PageWrapper variant='scaleIn'>
+            <PageWrapper variant="scaleIn">
               <Host />
             </PageWrapper>
           }
         />
         <Route
-          path='/hostlogin'
+          path="/hostlogin"
           element={
-            <PageWrapper variant='scaleIn'>
+            <PageWrapper variant="scaleIn">
               <Hostlogin />
             </PageWrapper>
           }
         />
         <Route
-          path='/host-dashboard'
+          path="/host-dashboard"
           element={
-            <PageWrapper variant='slideInRight'>
+            <PageWrapper variant="slideInRight">
               <Dashboard />
             </PageWrapper>
           }
         />
         <Route
-          path='/host-signup'
+          path="/host-signup"
           element={
-            <PageWrapper variant='scaleIn'>
+            <PageWrapper variant="scaleIn">
               <CreateAccount />
             </PageWrapper>
           }
         />
         <Route
-          path='/payment'
+          path="/payment"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <PaymentPage />
             </PageWrapper>
           }
         />
         {/* Catch-all route for unknown paths */}
         <Route
-          path='*'
+          path="*"
           element={
-            <PageWrapper variant='fadeInUp'>
+            <PageWrapper variant="fadeInUp">
               <div
                 style={{
-                  minHeight: '60vh',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#c53030',
-                  fontWeight: 'bold',
-                  fontSize: '2rem',
+                  minHeight: "60vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#c53030",
+                  fontWeight: "bold",
+                  fontSize: "2rem",
                 }}
               >
                 404 - Page Not Found
@@ -186,8 +189,8 @@ const AnimatedRoutes = () => {
         />
       </Routes>
     </AnimatePresence>
-  )
-}
+  );
+};
 
 function App() {
   return (
@@ -196,26 +199,26 @@ function App() {
       <AnimatedRoutes />
       <FloatingSupportChat />
       <Toaster
-        position='top-right'
+        position="top-right"
         richColors
         closeButton
         expand={true}
         duration={4000}
         toastOptions={{
           style: {
-            background: 'white',
-            border: '1px solid #e2e8f0',
-            borderRadius: '12px',
-            padding: '16px',
-            fontSize: '14px',
-            fontWeight: '500',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+            background: "white",
+            border: "1px solid #e2e8f0",
+            borderRadius: "12px",
+            padding: "16px",
+            fontSize: "14px",
+            fontWeight: "500",
+            boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)",
           },
-          className: 'sonner-toast',
+          className: "sonner-toast",
         }}
       />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

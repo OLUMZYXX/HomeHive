@@ -1,12 +1,12 @@
-import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
-import PropTypes from 'prop-types'
-import PageLoader from './PageLoader'
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import PropTypes from "prop-types";
+import PageLoader from "./PageLoader";
 
 // Page Wrapper Component for consistent page transitions with loading
 export const PageWrapper = ({
   children,
-  variant = 'fadeInUp',
+  variant = "fadeInUp",
   showLoader = true,
   loaderDuration = 3000,
 }) => {
@@ -68,42 +68,42 @@ export const PageWrapper = ({
         },
       },
     },
-  }
+  };
 
   const content = (
     <motion.div
       variants={variants[variant]}
-      initial='initial'
-      animate='animate'
-      exit='exit'
-      className='min-h-screen'
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="min-h-screen"
     >
       {children}
     </motion.div>
-  )
+  );
 
   return showLoader ? (
     <PageLoader duration={loaderDuration}>{content}</PageLoader>
   ) : (
     content
-  )
-}
+  );
+};
 
 // Scroll Reveal Component
 export const ScrollReveal = ({
   children,
-  direction = 'up',
+  direction = "up",
   delay = 0,
   duration = 0.6,
   threshold = 0.1,
-  className = '',
+  className = "",
 }) => {
-  const ref = useRef(null)
+  const ref = useRef(null);
   const isInView = useInView(ref, {
     threshold,
     once: true,
-    margin: '0px 0px -100px 0px',
-  })
+    margin: "0px 0px -100px 0px",
+  });
 
   const variants = {
     up: {
@@ -166,33 +166,33 @@ export const ScrollReveal = ({
         },
       },
     },
-  }
+  };
 
   return (
     <motion.div
       ref={ref}
       variants={variants[direction]}
-      initial='hidden'
-      animate={isInView ? 'visible' : 'hidden'}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
       className={className}
     >
       {children}
     </motion.div>
-  )
-}
+  );
+};
 
 // Stagger Container Component
 export const StaggerContainer = ({
   children,
   staggerDelay = 0.1,
-  className = '',
+  className = "",
 }) => {
-  const ref = useRef(null)
+  const ref = useRef(null);
   const isInView = useInView(ref, {
     threshold: 0.1,
     once: true,
-    margin: '0px 0px -50px 0px',
-  })
+    margin: "0px 0px -50px 0px",
+  });
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -203,23 +203,23 @@ export const StaggerContainer = ({
         delayChildren: 0.2,
       },
     },
-  }
+  };
 
   return (
     <motion.div
       ref={ref}
       variants={containerVariants}
-      initial='hidden'
-      animate={isInView ? 'show' : 'hidden'}
+      initial="hidden"
+      animate={isInView ? "show" : "hidden"}
       className={className}
     >
       {children}
     </motion.div>
-  )
-}
+  );
+};
 
 // Stagger Item Component
-export const StaggerItem = ({ children, className = '' }) => {
+export const StaggerItem = ({ children, className = "" }) => {
   const itemVariants = {
     hidden: { opacity: 0, y: 30 },
     show: {
@@ -230,20 +230,20 @@ export const StaggerItem = ({ children, className = '' }) => {
         ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
-  }
+  };
 
   return (
     <motion.div variants={itemVariants} className={className}>
       {children}
     </motion.div>
-  )
-}
+  );
+};
 
 // Animated Button Component
 export const AnimatedButton = ({
   children,
   onClick,
-  className = '',
+  className = "",
   disabled = false,
   ...props
 }) => {
@@ -261,13 +261,13 @@ export const AnimatedButton = ({
         duration: 0.1,
       },
     },
-  }
+  };
 
   return (
     <motion.button
       variants={buttonVariants}
-      whileHover='whileHover'
-      whileTap='whileTap'
+      whileHover="whileHover"
+      whileTap="whileTap"
       onClick={onClick}
       disabled={disabled}
       className={className}
@@ -275,13 +275,13 @@ export const AnimatedButton = ({
     >
       {children}
     </motion.button>
-  )
-}
+  );
+};
 
 // Animated Card Component
 export const AnimatedCard = ({
   children,
-  className = '',
+  className = "",
   hoverScale = 1.02,
   hoverY = -8,
   ...props
@@ -296,31 +296,31 @@ export const AnimatedCard = ({
         ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
-  }
+  };
 
   return (
     <motion.div
       variants={cardVariants}
-      initial='rest'
-      whileHover='hover'
+      initial="rest"
+      whileHover="hover"
       className={className}
       {...props}
     >
       {children}
     </motion.div>
-  )
-}
+  );
+};
 
 // Floating Animation Component
 export const FloatingElement = ({
   children,
-  direction = 'y',
+  direction = "y",
   distance = 10,
   duration = 3,
-  className = '',
+  className = "",
 }) => {
   // Fallback to empty fragment if children is undefined
-  const safeChildren = typeof children === 'undefined' ? <></> : children
+  const safeChildren = typeof children === "undefined" ? <></> : children;
   const floatingVariants = {
     y: {
       animate: {
@@ -328,7 +328,7 @@ export const FloatingElement = ({
         transition: {
           duration,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: "easeInOut",
         },
       },
     },
@@ -338,30 +338,30 @@ export const FloatingElement = ({
         transition: {
           duration,
           repeat: Infinity,
-          ease: 'easeInOut',
+          ease: "easeInOut",
         },
       },
     },
-  }
+  };
 
   return (
     <motion.div
       variants={floatingVariants[direction]}
-      animate='animate'
+      animate="animate"
       className={className}
     >
       {safeChildren}
     </motion.div>
-  )
-}
+  );
+};
 
 // Modal Animation Component
 export const AnimatedModal = ({
   children,
   isOpen,
   onClose,
-  className = '',
-  backdropClassName = '',
+  className = "",
+  backdropClassName = "",
 }) => {
   const backdropVariants = {
     initial: { opacity: 0 },
@@ -373,7 +373,7 @@ export const AnimatedModal = ({
       opacity: 0,
       transition: { duration: 0.3 },
     },
-  }
+  };
 
   const modalVariants = {
     initial: { opacity: 0, scale: 0.95, y: 20 },
@@ -395,38 +395,38 @@ export const AnimatedModal = ({
         ease: [0.25, 0.46, 0.45, 0.94],
       },
     },
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <motion.div
       variants={backdropVariants}
-      initial='initial'
-      animate='animate'
-      exit='exit'
+      initial="initial"
+      animate="animate"
+      exit="exit"
       onClick={onClose}
       className={`fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center p-4 ${backdropClassName}`}
     >
       <motion.div
         variants={modalVariants}
-        initial='initial'
-        animate='animate'
-        exit='exit'
+        initial="initial"
+        animate="animate"
+        exit="exit"
         onClick={(e) => e.stopPropagation()}
         className={className}
       >
         {children}
       </motion.div>
     </motion.div>
-  )
-}
+  );
+};
 
 // Loading Spinner Component
 export const LoadingSpinner = ({
   size = 40,
-  color = 'currentColor',
-  className = '',
+  color = "currentColor",
+  className = "",
 }) => {
   return (
     <motion.div
@@ -434,7 +434,7 @@ export const LoadingSpinner = ({
       transition={{
         duration: 1,
         repeat: Infinity,
-        ease: 'linear',
+        ease: "linear",
       }}
       className={`inline-block ${className}`}
       style={{
@@ -442,18 +442,18 @@ export const LoadingSpinner = ({
         height: size,
         border: `3px solid transparent`,
         borderTop: `3px solid ${color}`,
-        borderRadius: '50%',
+        borderRadius: "50%",
       }}
     />
-  )
-}
+  );
+};
 
 // Pulse Animation Component
 export const PulseElement = ({
   children,
   scale = 1.05,
   duration = 2,
-  className = '',
+  className = "",
 }) => {
   return (
     <motion.div
@@ -463,64 +463,64 @@ export const PulseElement = ({
       transition={{
         duration,
         repeat: Infinity,
-        ease: 'easeInOut',
+        ease: "easeInOut",
       }}
       className={className}
     >
       {children}
     </motion.div>
-  )
-}
+  );
+};
 
 // PropTypes
 PageWrapper.propTypes = {
   children: PropTypes.node.isRequired,
-  variant: PropTypes.oneOf(['fadeInUp', 'slideInRight', 'scaleIn']),
+  variant: PropTypes.oneOf(["fadeInUp", "slideInRight", "scaleIn"]),
   showLoader: PropTypes.bool,
   loaderDuration: PropTypes.number,
-}
+};
 
 ScrollReveal.propTypes = {
   children: PropTypes.node.isRequired,
-  direction: PropTypes.oneOf(['up', 'down', 'left', 'right', 'scale']),
+  direction: PropTypes.oneOf(["up", "down", "left", "right", "scale"]),
   delay: PropTypes.number,
   duration: PropTypes.number,
   threshold: PropTypes.number,
   className: PropTypes.string,
-}
+};
 
 StaggerContainer.propTypes = {
   children: PropTypes.node.isRequired,
   staggerDelay: PropTypes.number,
   className: PropTypes.string,
-}
+};
 
 StaggerItem.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
-}
+};
 
 AnimatedButton.propTypes = {
   children: PropTypes.node.isRequired,
   onClick: PropTypes.func,
   className: PropTypes.string,
   disabled: PropTypes.bool,
-}
+};
 
 AnimatedCard.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
   hoverScale: PropTypes.number,
   hoverY: PropTypes.number,
-}
+};
 
 FloatingElement.propTypes = {
-  children: PropTypes.node.isRequired,
-  direction: PropTypes.oneOf(['x', 'y']),
+  children: PropTypes.node,
+  direction: PropTypes.oneOf(["x", "y"]),
   distance: PropTypes.number,
   duration: PropTypes.number,
   className: PropTypes.string,
-}
+};
 
 AnimatedModal.propTypes = {
   children: PropTypes.node.isRequired,
@@ -528,17 +528,17 @@ AnimatedModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   className: PropTypes.string,
   backdropClassName: PropTypes.string,
-}
+};
 
 LoadingSpinner.propTypes = {
   size: PropTypes.number,
   color: PropTypes.string,
   className: PropTypes.string,
-}
+};
 
 PulseElement.propTypes = {
   children: PropTypes.node.isRequired,
   scale: PropTypes.number,
   duration: PropTypes.number,
   className: PropTypes.string,
-}
+};

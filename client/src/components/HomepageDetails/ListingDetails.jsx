@@ -296,10 +296,10 @@ const ListingDetails = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100 pt-20'>
+    <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100 pt-20 flex flex-col'>
       {/* Loading state */}
       {loading && (
-        <div className='flex items-center justify-center min-h-screen'>
+        <div className='flex items-center justify-center flex-grow'>
           <div className='text-center'>
             <div className='w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
             <h2 className='text-xl font-semibold text-primary-800'>
@@ -311,7 +311,7 @@ const ListingDetails = () => {
 
       {/* Fallback if home not found */}
       {!loading && !home && (
-        <div className='px-4 py-10 text-center bg-white rounded-2xl shadow-medium mx-4 mt-10'>
+        <div className='px-4 py-10 text-center bg-white rounded-2xl shadow-medium mx-4 mt-10 flex-grow'>
           <h2 className='text-xl md:text-2xl font-bold mb-2 text-primary-800'>
             Property not found
           </h2>
@@ -334,7 +334,8 @@ const ListingDetails = () => {
           <Navbar />
 
           {/* Enhanced Listing Details */}
-          <div className='max-w-[1400px] mx-auto px-4 mt-4 md:mt-8'>
+          <main className='flex-grow'>
+            <div className='max-w-[1400px] mx-auto px-4 mt-4 md:mt-8'>
             {/* Enhanced Header Section */}
             <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-4 md:p-6 mb-6 md:mb-8'>
               <div className='flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6'>
@@ -1026,7 +1027,7 @@ const ListingDetails = () => {
                 </p>
               </div>
             </div>
-          </div>
+          </main>
 
           <Footer />
         </>

@@ -10,7 +10,7 @@
     "dev:nodemon": "nodemon server.js",
     "dev:watch": "node --watch server.js",
     "dev:inspect": "node --inspect --watch server.js",
-    "server": "node server.js",
+    "server": "nodemon server.js",
     "server:dev": "node --watch server.js",
     "server:prod": "NODE_ENV=production node server.js",
     "pm2:start": "pm2 start server.js --name homehive-api --watch",
