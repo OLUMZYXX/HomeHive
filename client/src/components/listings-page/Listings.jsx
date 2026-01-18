@@ -335,20 +335,28 @@ const Listings = () => {
                 {/* Check in Section */}
                 <div
                   className="px-6 py-4 border-r border-gray-200 hover:bg-gray-50/80 transition-colors duration-300 min-w-0 flex-shrink-0 mr-2 cursor-pointer"
-                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowGuestSelector(false);
+                    setShowDatePicker(!showDatePicker);
+                  }}
                 >
                   <div className="text-xs font-bold text-primary-700 mb-1 uppercase tracking-wide">
                     Check in
                   </div>
                   <div className="text-primary-500 text-sm font-medium whitespace-nowrap">
-                    {formatDateRange()}
+                    {checkInDate ? formatDate(checkInDate) : "Add date"}
                   </div>
                 </div>
 
                 {/* Guests Section */}
                 <div
                   className="px-6 py-4 hover:bg-gray-50/80 transition-colors duration-300 rounded-r-full min-w-0 flex-shrink-0 ml-2 cursor-pointer"
-                  onClick={() => setShowGuestSelector(!showGuestSelector)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDatePicker(false);
+                    setShowGuestSelector(!showGuestSelector);
+                  }}
                 >
                   <div className="text-xs font-bold text-primary-700 mb-1 uppercase tracking-wide">
                     Guests
@@ -377,6 +385,7 @@ const Listings = () => {
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
                   className="absolute top-full left-1/2 transform -translate-x-1/2 mt-3 w-96 bg-white border-2 border-gray-200 rounded-3xl shadow-xl z-50 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
@@ -468,7 +477,8 @@ const Listings = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2 }}
-                  className="absolute top-full right-8 mt-3 w-80 bg-white border-2 border-gray-200 rounded-3xl shadow-xl z-50 overflow-hidden"
+                  className="absolute top-full left-1/2 transform -translate-x-1/4 mt-3 w-80 bg-white border-2 border-gray-200 rounded-3xl shadow-xl z-50 overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-6">
@@ -780,6 +790,7 @@ const Listings = () => {
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 className="lg:hidden mt-4 mx-4 bg-white border-2 border-gray-200 rounded-3xl shadow-xl z-50 overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -870,6 +881,7 @@ const Listings = () => {
                 exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
                 className="lg:hidden mt-4 mx-4 bg-white border-2 border-gray-200 rounded-3xl shadow-xl z-50 overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
               >
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-6">
