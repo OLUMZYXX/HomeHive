@@ -1,95 +1,79 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { FaArrowLeft, FaEye, FaEyeSlash } from 'react-icons/fa'
-import { HiMail, HiLockClosed } from 'react-icons/hi'
-import { HiUser } from 'react-icons/hi2'
-import { navigateToHome } from '../../utils/navigation'
-import useScrollToTop from '../../hooks/useScrollToTop'
-import { toast } from 'sonner'
-import { useAPI } from '../../contexts/APIContext'
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FcGoogle } from "react-icons/fc";
+import { HiMail, HiLockClosed, HiPhone } from "react-icons/hi";
+import { HiUser, HiHome, HiBuildingOffice2 } from "react-icons/hi2";
+import { navigateToHome } from "../../utils/navigation";
+import useScrollToTop from "../../hooks/useScrollToTop";
+import { toast } from "sonner";
+import { useAPI } from "../../contexts/APIContext";
+import GoogleAuth from "../../config/googleAuth";
 
 const Createacct = () => {
-  // Use scroll to top hook
-  useScrollToTop()
+  useScrollToTop();
 
-  const navigate = useNavigate()
-  const location = useLocation()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { registerHost, googleAuth } = useAPI();
 
-  // Get API functions
-  const { registerHost, googleAuth, loading } = useAPI()
-
-  // Smart home navigation handler
   const handleHomeNavigation = () => {
-    navigateToHome(navigate, location)
-  }
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [businessName, setBusinessName] = useState('')
-  const [businessType, setBusinessType] = useState('individual')
-  const [phone, setPhone] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
-  const [agreeTerms, setAgreeTerms] = useState(false)
-  const [errors, setErrors] = useState({})
-  const [successMessage, setSuccessMessage] = useState('')
+    navigateToHome(navigate, location);
+  };
 
-  // Validate Email
-  const isEmailValid = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-  }
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("individual");
+  const [phone, setPhone] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [error, setError] = useState("");
 
-  // Validate Password Strength
-  const isPasswordValid = (password) => {
-    return (
-      password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)
-    )
-  }
+  const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isPasswordValid = (password) =>
+    password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
 
-  // Handle Create Account
   const handleCreateAccount = async (e) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setErrors({})
+    e.preventDefault();
+    setError("");
 
-    // Validation
-    const newErrors = {}
-    if (!firstName.trim()) newErrors.firstName = 'First name is required'
-    if (!lastName.trim()) newErrors.lastName = 'Last name is required'
-    if (!email.trim()) {
-      newErrors.email = 'Email is required'
-    } else if (!isEmailValid(email)) {
-      newErrors.email = 'Please enter a valid email address'
+    if (!firstName.trim() || !lastName.trim()) {
+      setError("Please enter your full name");
+      return;
     }
-    if (!businessName.trim())
-      newErrors.businessName = 'Business name is required'
-    if (!password) {
-      newErrors.password = 'Password is required'
-    } else if (!isPasswordValid(password)) {
-      newErrors.password =
-        'Password must be at least 8 characters with uppercase and number'
+    if (!email.trim() || !isEmailValid(email)) {
+      setError("Please enter a valid email address");
+      return;
     }
-    if (!confirmPassword) {
-      newErrors.confirmPassword = 'Please confirm your password'
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
+    if (!businessName.trim()) {
+      setError("Business name is required");
+      return;
+    }
+    if (!password || !isPasswordValid(password)) {
+      setError(
+        "Password must be at least 8 characters with uppercase and number",
+      );
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
     }
     if (!agreeTerms) {
-      newErrors.terms = 'You must agree to the terms and conditions'
+      setError("You must agree to the terms and conditions");
+      return;
     }
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors)
-      setIsLoading(false)
-      return
-    }
+    setIsLoading(true);
 
     try {
-      // Call the actual API for host registration
       const result = await registerHost({
         email: email.trim(),
         password,
@@ -99,599 +83,516 @@ const Createacct = () => {
         phone: phone.trim(),
         businessName: businessName.trim(),
         businessType,
-      })
+      });
 
       if (result.success) {
         toast.success(
-          'Host account created successfully! Welcome to HomeHive!',
-          {
-            duration: 4000,
-            className: 'text-sm font-medium',
-          }
-        )
-
-        setTimeout(() => {
-          navigate('/host-dashboard')
-        }, 1000)
+          "Host account created successfully! Welcome to HomeHive!",
+          { duration: 4000 },
+        );
+        setTimeout(() => navigate("/host-dashboard"), 1000);
       }
     } catch (error) {
-      console.error('Host registration error:', error)
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
-        'Failed to create account. Please try again.'
-
-      toast.error(errorMessage, {
-        duration: 3000,
-        className: 'text-sm font-medium',
-      })
-
-      // Set form errors if available
-      if (error.response?.data?.field) {
-        setErrors({
-          [error.response.data.field]: errorMessage,
-        })
-      }
+        "Failed to create account. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage, { duration: 3000 });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Handle Google Sign Up
   const handleGoogleSignUp = async () => {
-    setIsGoogleLoading(true)
+    setIsGoogleLoading(true);
     try {
-      // Import Google Auth configuration
-      const { signInWithGoogle } = await import('../../config/googleAuth')
+      await GoogleAuth.initialize();
+      const googleUser = await GoogleAuth.signIn();
 
-      // Get Google credentials
-      const { user, credential } = await signInWithGoogle()
-
-      // Call API with Google token for host registration
-      const result = await googleAuth(credential.idToken, {
-        email: user.email,
-        name: user.displayName,
-        firstName: user.displayName?.split(' ')[0] || '',
-        lastName: user.displayName?.split(' ').slice(1).join(' ') || '',
-        profilePicture: user.photoURL,
-        businessName: `${user.displayName || 'User'}'s Properties`,
-        businessType: 'individual',
+      const result = await googleAuth(googleUser.idToken, {
+        email: googleUser.email,
+        name: googleUser.name,
+        firstName: googleUser.firstName,
+        lastName: googleUser.lastName,
+        picture: googleUser.picture,
+        googleId: googleUser.id,
+        businessName: `${googleUser.name || "User"}'s Properties`,
+        businessType: "individual",
         isHost: true,
-      })
+      });
 
       if (result.success) {
         toast.success(
-          'Google account created successfully! Welcome to HomeHive!',
-          {
-            duration: 4000,
-            className: 'text-sm font-medium',
-          }
-        )
-
-        setTimeout(() => {
-          navigate('/host-dashboard')
-        }, 1000)
+          "Google account created successfully! Welcome to HomeHive!",
+          { duration: 4000 },
+        );
+        setTimeout(() => navigate("/host-dashboard"), 1000);
       }
     } catch (error) {
-      console.error('Google signup error:', error)
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
-        'Google sign up failed. Please try again.'
-
-      toast.error(errorMessage, {
-        duration: 3000,
-        className: 'text-sm font-medium',
-      })
-
-      setErrors({ submit: errorMessage })
+        "Google sign up failed. Please try again.";
+      toast.error(errorMessage, { duration: 3000 });
+      setError(errorMessage);
     } finally {
-      setIsGoogleLoading(false)
+      setIsGoogleLoading(false);
     }
-  }
+  };
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-50 via-neutral-50 to-primary-100 relative overflow-hidden'>
-      {/* Background Pattern */}
-      <div className='absolute inset-0'>
-        <div className='absolute inset-0 bg-gradient-to-br from-primary-200/10 to-primary-600/20'></div>
-        <div className='absolute top-0 left-0 w-full h-full bg-[url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23475569" fill-opacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")] opacity-30'></div>
-      </div>
-
-      {/* Back Button - Improved Mobile Layout */}
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 flex items-center justify-center p-4">
+      {/* Back Button */}
       <button
-        onClick={() => navigate('/hostlogin')}
-        className='absolute top-4 left-4 md:top-6 md:left-6 flex items-center gap-2 md:gap-3 text-primary-600 hover:text-primary-800 bg-neutral-25/80 backdrop-blur-md px-3 py-2.5 md:px-4 md:py-3 rounded-2xl md:rounded-3xl shadow-soft hover:shadow-medium transition-all duration-300 font-medium z-10 border border-neutral-200/20 text-sm md:text-base'
+        onClick={() => navigate("/hostlogin")}
+        className="absolute top-6 left-6 flex items-center gap-2 text-primary-700 hover:text-primary-900 transition-colors duration-300 font-medium z-20"
       >
-        <FaArrowLeft className='text-sm md:text-sm' />
-        <span className='hidden sm:inline text-sm md:text-base'>
-          Back to Login
-        </span>
-        <span className='sm:hidden text-sm'>Back</span>
+        <FaArrowLeft className="text-sm" />
+        <span>Back to Login</span>
       </button>
 
       {/* Main Container */}
-      <div className='min-h-screen flex items-center justify-center p-4 relative z-10'>
-        <div className='w-full max-w-2xl mx-auto'>
-          <div className='grid lg:grid-cols-1 gap-8 items-center'>
-            {/* Sign Up Card */}
-            <div className='w-full max-w-2xl mx-auto'>
-              {/* Mobile Logo - Hidden on mobile, show on larger screens */}
-              <div className='hidden lg:block text-center mb-8'>
-                <div
-                  className='flex items-center justify-center gap-4 mb-4 cursor-pointer group'
-                  onClick={handleHomeNavigation}
-                >
-                  <div className='w-16 h-16 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center shadow-medium group-hover:shadow-strong transition-all duration-300'>
-                    <HiUser className='text-neutral-25 text-2xl group-hover:scale-110 transition-transform duration-300' />
-                  </div>
-                  <div>
-                    <h1 className='text-2xl font-NotoSans font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent group-hover:opacity-80 transition-opacity duration-300'>
-                      Homehive
-                    </h1>
-                    <p className='text-primary-500 font-medium text-sm'>
-                      Host Portal
-                    </p>
-                  </div>
-                </div>
-              </div>
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100">
+        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[700px]">
+          {/* Left Side: Branding & Benefits */}
+          <div className="relative bg-gradient-to-br from-primary-700 via-primary-800 to-primary-900 p-8 lg:p-12 hidden lg:flex flex-col justify-center text-white">
+            {/* Background Pattern */}
+            <div className="absolute inset-0 opacity-10">
+              <div className='absolute inset-0 bg-[url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")]'></div>
+            </div>
 
-              {/* Sign Up Card - Enhanced Mobile Layout */}
-              <div className='bg-neutral-25/95 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-strong border border-neutral-200/20 p-4 sm:p-6 lg:p-8 relative'>
-                {/* Card Header */}
-                <div className='text-center mb-6 sm:mb-8'>
-                  <div className='inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-accent-blue-50 border border-primary-200 rounded-full px-3 py-1.5 sm:px-4 sm:py-2 mb-3 sm:mb-4'>
-                    <HiUser className='text-primary-600 text-xs sm:text-sm' />
-                    <span className='text-xs sm:text-sm font-medium text-primary-700'>
-                      Host Sign Up
-                    </span>
-                  </div>
-                  <h2 className='text-xl sm:text-2xl font-NotoSans font-bold text-primary-800 mb-1.5 sm:mb-2'>
-                    Create Host Account
-                  </h2>
-                  <p className='text-sm sm:text-base text-primary-600'>
-                    Join our community and start hosting today
+            {/* Content */}
+            <div className="relative z-10 space-y-8">
+              {/* Logo */}
+              <div
+                className="flex items-center gap-3 cursor-pointer group"
+                onClick={handleHomeNavigation}
+              >
+                <div className="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all duration-300">
+                  <HiHome className="text-white text-2xl" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-NotoSans font-bold text-white">
+                    Homehive
+                  </h1>
+                  <p className="text-primary-200 text-sm font-medium">
+                    Host Portal
                   </p>
                 </div>
+              </div>
 
-                {/* Sign Up Form - Enhanced Mobile Layout */}
-                <form
-                  onSubmit={handleCreateAccount}
-                  className='space-y-4 sm:space-y-6'
-                >
-                  {/* Name Fields */}
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                    <div className='space-y-1.5 sm:space-y-2'>
-                      <label
-                        htmlFor='firstName'
-                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                      >
-                        <HiUser className='text-primary-500 text-sm' />
-                        First Name
-                      </label>
+              {/* Hero Text */}
+              <div className="space-y-4">
+                <h2 className="font-NotoSans text-3xl lg:text-4xl font-bold leading-tight">
+                  Start Your Hosting
+                  <span className="block text-transparent bg-gradient-to-r from-primary-200 to-white bg-clip-text">
+                    Journey Today
+                  </span>
+                </h2>
+                <p className="text-lg text-primary-100 leading-relaxed">
+                  Join thousands of hosts earning income by sharing their
+                  properties with travelers worldwide.
+                </p>
+              </div>
+
+              {/* Benefits List */}
+              <div className="space-y-4 pt-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
+                    <span className="text-lg">💰</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white mb-1">
+                      Earn Extra Income
+                    </h3>
+                    <p className="text-sm text-primary-200">
+                      Turn your property into a reliable income stream
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
+                    <span className="text-lg">🛡️</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white mb-1">
+                      Host Protection
+                    </h3>
+                    <p className="text-sm text-primary-200">
+                      Comprehensive coverage for peace of mind
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
+                    <span className="text-lg">📊</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white mb-1">
+                      Powerful Tools
+                    </h3>
+                    <p className="text-sm text-primary-200">
+                      Analytics, calendar sync, and smart pricing
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
+                    <span className="text-lg">🌍</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white mb-1">
+                      Global Reach
+                    </h3>
+                    <p className="text-sm text-primary-200">
+                      Connect with travelers from around the world
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Testimonial */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 mt-6">
+                <p className="text-primary-100 italic mb-3">
+                  &ldquo;I started hosting 6 months ago and it&apos;s been
+                  life-changing. The platform makes everything so easy!&rdquo;
+                </p>
+                <div className="text-sm text-primary-200">
+                  - Jennifer K., Superhost since 2024
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side: Sign Up Form */}
+          <div className="p-6 lg:p-10 flex flex-col justify-center overflow-y-auto max-h-[90vh] lg:max-h-none">
+            <div className="max-w-md mx-auto w-full space-y-6">
+              {/* Mobile Logo */}
+              <div
+                className="lg:hidden flex items-center justify-center gap-3 cursor-pointer"
+                onClick={handleHomeNavigation}
+              >
+                <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center">
+                  <HiHome className="text-white text-xl" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-NotoSans font-bold text-primary-800">
+                    Homehive
+                  </h1>
+                  <p className="text-primary-500 text-sm">Host Portal</p>
+                </div>
+              </div>
+
+              {/* Header */}
+              <div className="text-center space-y-2">
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-full px-4 py-2 mb-2">
+                  <HiUser className="text-primary-600 text-sm" />
+                  <span className="text-sm font-medium text-primary-700">
+                    Host Sign Up
+                  </span>
+                </div>
+                <h2 className="font-NotoSans text-2xl lg:text-3xl font-bold text-primary-900">
+                  Create Account
+                </h2>
+                <p className="text-primary-600">
+                  Join our community and start hosting
+                </p>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleCreateAccount} className="space-y-4">
+                {/* Name Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-primary-700">
+                      First Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HiUser className="h-5 w-5 text-primary-400" />
+                      </div>
                       <input
-                        type='text'
-                        id='firstName'
+                        type="text"
+                        placeholder="First name"
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                          errors.firstName
-                            ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                            : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                        }`}
-                        placeholder='Enter first name'
+                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
                       />
-                      {errors.firstName && (
-                        <p className='text-error-600 text-sm flex items-center gap-2 mt-1'>
-                          <span className='text-xs'>⚠️</span>
-                          {errors.firstName}
-                        </p>
-                      )}
                     </div>
-                    <div className='space-y-1.5 sm:space-y-2'>
-                      <label
-                        htmlFor='lastName'
-                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                      >
-                        <HiUser className='text-primary-500 text-sm' />
-                        Last Name
-                      </label>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-primary-700">
+                      Last Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HiUser className="h-5 w-5 text-primary-400" />
+                      </div>
                       <input
-                        type='text'
-                        id='lastName'
+                        type="text"
+                        placeholder="Last name"
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                          errors.lastName
-                            ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                            : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                        }`}
-                        placeholder='Enter last name'
+                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
                       />
-                      {errors.lastName && (
-                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                          <span className='text-xs'>⚠️</span>
-                          {errors.lastName}
-                        </p>
-                      )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Email Field */}
-                  <div className='space-y-1.5 sm:space-y-2'>
-                    <label
-                      htmlFor='email'
-                      className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                    >
-                      <HiMail className='text-primary-500 text-sm' />
-                      Email Address
-                    </label>
+                {/* Email Input */}
+                <div className="space-y-1.5">
+                  <label className="block text-sm font-semibold text-primary-700">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <HiMail className="h-5 w-5 text-primary-400" />
+                    </div>
                     <input
-                      type='email'
-                      id='email'
+                      type="email"
+                      placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                        errors.email
-                          ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                          : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                      }`}
-                      placeholder='Enter your email address'
+                      className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
                     />
-                    {errors.email && (
-                      <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                        <span className='text-xs'>⚠️</span>
-                        {errors.email}
-                      </p>
-                    )}
                   </div>
+                </div>
 
-                  {/* Business Info Fields */}
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                    <div className='space-y-1.5 sm:space-y-2'>
-                      <label
-                        htmlFor='businessName'
-                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                      >
-                        <HiUser className='text-primary-500 text-sm' />
-                        Business Name
-                      </label>
+                {/* Business Info */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-primary-700">
+                      Business Name
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HiBuildingOffice2 className="h-5 w-5 text-primary-400" />
+                      </div>
                       <input
-                        type='text'
-                        id='businessName'
+                        type="text"
+                        placeholder="Your business"
                         value={businessName}
                         onChange={(e) => setBusinessName(e.target.value)}
-                        className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                          errors.businessName
-                            ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                            : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                        }`}
-                        placeholder='Your property business name'
+                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
                       />
-                      {errors.businessName && (
-                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                          <span className='text-xs'>⚠️</span>
-                          {errors.businessName}
-                        </p>
-                      )}
                     </div>
-                    <div className='space-y-1.5 sm:space-y-2'>
-                      <label
-                        htmlFor='phone'
-                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                      >
-                        <HiMail className='text-primary-500 text-sm' />
-                        Phone Number
-                      </label>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-primary-700">
+                      Phone Number
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HiPhone className="h-5 w-5 text-primary-400" />
+                      </div>
                       <input
-                        type='tel'
-                        id='phone'
+                        type="tel"
+                        placeholder="Your phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className={`w-full px-3 py-3 sm:px-4 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                          errors.phone
-                            ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                            : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                        }`}
-                        placeholder='Your contact number'
+                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
                       />
-                      {errors.phone && (
-                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                          <span className='text-xs'>⚠️</span>
-                          {errors.phone}
-                        </p>
-                      )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Password Fields */}
-                  <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
-                    <div className='space-y-1.5 sm:space-y-2'>
-                      <label
-                        htmlFor='password'
-                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                      >
-                        <HiLockClosed className='text-primary-500 text-sm' />
-                        Password
-                      </label>
-                      <div className='relative'>
-                        <input
-                          type={showPassword ? 'text' : 'password'}
-                          id='password'
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          className={`w-full px-3 py-3 sm:px-4 sm:py-4 pr-10 sm:pr-12 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                            errors.password
-                              ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                              : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                          }`}
-                          placeholder='Create password'
-                        />
-                        <button
-                          type='button'
-                          onClick={() => setShowPassword(!showPassword)}
-                          className='absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors duration-200'
-                        >
-                          {showPassword ? (
-                            <FaEyeSlash className='text-base sm:text-lg' />
-                          ) : (
-                            <FaEye className='text-base sm:text-lg' />
-                          )}
-                        </button>
+                {/* Password Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-primary-700">
+                      Password
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HiLockClosed className="h-5 w-5 text-primary-400" />
                       </div>
-                      {errors.password && (
-                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                          <span className='text-xs'>⚠️</span>
-                          {errors.password}
-                        </p>
-                      )}
-                      <div className='text-xs text-primary-500 mt-1.5 sm:mt-2'>
-                        Must be 8+ characters with uppercase and number
-                      </div>
-                    </div>
-                    <div className='space-y-1.5 sm:space-y-2'>
-                      <label
-                        htmlFor='confirmPassword'
-                        className='text-sm sm:text-sm font-semibold text-primary-700 flex items-center gap-1.5 sm:gap-2'
-                      >
-                        <HiLockClosed className='text-primary-500 text-sm' />
-                        Confirm Password
-                      </label>
-                      <div className='relative'>
-                        <input
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          id='confirmPassword'
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          className={`w-full px-3 py-3 sm:px-4 sm:py-4 pr-10 sm:pr-12 text-sm sm:text-base rounded-lg sm:rounded-xl border-2 transition-all duration-300 focus:outline-none focus:ring-0 bg-neutral-25/80 placeholder-primary-400 ${
-                            errors.confirmPassword
-                              ? 'border-error-300 focus:border-error-500 bg-error-50/50'
-                              : 'border-primary-200 focus:border-primary-500 hover:border-primary-300'
-                          }`}
-                          placeholder='Confirm password'
-                        />
-                        <button
-                          type='button'
-                          onClick={() =>
-                            setShowConfirmPassword(!showConfirmPassword)
-                          }
-                          className='absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-primary-500 hover:text-primary-700 transition-colors duration-200'
-                        >
-                          {showConfirmPassword ? (
-                            <FaEyeSlash className='text-base sm:text-lg' />
-                          ) : (
-                            <FaEye className='text-base sm:text-lg' />
-                          )}
-                        </button>
-                      </div>
-                      {errors.confirmPassword && (
-                        <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                          <span className='text-xs'>⚠️</span>
-                          {errors.confirmPassword}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Terms Checkbox - Enhanced Mobile Layout */}
-                  <div className='flex items-start gap-2.5 sm:gap-3 pt-2'>
-                    <label
-                      htmlFor='agreeTerms'
-                      className='relative mt-0.5 cursor-pointer group'
-                    >
                       <input
-                        type='checkbox'
-                        id='agreeTerms'
-                        className='sr-only peer'
-                        checked={agreeTerms}
-                        onChange={(e) => setAgreeTerms(e.target.checked)}
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Create password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
                       />
-                      <div
-                        className={`w-4 h-4 sm:w-5 sm:h-5 border-2 rounded transition-all duration-200 flex items-center justify-center group-hover:border-primary-400 ${
-                          agreeTerms
-                            ? 'border-primary-600 bg-primary-600'
-                            : errors.terms
-                            ? 'border-error-300 bg-error-50'
-                            : 'border-primary-300 bg-neutral-25'
-                        }`}
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() => setShowPassword(!showPassword)}
                       >
-                        {agreeTerms && (
-                          <svg
-                            className='w-2.5 h-2.5 sm:w-3 sm:h-3 text-neutral-25'
-                            fill='currentColor'
-                            viewBox='0 0 20 20'
-                          >
-                            <path
-                              fillRule='evenodd'
-                              d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z'
-                              clipRule='evenodd'
-                            />
-                          </svg>
+                        {showPassword ? (
+                          <FaEyeSlash className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
+                        ) : (
+                          <FaEye className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
                         )}
-                      </div>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-primary-700">
+                      Confirm Password
                     </label>
-                    <label
-                      htmlFor='agreeTerms'
-                      className='text-xs sm:text-sm text-primary-600 cursor-pointer leading-relaxed flex-1'
-                    >
-                      I agree to the{' '}
-                      <a
-                        href='/terms'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-primary-700 hover:text-primary-800 font-semibold underline'
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Terms & Conditions
-                      </a>{' '}
-                      and{' '}
-                      <a
-                        href='/privacy'
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className='text-primary-700 hover:text-primary-800 font-semibold underline'
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Privacy Policy
-                      </a>
-                    </label>
-                  </div>
-                  {errors.terms && (
-                    <p className='text-error-600 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2 mt-1'>
-                      <span className='text-xs'>⚠️</span>
-                      {errors.terms}
-                    </p>
-                  )}
-
-                  {/* Submit Button - Enhanced Mobile Layout */}
-                  <button
-                    type='submit'
-                    disabled={isLoading || loading}
-                    className={`w-full py-3 sm:py-4 text-sm sm:text-base rounded-lg sm:rounded-xl font-semibold text-neutral-25 transition-all duration-300 transform relative overflow-hidden ${
-                      isLoading || loading
-                        ? 'bg-primary-400 cursor-not-allowed'
-                        : 'bg-gradient-to-r from-primary-600 to-primary-800 hover:from-primary-700 hover:to-primary-900 hover:scale-[1.02] active:scale-[0.98] shadow-medium hover:shadow-strong'
-                    }`}
-                  >
-                    <div
-                      className={`flex items-center justify-center gap-2 sm:gap-3 ${
-                        isLoading || loading ? 'opacity-0' : 'opacity-100'
-                      } transition-opacity duration-300`}
-                    >
-                      <HiUser className='text-base sm:text-lg' />
-                      <span>Create Host Account</span>
-                    </div>
-                    {(isLoading || loading) && (
-                      <div className='absolute inset-0 flex items-center justify-center'>
-                        <div className='w-5 h-5 sm:w-6 sm:h-6 border-2 border-neutral-25/30 border-t-neutral-25 rounded-full animate-spin'></div>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HiLockClosed className="h-5 w-5 text-primary-400" />
                       </div>
-                    )}
-                  </button>
-
-                  {/* Divider */}
-                  <div className='relative my-6 sm:my-8'>
-                    <div className='absolute inset-0 flex items-center'>
-                      <div className='w-full border-t border-primary-200'></div>
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirm password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full pl-10 pr-10 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        onClick={() =>
+                          setShowConfirmPassword(!showConfirmPassword)
+                        }
+                      >
+                        {showConfirmPassword ? (
+                          <FaEyeSlash className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
+                        ) : (
+                          <FaEye className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
+                        )}
+                      </button>
                     </div>
-                    <div className='relative flex justify-center text-xs sm:text-sm'>
-                      <span className='px-3 sm:px-4 bg-neutral-25 text-primary-500 font-medium'>
-                        Or continue with
-                      </span>
-                    </div>
                   </div>
-
-                  {/* Google Sign Up - Enhanced Mobile Layout */}
-                  <button
-                    type='button'
-                    onClick={handleGoogleSignUp}
-                    disabled={isGoogleLoading || loading}
-                    className='w-full py-3 sm:py-4 px-3 sm:px-4 text-sm sm:text-base border-2 border-primary-200 hover:border-primary-300 rounded-lg sm:rounded-xl font-semibold text-primary-700 bg-neutral-25 hover:bg-primary-50 transition-all duration-300 flex items-center justify-center gap-2 sm:gap-3 hover:scale-[1.02] active:scale-[0.98] shadow-soft hover:shadow-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
-                  >
-                    {isGoogleLoading || loading ? (
-                      <>
-                        <div className='w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin'></div>
-                        <span>Creating Account...</span>
-                      </>
-                    ) : (
-                      <>
-                        <img
-                          src='https://www.google.com/favicon.ico'
-                          alt='Google'
-                          className='w-4 h-4 sm:w-5 sm:h-5'
-                        />
-                        <span>Sign up with Google</span>
-                      </>
-                    )}
-                  </button>
-                </form>
-
-                {/* Error/Success Messages - Enhanced Mobile Layout */}
-                {errors.submit && (
-                  <div className='mt-4 sm:mt-6 p-3 sm:p-4 bg-error-50 border border-error-200 rounded-lg sm:rounded-xl'>
-                    <p className='text-error-700 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2'>
-                      <span className='text-base sm:text-lg'>❌</span>
-                      {errors.submit}
-                    </p>
-                  </div>
-                )}
-
-                {successMessage && (
-                  <div className='mt-4 sm:mt-6 p-3 sm:p-4 bg-success-50 border border-success-200 rounded-lg sm:rounded-xl'>
-                    <p className='text-success-700 text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2'>
-                      <span className='text-base sm:text-lg'>✅</span>
-                      {successMessage}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Sign In Link - Enhanced Mobile Layout */}
-              <div className='mt-6 sm:mt-8 text-center p-4 sm:p-6 bg-primary-50/80 rounded-xl sm:rounded-2xl border border-primary-100'>
-                <p className='text-xs sm:text-sm text-primary-600 mb-2 sm:mb-3'>
-                  Already have a host account?
+                </div>
+                <p className="text-xs text-primary-500">
+                  Password must be 8+ characters with uppercase and number
                 </p>
-                <button
-                  onClick={() => navigate('/hostlogin')}
-                  className='text-sm sm:text-base text-primary-600 hover:text-primary-800 font-semibold transition-colors duration-200 hover:underline'
-                >
-                  Sign in to your account →
-                </button>
-              </div>
 
-              {/* Footer Links - Enhanced Mobile Layout */}
-              <div className='mt-6 sm:mt-8 text-center space-y-3 sm:space-y-4'>
-                <div className='flex items-center justify-center gap-4 sm:gap-6 text-xs sm:text-sm text-primary-500'>
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-error-50 border border-error-200 rounded-xl p-3">
+                    <p className="text-error-700 text-sm">{error}</p>
+                  </div>
+                )}
+
+                {/* Terms Checkbox */}
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={agreeTerms}
+                    onChange={(e) => setAgreeTerms(e.target.checked)}
+                    className="mt-1 w-4 h-4 text-primary-600 border-primary-300 rounded focus:ring-primary-500"
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm text-primary-600 leading-relaxed"
+                  >
+                    I agree to the{" "}
+                    <a
+                      href="/terms"
+                      className="text-primary-800 font-semibold hover:underline"
+                    >
+                      Terms & Conditions
+                    </a>{" "}
+                    and{" "}
+                    <a
+                      href="/privacy"
+                      className="text-primary-800 font-semibold hover:underline"
+                    >
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
+
+                {/* Create Account Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl border border-primary-200 hover:border-primary-300 shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 flex items-center justify-center gap-3 text-base"
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating Account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <HiUser className="text-lg" />
+                      <span>Create Host Account</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Divider */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-primary-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-4 bg-white text-primary-500 font-medium">
+                      Or continue with
+                    </span>
+                  </div>
+                </div>
+
+                {/* Google Sign Up Button */}
+                <button
+                  type="button"
+                  onClick={handleGoogleSignUp}
+                  disabled={isGoogleLoading}
+                  className="w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium text-base"
+                >
+                  {isGoogleLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Creating Account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FcGoogle className="w-6 h-6" />
+                      <span>Sign up with Google</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Sign In Link */}
+              <div className="text-center pt-4 border-t border-primary-200">
+                <p className="text-primary-600">
+                  Already have a host account?{" "}
+                  <button
+                    onClick={() => navigate("/hostlogin")}
+                    className="text-primary-800 hover:text-primary-900 font-semibold transition-colors duration-300"
+                  >
+                    Sign In
+                  </button>
+                </p>
+
+                {/* Footer Links */}
+                <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-primary-500 mt-4 pt-4 border-t border-primary-100">
                   <a
-                    href='/privacy'
-                    className='hover:text-primary-700 transition-colors duration-200'
+                    href="/privacy"
+                    className="hover:text-primary-700 transition-colors duration-200"
                   >
                     Privacy Policy
                   </a>
-                  <span className='text-primary-300'>•</span>
+                  <span className="text-primary-300">•</span>
                   <a
-                    href='/terms'
-                    className='hover:text-primary-700 transition-colors duration-200'
+                    href="/terms"
+                    className="hover:text-primary-700 transition-colors duration-200"
                   >
                     Terms of Service
                   </a>
-                  <span className='text-primary-300'>•</span>
+                  <span className="text-primary-300">•</span>
                   <a
-                    href='/partner-help'
-                    className='hover:text-primary-700 transition-colors duration-200'
+                    href="/partner-help"
+                    className="hover:text-primary-700 transition-colors duration-200"
                   >
                     Help Center
                   </a>
                 </div>
-                <p className='text-xs text-primary-400'>
-                  © {new Date().getFullYear()} Homehive. All rights reserved.
-                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Createacct
+export default Createacct;

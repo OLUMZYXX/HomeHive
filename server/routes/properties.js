@@ -192,12 +192,10 @@ router.put("/:id", authenticateToken, async (req, res) => {
     }
     const property = await mongoPropertyService.getProperty(req.params.id);
     if (!property || property.hostId !== req.user.userId) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Property not found or unauthorized",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found or unauthorized",
+      });
     }
 
     const updateData = req.body;
@@ -265,12 +263,10 @@ router.delete("/:id", authenticateToken, async (req, res) => {
     }
     const property = await mongoPropertyService.getProperty(req.params.id);
     if (!property || property.hostId !== req.user.userId) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Property not found or unauthorized",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Property not found or unauthorized",
+      });
     }
     await mongoPropertyService.deleteProperty(req.params.id);
     res.json({ success: true, message: "Property deleted successfully" });
@@ -293,6 +289,81 @@ router.get("/host/properties", authenticateToken, async (req, res) => {
     );
     res.json({ success: true, properties, count: properties.length });
   } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// Search Properties
+router.post("/search", optionalAuth, async (req, res) => {
+  try {
+    console.log("🔍 Properties search endpoint hit - POST /search");
+
+    const searchCriteria = req.body;
+    console.log("📊 Search criteria:", searchCriteria);
+
+    const properties =
+      await mongoPropertyService.searchProperties(searchCriteria);
+
+    // Ensure each property has a valid images array
+    const processedProperties = properties.map((property) => {
+      // If images is not an array or is missing, set to []
+      if (!Array.isArray(property.images)) {
+        property.images = [];
+      }
+      // If images array contains non-string values, filter them out
+      property.images = property.images.filter(
+        (img) => typeof img === "string" && img.length > 0,
+      );
+      return property;
+    });
+
+    console.log(
+      `✅ Search completed, found ${processedProperties.length} properties`,
+    );
+    res.json({
+      success: true,
+      properties: processedProperties,
+      count: processedProperties.length,
+    });
+  } catch (error) {
+    console.error("❌ Error searching properties:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// Get Featured Properties
+router.get("/featured", optionalAuth, async (req, res) => {
+  try {
+    console.log("⭐ Featured properties endpoint hit - GET /featured");
+
+    const limit = parseInt(req.query.limit) || 10;
+    console.log("📊 Requested limit:", limit);
+
+    const properties = await mongoPropertyService.getFeaturedProperties(limit);
+
+    // Ensure each property has a valid images array
+    const processedProperties = properties.map((property) => {
+      // If images is not an array or is missing, set to []
+      if (!Array.isArray(property.images)) {
+        property.images = [];
+      }
+      // If images array contains non-string values, filter them out
+      property.images = property.images.filter(
+        (img) => typeof img === "string" && img.length > 0,
+      );
+      return property;
+    });
+
+    console.log(
+      `✅ Featured properties fetched, found ${processedProperties.length} properties`,
+    );
+    res.json({
+      success: true,
+      properties: processedProperties,
+      count: processedProperties.length,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching featured properties:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 });

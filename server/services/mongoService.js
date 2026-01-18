@@ -4,118 +4,121 @@ import {
   Booking,
   Favorite,
   Featured,
-} from '../models/mongodb-models.js'
+} from "../models/mongodb-models.js";
 
 // Property Service for MongoDB
 export const mongoPropertyService = {
   async getAllProperties(filters = {}, pagination = {}) {
     try {
-      const query = { isActive: true }
+      const query = { isActive: true };
 
       // Apply filters
       if (filters.city) {
-        query['address.city'] = new RegExp(filters.city, 'i') // Case insensitive
+        query["address.city"] = new RegExp(filters.city, "i"); // Case insensitive
       }
       if (filters.propertyType) {
-        query.type = filters.propertyType
+        query.type = filters.propertyType;
       }
       if (filters.bedrooms) {
-        query.bedrooms = filters.bedrooms
+        query.bedrooms = filters.bedrooms;
       }
       if (filters.bathrooms) {
-        query.bathrooms = filters.bathrooms
+        query.bathrooms = filters.bathrooms;
       }
       if (filters.minPrice) {
-        query.price = { ...query.price, $gte: filters.minPrice }
+        query.price = { ...query.price, $gte: filters.minPrice };
       }
       if (filters.maxPrice) {
-        query.price = { ...query.price, $lte: filters.maxPrice }
+        query.price = { ...query.price, $lte: filters.maxPrice };
       }
 
-      let queryBuilder = Property.find(query).sort({ createdAt: -1, views: -1 })
+      let queryBuilder = Property.find(query).sort({
+        createdAt: -1,
+        views: -1,
+      });
 
       // Apply pagination if provided
       if (pagination.skip !== undefined) {
-        queryBuilder = queryBuilder.skip(pagination.skip)
+        queryBuilder = queryBuilder.skip(pagination.skip);
       }
       if (pagination.limit !== undefined) {
-        queryBuilder = queryBuilder.limit(pagination.limit)
+        queryBuilder = queryBuilder.limit(pagination.limit);
       } else {
-        queryBuilder = queryBuilder.limit(50) // Default limit if no pagination
+        queryBuilder = queryBuilder.limit(50); // Default limit if no pagination
       }
 
-      const properties = await queryBuilder
+      const properties = await queryBuilder;
 
-      return properties
+      return properties;
     } catch (error) {
-      console.error('Error fetching properties:', error)
-      throw new Error('Failed to fetch properties')
+      console.error("Error fetching properties:", error);
+      throw new Error("Failed to fetch properties");
     }
   },
 
   async getPropertiesCount(filters = {}) {
     try {
-      const query = { isActive: true }
+      const query = { isActive: true };
 
       // Apply same filters as getAllProperties
       if (filters.city) {
-        query['address.city'] = new RegExp(filters.city, 'i')
+        query["address.city"] = new RegExp(filters.city, "i");
       }
       if (filters.propertyType) {
-        query.type = filters.propertyType
+        query.type = filters.propertyType;
       }
       if (filters.bedrooms) {
-        query.bedrooms = filters.bedrooms
+        query.bedrooms = filters.bedrooms;
       }
       if (filters.bathrooms) {
-        query.bathrooms = filters.bathrooms
+        query.bathrooms = filters.bathrooms;
       }
       if (filters.minPrice) {
-        query.price = { ...query.price, $gte: filters.minPrice }
+        query.price = { ...query.price, $gte: filters.minPrice };
       }
       if (filters.maxPrice) {
-        query.price = { ...query.price, $lte: filters.maxPrice }
+        query.price = { ...query.price, $lte: filters.maxPrice };
       }
 
-      return await Property.countDocuments(query)
+      return await Property.countDocuments(query);
     } catch (error) {
-      console.error('Error counting properties:', error)
-      throw new Error('Failed to count properties')
+      console.error("Error counting properties:", error);
+      throw new Error("Failed to count properties");
     }
   },
 
   async getProperty(propertyId) {
     try {
-      console.log('🔍 Looking up property with ID:', propertyId)
+      console.log("🔍 Looking up property with ID:", propertyId);
 
       // Validate the propertyId
       if (!propertyId) {
-        throw new Error('Property ID is required')
+        throw new Error("Property ID is required");
       }
 
       // Handle different ID formats
-      let query
+      let query;
       if (propertyId.match(/^[0-9a-fA-F]{24}$/)) {
         // Valid MongoDB ObjectId
-        query = { _id: propertyId, isActive: true }
+        query = { _id: propertyId, isActive: true };
       } else {
         // Could be a custom ID or invalid format
-        console.log('❌ Invalid MongoDB ObjectId format:', propertyId)
-        return null
+        console.log("❌ Invalid MongoDB ObjectId format:", propertyId);
+        return null;
       }
 
-      const property = await Property.findOne(query)
+      const property = await Property.findOne(query);
 
       if (!property) {
-        console.log('❌ Property not found in database for ID:', propertyId)
-        return null
+        console.log("❌ Property not found in database for ID:", propertyId);
+        return null;
       }
 
-      console.log('✅ Property found:', property.title, 'ID:', property._id)
-      return property
+      console.log("✅ Property found:", property.title, "ID:", property._id);
+      return property;
     } catch (error) {
-      console.error('❌ Error in getProperty service:', error)
-      throw new Error('Failed to fetch property: ' + error.message)
+      console.error("❌ Error in getProperty service:", error);
+      throw new Error("Failed to fetch property: " + error.message);
     }
   },
 
@@ -125,13 +128,13 @@ export const mongoPropertyService = {
         ...propertyData,
         hostId,
         views: 0,
-      })
+      });
 
-      const savedProperty = await property.save()
-      return savedProperty._id.toString()
+      const savedProperty = await property.save();
+      return savedProperty._id.toString();
     } catch (error) {
-      console.error('Error creating property:', error)
-      throw new Error('Failed to create property')
+      console.error("Error creating property:", error);
+      throw new Error("Failed to create property");
     }
   },
 
@@ -140,20 +143,20 @@ export const mongoPropertyService = {
       await Property.findByIdAndUpdate(
         propertyId,
         { ...updateData, updatedAt: new Date() },
-        { new: true }
-      )
+        { new: true },
+      );
     } catch (error) {
-      console.error('Error updating property:', error)
-      throw new Error('Failed to update property')
+      console.error("Error updating property:", error);
+      throw new Error("Failed to update property");
     }
   },
 
   async deleteProperty(propertyId) {
     try {
-      await Property.findByIdAndUpdate(propertyId, { isActive: false })
+      await Property.findByIdAndUpdate(propertyId, { isActive: false });
     } catch (error) {
-      console.error('Error deleting property:', error)
-      throw new Error('Failed to delete property')
+      console.error("Error deleting property:", error);
+      throw new Error("Failed to delete property");
     }
   },
 
@@ -161,18 +164,18 @@ export const mongoPropertyService = {
     try {
       return await Property.find({ hostId, isActive: true }).sort({
         createdAt: -1,
-      })
+      });
     } catch (error) {
-      console.error('Error fetching host properties:', error)
-      throw new Error('Failed to fetch host properties')
+      console.error("Error fetching host properties:", error);
+      throw new Error("Failed to fetch host properties");
     }
   },
 
   async incrementViews(propertyId) {
     try {
-      await Property.findByIdAndUpdate(propertyId, { $inc: { views: 1 } })
+      await Property.findByIdAndUpdate(propertyId, { $inc: { views: 1 } });
     } catch (error) {
-      console.error('Error incrementing views:', error)
+      console.error("Error incrementing views:", error);
       // Don't throw error as this is not critical
     }
   },
@@ -182,17 +185,17 @@ export const mongoPropertyService = {
     try {
       // For now, skip caching to avoid schema issues
       // Just return fresh luxury images each time
-      const bestImages = await this.selectBestWeeklyImages()
+      const bestImages = await this.selectBestWeeklyImages();
 
       return {
         images: bestImages,
         lastUpdated: new Date(),
         week: Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000)),
         cached: false,
-      }
+      };
     } catch (error) {
-      console.error('Error fetching weekly featured images:', error)
-      throw new Error('Failed to fetch weekly featured images')
+      console.error("Error fetching weekly featured images:", error);
+      throw new Error("Failed to fetch weekly featured images");
     }
   },
 
@@ -205,12 +208,12 @@ export const mongoPropertyService = {
         images: { $exists: true, $ne: [] },
       })
         .sort({ price: -1, views: -1 })
-        .limit(6) // Get exactly what we need
+        .limit(6); // Get exactly what we need
 
       // If no properties found, return empty array
       if (properties.length === 0) {
-        console.log('No properties found for weekly featured images')
-        return []
+        console.log("No properties found for weekly featured images");
+        return [];
       }
 
       // Convert properties to image objects
@@ -219,11 +222,11 @@ export const mongoPropertyService = {
         url: property.images[0],
         title: property.title || `${property.type} Property`,
         type: property.type,
-        category: property.category || 'Featured',
-        location: property.address?.city || 'Featured Location',
+        category: property.category || "Featured",
+        location: property.address?.city || "Featured Location",
         price: property.price,
         originalPrice: property.originalPrice || property.price,
-        currency: property.currency || 'NGN',
+        currency: property.currency || "NGN",
         rating: property.averageRating || 4.8,
         quality: property.imageQuality || 8,
         isPremium: property.price >= 500000,
@@ -234,12 +237,12 @@ export const mongoPropertyService = {
         views: property.views || 0,
         hostName: property.hostName,
         propertyId: property._id.toString(),
-      }))
+      }));
 
-      return selectedImages
+      return selectedImages;
     } catch (error) {
-      console.error('Error selecting best weekly images:', error)
-      return []
+      console.error("Error selecting best weekly images:", error);
+      return [];
     }
   },
 
@@ -251,17 +254,17 @@ export const mongoPropertyService = {
         images: { $exists: true, $ne: [] },
       })
         .sort({ views: -1, price: -1 })
-        .limit(limit)
+        .limit(limit);
 
       return properties.map((property) => ({
         id: property._id.toString(),
         url: property.images[0],
         title: property.title || `${property.type} Property`,
         type: property.type,
-        category: property.category || 'Featured',
-        location: property.address?.city || 'Featured Location',
+        category: property.category || "Featured",
+        location: property.address?.city || "Featured Location",
         price: property.price,
-        currency: property.currency || 'NGN',
+        currency: property.currency || "NGN",
         rating: property.averageRating || 4.5,
         quality: property.imageQuality || 7,
         views: property.views || 0,
@@ -270,16 +273,16 @@ export const mongoPropertyService = {
         amenities: property.amenities || [],
         hostName: property.hostName,
         propertyId: property._id.toString(),
-      }))
+      }));
     } catch (error) {
-      console.error('Error fetching random best images:', error)
-      return []
+      console.error("Error fetching random best images:", error);
+      return [];
     }
   },
 
-  async markImagesAsUsed(images, section = 'header') {
+  async markImagesAsUsed(images, section = "header") {
     try {
-      const imageUrls = images.map((img) => img.url).filter(Boolean)
+      const imageUrls = images.map((img) => img.url).filter(Boolean);
 
       await Featured.findOneAndUpdate(
         { type: `used-${section}` },
@@ -288,20 +291,20 @@ export const mongoPropertyService = {
           lastUpdated: new Date(),
           isActive: true,
         },
-        { upsert: true }
-      )
+        { upsert: true },
+      );
     } catch (error) {
-      console.error('Error marking images as used:', error)
+      console.error("Error marking images as used:", error);
     }
   },
 
-  async getUsedImages(section = 'header') {
+  async getUsedImages(section = "header") {
     try {
-      const used = await Featured.findOne({ type: `used-${section}` })
-      return used ? used.urls || [] : [] // Use urls field
+      const used = await Featured.findOne({ type: `used-${section}` });
+      return used ? used.urls || [] : []; // Use urls field
     } catch (error) {
-      console.error('Error getting used images:', error)
-      return []
+      console.error("Error getting used images:", error);
+      return [];
     }
   },
 
@@ -313,13 +316,13 @@ export const mongoPropertyService = {
         price: { $gte: 300000 }, // Premium price threshold
         images: { $exists: true, $ne: [] },
         $or: [
-          { category: { $in: ['Luxury', 'Premium', 'Executive'] } },
+          { category: { $in: ["Luxury", "Premium", "Executive"] } },
           { hostPremium: true },
           { price: { $gte: 500000 } },
         ],
       })
         .sort({ price: -1, views: -1, averageRating: -1 })
-        .limit(limit * 2) // Get more for better selection
+        .limit(limit * 2); // Get more for better selection
 
       const selectedImages = premiumProperties
         .slice(0, limit)
@@ -328,11 +331,11 @@ export const mongoPropertyService = {
           url: property.images[0],
           title: property.title || `Premium ${property.type}`,
           type: property.type,
-          category: property.category || 'Premium',
-          location: property.address?.city || 'Premium Location',
+          category: property.category || "Premium",
+          location: property.address?.city || "Premium Location",
           price: property.price,
           originalPrice: property.originalPrice || property.price,
-          currency: property.currency || 'NGN',
+          currency: property.currency || "NGN",
           rating: property.averageRating || 4.7,
           quality: property.imageQuality || 8,
           isPremium: true,
@@ -344,12 +347,12 @@ export const mongoPropertyService = {
           hostName: property.hostName,
           hostPremium: property.hostPremium || false,
           propertyId: property._id.toString(),
-        }))
+        }));
 
-      return selectedImages
+      return selectedImages;
     } catch (error) {
-      console.error('Error fetching premium featured images:', error)
-      return []
+      console.error("Error fetching premium featured images:", error);
+      return [];
     }
   },
 
@@ -363,17 +366,17 @@ export const mongoPropertyService = {
         images: { $exists: true, $ne: [] },
       })
         .sort({ imageQuality: -1, price: -1, averageRating: -1 })
-        .limit(12)
+        .limit(12);
 
       return showcaseProperties.map((property) => ({
         id: property._id.toString(),
         url: property.images[0],
         title: property.title || `Quality ${property.type}`,
         type: property.type,
-        category: property.category || 'Showcase',
-        location: property.address?.city || 'Premium Location',
+        category: property.category || "Showcase",
+        location: property.address?.city || "Premium Location",
         price: property.price,
-        currency: property.currency || 'NGN',
+        currency: property.currency || "NGN",
         rating: property.averageRating || 4.6,
         quality: property.imageQuality || 8,
         amenities: property.amenities || [],
@@ -382,10 +385,10 @@ export const mongoPropertyService = {
         views: property.views || 0,
         hostName: property.hostName,
         propertyId: property._id.toString(),
-      }))
+      }));
     } catch (error) {
-      console.error('Error fetching premium showcase images:', error)
-      return []
+      console.error("Error fetching premium showcase images:", error);
+      return [];
     }
   },
 
@@ -398,19 +401,19 @@ export const mongoPropertyService = {
         images: { $exists: true, $ne: [] },
       })
         .sort({ price: -1, views: -1 })
-        .limit(limit)
+        .limit(limit);
 
       return properties.map((property) => ({
         id: property._id.toString(),
         title: property.title,
         description: property.description,
         type: property.type,
-        category: property.category || 'Premium',
+        category: property.category || "Premium",
         price: property.price,
-        currency: property.currency || 'NGN',
+        currency: property.currency || "NGN",
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
-        location: property.address?.city || 'Premium Location',
+        location: property.address?.city || "Premium Location",
         fullAddress: property.address,
         images: property.images,
         amenities: property.amenities || [],
@@ -423,12 +426,132 @@ export const mongoPropertyService = {
         isAvailable: property.isAvailable,
         isFeatured: property.isFeatured,
         createdAt: property.createdAt,
-      }))
+      }));
     } catch (error) {
-      console.error('Error fetching premium properties:', error)
-      return []
+      console.error("Error fetching premium properties:", error);
+      return [];
     }
   },
-}
 
-export default mongoPropertyService
+  async getFeaturedProperties(limit = 10) {
+    try {
+      console.log(`⭐ Fetching ${limit} featured properties`);
+
+      // Get properties that are marked as featured, or fallback to high-rated properties
+      const query = {
+        isActive: true,
+        $or: [
+          { isFeatured: true },
+          { averageRating: { $gte: 4.5 } },
+          { category: { $in: ["Premium", "Luxury", "Executive"] } },
+        ],
+      };
+
+      const properties = await Property.find(query)
+        .sort({
+          isFeatured: -1, // Featured properties first
+          averageRating: -1, // Then by rating
+          views: -1, // Then by views
+          createdAt: -1, // Finally by creation date
+        })
+        .limit(limit);
+
+      console.log(`✅ Found ${properties.length} featured properties`);
+      return properties;
+    } catch (error) {
+      console.error("❌ Error fetching featured properties:", error);
+      throw new Error("Failed to fetch featured properties: " + error.message);
+    }
+  },
+
+  async searchProperties(searchCriteria) {
+    try {
+      console.log("🔍 Searching properties with criteria:", searchCriteria);
+
+      const query = { isActive: true };
+
+      // Apply location filter
+      if (searchCriteria.location) {
+        // Search in address fields
+        query.$or = [
+          { "address.city": new RegExp(searchCriteria.location, "i") },
+          { "address.state": new RegExp(searchCriteria.location, "i") },
+          { "address.country": new RegExp(searchCriteria.location, "i") },
+          { title: new RegExp(searchCriteria.location, "i") },
+          { description: new RegExp(searchCriteria.location, "i") },
+        ];
+      }
+
+      // Apply property type filter
+      if (searchCriteria.propertyType) {
+        query.type = new RegExp(searchCriteria.propertyType, "i");
+      }
+
+      // Apply price range filters
+      if (
+        searchCriteria.minPrice !== undefined ||
+        searchCriteria.maxPrice !== undefined
+      ) {
+        query.price = {};
+        if (searchCriteria.minPrice !== undefined) {
+          query.price.$gte = searchCriteria.minPrice;
+        }
+        if (searchCriteria.maxPrice !== undefined) {
+          query.price.$lte = searchCriteria.maxPrice;
+        }
+      }
+
+      // Apply availability filter
+      if (searchCriteria.available !== undefined) {
+        query.isAvailable = searchCriteria.available;
+      }
+
+      // Apply status filter
+      if (searchCriteria.status) {
+        query.status = searchCriteria.status;
+      }
+
+      // Apply keyword search across multiple fields
+      if (searchCriteria.search) {
+        const searchRegex = new RegExp(searchCriteria.search, "i");
+        const searchFields = searchCriteria.searchFields || [
+          "title",
+          "description",
+          "amenities",
+        ];
+
+        const searchConditions = searchFields.map((field) => {
+          if (field === "amenities") {
+            return { amenities: { $in: [searchRegex] } };
+          } else {
+            return { [field]: searchRegex };
+          }
+        });
+
+        if (query.$or) {
+          query.$and = [{ $or: query.$or }, { $or: searchConditions }];
+          delete query.$or;
+        } else {
+          query.$or = searchConditions;
+        }
+      }
+
+      console.log("🏗️ Built search query:", JSON.stringify(query, null, 2));
+
+      const properties = await Property.find(query)
+        .sort({ createdAt: -1, views: -1 })
+        .limit(50); // Limit results to prevent overwhelming responses
+
+      console.log(
+        `✅ Found ${properties.length} properties matching search criteria`,
+      );
+
+      return properties;
+    } catch (error) {
+      console.error("❌ Error searching properties:", error);
+      throw new Error("Failed to search properties: " + error.message);
+    }
+  },
+};
+
+export default mongoPropertyService;
