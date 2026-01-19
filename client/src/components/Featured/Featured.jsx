@@ -133,9 +133,9 @@ const Featured = () => {
   };
 
   return (
-    <section className="py-10 lg:py-14 bg-gradient-to-br from-neutral-25 via-white to-primary-50 relative overflow-hidden [content-visibility:auto] [contain-intrinsic-size:1px_1000px]">
+    <section className="py-10 lg:py-14 bg-gradient-to-br from-neutral-25 via-white to-primary-50 relative [content-visibility:auto] [contain-intrinsic-size:1px_1000px]">
       {/* Background Decorations */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0">
         <FloatingElement
           direction="y"
           distance={20}
@@ -172,21 +172,27 @@ const Featured = () => {
                 verified guests
               </p>
             </div>
-            <div className="flex-shrink-0">
-              <AnimatedButton
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+            {/* <div className="flex-shrink-0">
+              <button
+                type="button"
+                onClick={() => {
                   console.log("Button clicked - navigating to /listings");
-                  navigate("/listings");
+                  console.log("Navigate function:", navigate);
+                  alert("Button clicked!"); // Temporary alert for testing
+                  try {
+                    navigate("/listings");
+                    console.log("Navigation attempted");
+                  } catch (error) {
+                    console.error("Navigation error:", error);
+                  }
                 }}
-                className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center gap-3 cursor-pointer"
-                style={{ cursor: "pointer" }}
+                className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center gap-3"
+                style={{ cursor: "pointer !important" }}
               >
                 View All Properties
                 <HiArrowRight className="text-lg group-hover:translate-x-1 transition-transform duration-300" />
-              </AnimatedButton>
-            </div>
+              </button>
+            </div> */}
           </div>
         </ScrollReveal>
         {/* Properties Grid */}

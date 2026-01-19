@@ -9,6 +9,7 @@ import useScrollToTop from "../../hooks/useScrollToTop";
 import { toast } from "sonner";
 import { useAPI } from "../../contexts/APIContext";
 import GoogleAuth from "../../config/googleAuth";
+import { HostTokenManager } from "../../services/jwtAuthService";
 
 const Hostlogin = () => {
   // Use scroll to top hook
@@ -52,7 +53,8 @@ const Hostlogin = () => {
       // Call the actual API login with isHost = true
       const result = await login(email, password, true);
       if (result?.token) {
-        localStorage.setItem("homehive_host_access_token", result.token);
+        HostTokenManager.setTokens(result.token, result.refreshToken);
+        HostTokenManager.setUserData(result.user || result.host);
       }
       if (result.success) {
         toast.success("Login successful! Welcome back to your dashboard!", {
@@ -97,7 +99,8 @@ const Hostlogin = () => {
         isHost: true,
       });
       if (result?.token) {
-        localStorage.setItem("homehive_host_access_token", result.token);
+        HostTokenManager.setTokens(result.token, result.refreshToken);
+        HostTokenManager.setUserData(result.user || result.host);
       }
       if (result.success) {
         toast.success("Google login successful! Welcome to your dashboard!", {

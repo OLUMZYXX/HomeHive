@@ -185,7 +185,8 @@ const Listings = () => {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      // Listings page is for users, so logout as user (isHost = false)
+      await logout(false);
       toast.success("Logged out successfully");
       setProfileMenuOpen(false);
       navigate("/");

@@ -20,6 +20,7 @@ import {
 import { HiArrowLeft, HiArrowRight, HiRefresh } from "react-icons/hi";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
 import {
   ScrollReveal,
@@ -336,26 +337,27 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking, index }) => {
               </button>
             )}
 
-            {booking.status === "pending" && (
-              <>
-                <button
-                  onClick={() => onCancelBooking(booking)}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all duration-300"
-                >
-                  <FaTimesCircle className="text-sm" />
-                  Cancel
-                </button>
-                <button
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 hover:shadow-lg"
-                  onClick={() =>
-                    navigate("/checkout", { state: { bookingData: booking } })
-                  }
-                >
-                  <FaCreditCard className="text-sm" />
-                  Pay
-                </button>
-              </>
-            )}
+            {booking.status === "pending" &&
+              booking.paymentStatus !== "paid" && (
+                <>
+                  <button
+                    onClick={() => onCancelBooking(booking)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 hover:border-red-300 transition-all duration-300"
+                  >
+                    <FaTimesCircle className="text-sm" />
+                    Cancel
+                  </button>
+                  <button
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 hover:shadow-lg"
+                    onClick={() =>
+                      navigate("/checkout", { state: { bookingData: booking } })
+                    }
+                  >
+                    <FaCreditCard className="text-sm" />
+                    Pay
+                  </button>
+                </>
+              )}
           </div>
         </div>
       </motion.div>
@@ -368,6 +370,7 @@ BookingCard.propTypes = {
     _id: PropTypes.string,
     id: PropTypes.string,
     status: PropTypes.string,
+    paymentStatus: PropTypes.string,
     propertyTitle: PropTypes.string,
     propertyLocation: PropTypes.string,
     propertyId: PropTypes.string,
@@ -421,12 +424,28 @@ FilterTab.propTypes = {
 
 const MyBookings = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, getBookings, cancelBooking } = useAPI();
+  const {
+    user,
+    isAuthenticated,
+    getBookings,
+    cancelBooking,
+    bookings: contextBookings,
+  } = useAPI();
 
-  const [bookings, setBookings] = useState([]);
+  const [localBookings, setLocalBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
+
+  // Use context bookings or local bookings
+  const bookings =
+    contextBookings && contextBookings.length > 0
+      ? contextBookings
+      : localBookings;
+
+  console.log("📊 MyBookings - contextBookings:", contextBookings);
+  console.log("📊 MyBookings - localBookings:", localBookings);
+  console.log("📊 MyBookings - final bookings:", bookings);
 
   // Modal state
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
@@ -441,21 +460,14 @@ const MyBookings = () => {
     if (!bookingToCancel) return;
 
     try {
-      setLoading(true);
       setCancelModalOpen(false);
+      setLoading(true);
 
       const bookingIdToCancel = bookingToCancel._id || bookingToCancel.id;
       await cancelBooking(bookingIdToCancel);
 
-      setBookings((prevBookings) =>
-        prevBookings.map((booking) => {
-          const currentBookingId = booking._id || booking.id;
-          if (currentBookingId === bookingIdToCancel) {
-            return { ...booking, status: "cancelled" };
-          }
-          return booking;
-        }),
-      );
+      // Refetch bookings to get the updated list from the server
+      await getBookings();
 
       toast.success("Booking cancelled successfully!");
     } catch (error) {
@@ -484,21 +496,25 @@ const MyBookings = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       if (!isAuthenticated) {
+        console.log("❌ User not authenticated, redirecting to signin");
         navigate("/signin");
         return;
       }
 
       if (!user || (!user.id && !user.uid && !user.email)) {
+        console.log("❌ No valid user data:", user);
         toast.error("Unable to load user data. Please try logging in again.");
         navigate("/signin");
         return;
       }
 
       try {
+        console.log("🔄 Fetching bookings for user:", user);
         setLoading(true);
         setError(null);
         const userBookings = await getBookings();
-        setBookings(userBookings || []);
+        console.log("✅ Bookings received:", userBookings);
+        setLocalBookings(userBookings || []);
       } catch (err) {
         console.error("Error fetching bookings:", err);
         const errorMessage =
@@ -577,7 +593,8 @@ const MyBookings = () => {
 
   return (
     <div className="overflow-x-hidden bg-white min-h-screen flex flex-col">
-      <main className="flex-grow">
+      <Navbar />
+      <main className="flex-grow pt-16">
         {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-primary-50 via-white to-neutral-50 overflow-hidden">
           {/* Background Decorative Elements */}
@@ -596,25 +613,25 @@ const MyBookings = () => {
             />
           </div>
 
-          <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-32 pb-12 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
+          <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-20 pb-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
             <ScrollReveal direction="up" delay={0.2}>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 {/* Left: Back Button & Title */}
                 <div>
                   <button
                     onClick={() => navigate("/listings")}
-                    className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium mb-4 group"
+                    className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-medium mb-3 group"
                   >
                     <HiArrowLeft className="group-hover:-translate-x-1 transition-transform duration-300" />
                     Back to Listings
                   </button>
-                  <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
                     My{" "}
                     <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text">
                       Bookings
                     </span>
                   </h1>
-                  <p className="text-lg text-gray-600">
+                  <p className="text-base text-gray-600">
                     Manage your reservations and track your upcoming stays
                   </p>
                 </div>

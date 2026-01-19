@@ -3,57 +3,84 @@ import React, {
   useContext,
   useReducer,
   useCallback,
-} from 'react'
-import axiosInstance from '../config/axios'
-import { TokenManager } from '../services/jwtAuthService'
+  useEffect,
+} from "react";
+import { useLocation } from "react-router-dom";
+import axiosInstance from "../config/axios";
+import { TokenManager, HostTokenManager } from "../services/jwtAuthService";
 
 // ================================
 // CONTEXT STATE MANAGEMENT
 // ================================
 
-// Initial state
+// Helper to determine if current path is a host route
+const isHostPath = (pathname) => {
+  const path = pathname?.toLowerCase() || "";
+  return path.includes("/host") || path.includes("/host-");
+};
+
+// Helper to get user based on current route
+const getUserForRoute = (pathname) => {
+  if (isHostPath(pathname)) {
+    return HostTokenManager.getCurrentUser();
+  } else {
+    return TokenManager.getCurrentUser();
+  }
+};
+
+// Helper to check if authenticated for current route
+const isAuthenticatedForRoute = (pathname) => {
+  if (isHostPath(pathname)) {
+    return HostTokenManager.isLoggedIn();
+  } else {
+    return TokenManager.isLoggedIn();
+  }
+};
+
+// Initial state - will be synced on route changes
 const initialState = {
-  user: TokenManager.getCurrentUser(),
-  isAuthenticated: TokenManager.isLoggedIn(),
+  user: null,
+  isAuthenticated: false,
   loading: false,
   error: null,
   properties: [],
   favorites: [],
   bookings: [],
   hostProperties: [],
-}
+};
 
 // Action types
 const actionTypes = {
-  SET_LOADING: 'SET_LOADING',
-  SET_ERROR: 'SET_ERROR',
-  CLEAR_ERROR: 'CLEAR_ERROR',
-  SET_USER: 'SET_USER',
-  CLEAR_USER: 'CLEAR_USER',
-  SET_PROPERTIES: 'SET_PROPERTIES',
-  SET_FAVORITES: 'SET_FAVORITES',
-  SET_BOOKINGS: 'SET_BOOKINGS',
-  SET_HOST_PROPERTIES: 'SET_HOST_PROPERTIES',
-  ADD_PROPERTY: 'ADD_PROPERTY',
-  UPDATE_PROPERTY: 'UPDATE_PROPERTY',
-  REMOVE_PROPERTY: 'REMOVE_PROPERTY',
-  ADD_FAVORITE: 'ADD_FAVORITE',
-  REMOVE_FAVORITE: 'REMOVE_FAVORITE',
-  ADD_BOOKING: 'ADD_BOOKING',
-  UPDATE_BOOKING: 'UPDATE_BOOKING',
-}
+  SET_LOADING: "SET_LOADING",
+  SET_ERROR: "SET_ERROR",
+  CLEAR_ERROR: "CLEAR_ERROR",
+  SET_USER: "SET_USER",
+  CLEAR_USER: "CLEAR_USER",
+  SYNC_AUTH_STATE: "SYNC_AUTH_STATE",
+  SET_PROPERTIES: "SET_PROPERTIES",
+  SET_FAVORITES: "SET_FAVORITES",
+  SET_BOOKINGS: "SET_BOOKINGS",
+  SET_HOST_PROPERTIES: "SET_HOST_PROPERTIES",
+  ADD_PROPERTY: "ADD_PROPERTY",
+  UPDATE_PROPERTY: "UPDATE_PROPERTY",
+  REMOVE_PROPERTY: "REMOVE_PROPERTY",
+  ADD_FAVORITE: "ADD_FAVORITE",
+  REMOVE_FAVORITE: "REMOVE_FAVORITE",
+  ADD_BOOKING: "ADD_BOOKING",
+  UPDATE_BOOKING: "UPDATE_BOOKING",
+};
 
 // Reducer
 const apiReducer = (state, action) => {
   switch (action.type) {
     case actionTypes.SET_LOADING:
-      return { ...state, loading: action.payload }
+      return { ...state, loading: action.payload };
 
     case actionTypes.SET_ERROR:
-      return { ...state, error: action.payload, loading: false }
+      return { ...state, error: action.payload, loading: false };
 
     case actionTypes.CLEAR_ERROR:
-      return { ...state, error: null }
+      return { ...state, error: null };
 
     case actionTypes.SET_USER:
       return {
@@ -62,7 +89,7 @@ const apiReducer = (state, action) => {
         isAuthenticated: true,
         loading: false,
         error: null,
-      }
+      };
 
     case actionTypes.CLEAR_USER:
       return {
@@ -72,113 +99,146 @@ const apiReducer = (state, action) => {
         favorites: [],
         bookings: [],
         hostProperties: [],
-      }
+      };
+
+    case actionTypes.SYNC_AUTH_STATE:
+      return {
+        ...state,
+        user: action.payload.user,
+        isAuthenticated: action.payload.isAuthenticated,
+      };
 
     case actionTypes.SET_PROPERTIES:
-      return { ...state, properties: action.payload, loading: false }
+      return { ...state, properties: action.payload, loading: false };
 
     case actionTypes.SET_FAVORITES:
-      return { ...state, favorites: action.payload, loading: false }
+      return { ...state, favorites: action.payload, loading: false };
 
     case actionTypes.SET_BOOKINGS:
-      return { ...state, bookings: action.payload, loading: false }
+      return { ...state, bookings: action.payload, loading: false };
 
     case actionTypes.SET_HOST_PROPERTIES:
-      return { ...state, hostProperties: action.payload, loading: false }
+      return { ...state, hostProperties: action.payload, loading: false };
 
     case actionTypes.ADD_PROPERTY:
       return {
         ...state,
         properties: [...state.properties, action.payload],
         hostProperties:
-          state.user?.role === 'host'
+          state.user?.role === "host"
             ? [...state.hostProperties, action.payload]
             : state.hostProperties,
-      }
+      };
 
     case actionTypes.UPDATE_PROPERTY:
       return {
         ...state,
-        properties: state.properties.map((p) =>
-          p.id === action.payload.id ? { ...p, ...action.payload } : p
-        ),
-        hostProperties: state.hostProperties.map((p) =>
-          p.id === action.payload.id ? { ...p, ...action.payload } : p
-        ),
-      }
+        properties: state.properties.map((p) => {
+          const propId = p._id || p.id;
+          const payloadId = action.payload._id || action.payload.id;
+          return propId === payloadId ? { ...p, ...action.payload } : p;
+        }),
+        hostProperties: state.hostProperties.map((p) => {
+          const propId = p._id || p.id;
+          const payloadId = action.payload._id || action.payload.id;
+          return propId === payloadId ? { ...p, ...action.payload } : p;
+        }),
+      };
 
     case actionTypes.REMOVE_PROPERTY:
       return {
         ...state,
-        properties: state.properties.filter((p) => p.id !== action.payload),
-        hostProperties: state.hostProperties.filter(
-          (p) => p.id !== action.payload
-        ),
-      }
+        properties: state.properties.filter((p) => {
+          const propId = p._id || p.id;
+          return propId !== action.payload;
+        }),
+        hostProperties: state.hostProperties.filter((p) => {
+          const propId = p._id || p.id;
+          return propId !== action.payload;
+        }),
+      };
 
     case actionTypes.ADD_FAVORITE:
       return {
         ...state,
         favorites: [...state.favorites, action.payload],
-      }
+      };
 
     case actionTypes.REMOVE_FAVORITE:
       return {
         ...state,
         favorites: state.favorites.filter(
-          (f) => f.propertyId !== action.payload
+          (f) => f.propertyId !== action.payload,
         ),
-      }
+      };
 
     case actionTypes.ADD_BOOKING:
       return {
         ...state,
         bookings: [...state.bookings, action.payload],
-      }
+      };
 
     case actionTypes.UPDATE_BOOKING:
       return {
         ...state,
-        bookings: state.bookings.map((b) =>
-          b.id === action.payload.id ? { ...b, ...action.payload } : b
-        ),
-      }
+        bookings: state.bookings.map((b) => {
+          const bookingId = b._id || b.id;
+          const payloadId = action.payload._id || action.payload.id;
+          return bookingId === payloadId ? { ...b, ...action.payload } : b;
+        }),
+      };
 
     default:
-      return state
+      return state;
   }
-}
+};
 
 // ================================
 // CONTEXT CREATION
 // ================================
 
-const APIContext = createContext()
+const APIContext = createContext();
 
 // ================================
 // API CONTEXT PROVIDER
 // ================================
 
 export const APIProvider = ({ children }) => {
-  const [state, dispatch] = useReducer(apiReducer, initialState)
+  const [state, dispatch] = useReducer(apiReducer, initialState);
+  const location = useLocation();
+
+  // ================================
+  // SYNC AUTH STATE ON ROUTE CHANGE
+  // ================================
+  useEffect(() => {
+    // Sync authentication state based on current route
+    const pathname = location.pathname;
+    const user = getUserForRoute(pathname);
+    const isAuthenticated = isAuthenticatedForRoute(pathname);
+
+    dispatch({
+      type: actionTypes.SYNC_AUTH_STATE,
+      payload: { user, isAuthenticated },
+    });
+  }, [location.pathname]);
 
   // ================================
   // HELPER FUNCTIONS
   // ================================
 
   const setLoading = useCallback((loading) => {
-    dispatch({ type: actionTypes.SET_LOADING, payload: loading })
-  }, [])
+    dispatch({ type: actionTypes.SET_LOADING, payload: loading });
+  }, []);
 
   const setError = useCallback((error) => {
     const errorMessage =
-      error.response?.data?.message || error.message || 'An error occurred'
-    dispatch({ type: actionTypes.SET_ERROR, payload: errorMessage })
-  }, [])
+      error.response?.data?.message || error.message || "An error occurred";
+    dispatch({ type: actionTypes.SET_ERROR, payload: errorMessage });
+  }, []);
 
   const clearError = useCallback(() => {
-    dispatch({ type: actionTypes.CLEAR_ERROR })
-  }, [])
+    dispatch({ type: actionTypes.CLEAR_ERROR });
+  }, []);
 
   // ================================
   // AUTHENTICATION API CALLS
@@ -187,225 +247,253 @@ export const APIProvider = ({ children }) => {
   const register = useCallback(
     async (userData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.post('/auth/register', userData)
-        const { user, tokens } = response.data
+        const response = await axiosInstance.post("/auth/register", userData);
+        const { user, tokens } = response.data;
 
         // Store tokens in localStorage
         if (tokens) {
-          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
-          TokenManager.setUserData(user)
+          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+          TokenManager.setUserData(user);
         }
 
-        dispatch({ type: actionTypes.SET_USER, payload: user })
-        return response.data
+        dispatch({ type: actionTypes.SET_USER, payload: user });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const registerHost = useCallback(
     async (hostData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.post(
-          '/auth/register-host',
-          hostData
-        )
-        const { host, tokens } = response.data
+          "/auth/register-host",
+          hostData,
+        );
+        const { host, tokens } = response.data;
 
-        // Store tokens in localStorage
+        // Store tokens in localStorage using HostTokenManager
         if (tokens) {
-          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
-          TokenManager.setUserData(host)
+          HostTokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+          HostTokenManager.setUserData(host);
         }
 
-        dispatch({ type: actionTypes.SET_USER, payload: host })
-        return response.data
+        dispatch({ type: actionTypes.SET_USER, payload: host });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const login = useCallback(
     async (email, password, isHost = false) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         // Use different endpoint for host login
-        const endpoint = isHost ? '/auth/host-login' : '/auth/login'
+        const endpoint = isHost ? "/auth/host-login" : "/auth/login";
         const requestData = isHost
           ? { email, password }
-          : { email, password, isHost }
+          : { email, password, isHost };
 
-        const response = await axiosInstance.post(endpoint, requestData)
+        const response = await axiosInstance.post(endpoint, requestData);
 
-        const { user, tokens } = response.data
+        const { user, tokens } = response.data;
 
-        // Store tokens in localStorage
+        // Store tokens in localStorage using appropriate manager
         if (tokens) {
-          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
-          TokenManager.setUserData(user)
+          if (isHost) {
+            HostTokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+            HostTokenManager.setUserData(user);
+          } else {
+            TokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+            TokenManager.setUserData(user);
+          }
         }
 
-        dispatch({ type: actionTypes.SET_USER, payload: user })
-        return response.data
+        dispatch({ type: actionTypes.SET_USER, payload: user });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const googleAuth = useCallback(
     async (idToken, userData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         // Use different endpoint for host Google auth
-        const endpoint = userData.isHost ? '/auth/google-host' : '/auth/google'
+        const endpoint = userData.isHost ? "/auth/google-host" : "/auth/google";
 
         const response = await axiosInstance.post(endpoint, {
           idToken,
           userData,
-        })
-        console.log('✅ Google auth API response:', response.data)
+        });
+        console.log("✅ Google auth API response:", response.data);
 
-        const { user, tokens } = response.data
+        const { user, tokens } = response.data;
 
-        // Store tokens in localStorage
+        // Store tokens in localStorage using appropriate manager
         if (tokens) {
-          TokenManager.setTokens(tokens.accessToken, tokens.refreshToken)
-          TokenManager.setUserData(user)
-          console.log('✅ Tokens stored in localStorage')
+          if (userData.isHost) {
+            HostTokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+            HostTokenManager.setUserData(user);
+          } else {
+            TokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
+            TokenManager.setUserData(user);
+          }
+          console.log("✅ Tokens stored in localStorage");
         }
 
-        dispatch({ type: actionTypes.SET_USER, payload: user })
-        console.log('✅ User state updated:', user)
-        return response.data
+        dispatch({ type: actionTypes.SET_USER, payload: user });
+        console.log("✅ User state updated:", user);
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
-  const logout = useCallback(async () => {
-    try {
-      setLoading(true)
-      await axiosInstance.post('/auth/logout')
+  const logout = useCallback(
+    async (isHost = false) => {
+      try {
+        setLoading(true);
+        await axiosInstance.post("/auth/logout");
 
-      TokenManager.clearTokens()
-      dispatch({ type: actionTypes.CLEAR_USER })
-      return { success: true }
-    } catch (error) {
-      // Even if API call fails, clear local state
-      TokenManager.clearTokens()
-      dispatch({ type: actionTypes.CLEAR_USER })
-      setError(error)
-      throw error
-    }
-  }, [setLoading, setError])
+        // Clear appropriate tokens based on user type
+        if (isHost) {
+          HostTokenManager.clearTokens();
+        } else {
+          TokenManager.clearTokens();
+        }
+
+        dispatch({ type: actionTypes.CLEAR_USER });
+        return { success: true };
+      } catch (error) {
+        // Even if API call fails, clear local state
+        if (isHost) {
+          HostTokenManager.clearTokens();
+        } else {
+          TokenManager.clearTokens();
+        }
+        dispatch({ type: actionTypes.CLEAR_USER });
+        setError(error);
+        throw error;
+      }
+    },
+    [setLoading, setError],
+  );
 
   const getCurrentUser = useCallback(async () => {
     try {
-      setLoading(true)
-      clearError()
+      setLoading(true);
+      clearError();
 
-      const response = await axiosInstance.get('/auth/me')
-      const { user } = response.data
+      const response = await axiosInstance.get("/auth/me");
+      const { user } = response.data;
 
-      // Update user data in localStorage
-      TokenManager.setUserData(user)
+      // Update user data in the appropriate token manager based on route
+      const pathname = location.pathname;
+      if (isHostPath(pathname)) {
+        HostTokenManager.setUserData(user);
+      } else {
+        TokenManager.setUserData(user);
+      }
 
-      dispatch({ type: actionTypes.SET_USER, payload: user })
-      return user
+      dispatch({ type: actionTypes.SET_USER, payload: user });
+      return user;
     } catch (error) {
-      setError(error)
-      throw error
+      setError(error);
+      throw error;
     }
-  }, [setLoading, setError, clearError])
+  }, [setLoading, setError, clearError, location.pathname]);
 
   const changePassword = useCallback(
     async (currentPassword, newPassword) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.put('/auth/change-password', {
+        const response = await axiosInstance.put("/auth/change-password", {
           currentPassword,
           newPassword,
-        })
+        });
 
-        return response.data
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const resetPassword = useCallback(
     async (email, isHost = false) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.post('/auth/reset-password', {
+        const response = await axiosInstance.post("/auth/reset-password", {
           email,
           isHost,
-        })
+        });
 
-        return response.data
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const updateProfile = useCallback(
     async (profileData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.put('/profile', profileData)
+        const response = await axiosInstance.put("/profile", profileData);
 
         // Update user in state
-        const updatedUser = { ...state.user, ...profileData }
-        dispatch({ type: actionTypes.SET_USER, payload: updatedUser })
+        const updatedUser = { ...state.user, ...profileData };
+        dispatch({ type: actionTypes.SET_USER, payload: updatedUser });
 
-        return response.data
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [state.user, setLoading, setError, clearError]
-  )
+    [state.user, setLoading, setError, clearError],
+  );
 
   // ================================
   // PROPERTIES API CALLS
@@ -414,393 +502,393 @@ export const APIProvider = ({ children }) => {
   const getProperties = useCallback(
     async (filters = {}) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.get('/properties', {
+        const response = await axiosInstance.get("/properties", {
           params: filters,
-        })
-        const { properties } = response.data
+        });
+        const { properties } = response.data;
 
-        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties })
-        return properties
+        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties });
+        return properties;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const getProperty = useCallback(
     async (id) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.get(`/properties/${id}`)
-        return response.data.property
+        const response = await axiosInstance.get(`/properties/${id}`);
+        return response.data.property;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const createProperty = useCallback(
     async (propertyData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.post(
-          '/auth/host/properties',
-          propertyData
-        )
-        const { data } = response.data
+          "/auth/host/properties",
+          propertyData,
+        );
+        const { data } = response.data;
 
-        dispatch({ type: actionTypes.ADD_PROPERTY, payload: data })
-        return data
+        dispatch({ type: actionTypes.ADD_PROPERTY, payload: data });
+        return data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const updateProperty = useCallback(
     async (id, propertyData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.put(
           `/auth/host/properties/${id}`,
-          propertyData
-        )
-        const { data } = response.data
+          propertyData,
+        );
+        const { data } = response.data;
 
         dispatch({
           type: actionTypes.UPDATE_PROPERTY,
           payload: { id, ...data },
-        })
-        return data
+        });
+        return data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const deleteProperty = useCallback(
     async (id) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.delete(
-          `/auth/host/properties/${id}`
-        )
+          `/auth/host/properties/${id}`,
+        );
 
-        dispatch({ type: actionTypes.REMOVE_PROPERTY, payload: id })
-        return response.data
+        dispatch({ type: actionTypes.REMOVE_PROPERTY, payload: id });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const getHostProperties = useCallback(async () => {
     try {
-      setLoading(true)
-      clearError()
+      setLoading(true);
+      clearError();
 
-      console.log('🔍 Fetching host properties...')
-      console.log('📍 Endpoint: /auth/host/properties')
-      console.log('🔐 User token exists:', !!TokenManager.getAccessToken())
+      console.log("🔍 Fetching host properties...");
+      console.log("📍 Endpoint: /auth/host/properties");
+      console.log("🔐 User token exists:", !!TokenManager.getAccessToken());
 
-      const response = await axiosInstance.get('/auth/host/properties')
-      console.log('✅ Host properties response:', response.data)
+      const response = await axiosInstance.get("/auth/host/properties");
+      console.log("✅ Host properties response:", response.data);
 
-      const { data } = response.data // The server returns { success, data, count, message }
+      const { data } = response.data; // The server returns { success, data, count, message }
 
-      dispatch({ type: actionTypes.SET_HOST_PROPERTIES, payload: data || [] })
-      return data || []
+      dispatch({ type: actionTypes.SET_HOST_PROPERTIES, payload: data || [] });
+      return data || [];
     } catch (error) {
-      console.error('❌ Error in getHostProperties:', error)
-      console.error('📄 Error response:', error.response?.data)
-      console.error('🔢 Error status:', error.response?.status)
-      console.error('🌐 Request URL:', error.config?.url)
+      console.error("❌ Error in getHostProperties:", error);
+      console.error("📄 Error response:", error.response?.data);
+      console.error("🔢 Error status:", error.response?.status);
+      console.error("🌐 Request URL:", error.config?.url);
       console.error(
-        'Error loading properties:',
-        error.response?.data?.message || error.message
-      )
-      setError(new Error(`Endpoint not found: ${error.config?.url}`))
-      throw error
+        "Error loading properties:",
+        error.response?.data?.message || error.message,
+      );
+      setError(new Error(`Endpoint not found: ${error.config?.url}`));
+      throw error;
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [setLoading, setError, clearError])
+  }, [setLoading, setError, clearError]);
 
   const getHostStats = useCallback(
     async (hostId) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        console.log('📊 Fetching host stats for:', hostId)
+        console.log("📊 Fetching host stats for:", hostId);
 
         const response = await axiosInstance.get(
-          `/bookings/host/${hostId}/stats`
-        )
-        console.log('✅ Host stats response:', response.data)
+          `/bookings/host/${hostId}/stats`,
+        );
+        console.log("✅ Host stats response:", response.data);
 
-        return response.data
+        return response.data;
       } catch (error) {
-        console.error('❌ Error in getHostStats:', error)
-        console.error('📄 Error response:', error.response?.data)
+        console.error("❌ Error in getHostStats:", error);
+        console.error("📄 Error response:", error.response?.data);
         setError(
           error.response?.data?.message ||
             error.message ||
-            'Failed to fetch host statistics'
-        )
-        throw error
+            "Failed to fetch host statistics",
+        );
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const checkBookingAvailability = useCallback(
     async (propertyId, checkIn, checkOut) => {
       try {
         const response = await axiosInstance.post(
-          '/bookings/check-availability',
+          "/bookings/check-availability",
           {
             propertyId,
             checkIn,
             checkOut,
-          }
-        )
+          },
+        );
 
-        return response.data
+        return response.data;
       } catch (error) {
-        console.error('❌ Error checking availability:', error)
-        throw error
+        console.error("❌ Error checking availability:", error);
+        throw error;
       }
     },
-    []
-  )
+    [],
+  );
 
   const createBookingWithValidation = useCallback(
     async (bookingData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         // First check availability
         const availabilityCheck = await checkBookingAvailability(
           bookingData.propertyId,
           bookingData.checkIn,
-          bookingData.checkOut
-        )
+          bookingData.checkOut,
+        );
 
         if (!availabilityCheck.available) {
           throw new Error(
             availabilityCheck.message ||
-              'Property is not available for the selected dates'
-          )
+              "Property is not available for the selected dates",
+          );
         }
 
         // Create the booking
-        const response = await axiosInstance.post('/bookings', bookingData)
-        console.log('✅ Booking created:', response.data)
+        const response = await axiosInstance.post("/bookings", bookingData);
+        console.log("✅ Booking created:", response.data);
 
         const newBooking = {
           id: response.data.bookingId,
           ...bookingData,
-          status: 'pending',
+          status: "pending",
           createdAt: new Date(),
-        }
+        };
 
-        dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking })
-        return response.data
+        dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking });
+        return response.data;
       } catch (error) {
-        console.error('❌ Error creating booking:', error)
+        console.error("❌ Error creating booking:", error);
         setError(
           error.response?.data?.message ||
             error.message ||
-            'Failed to create booking'
-        )
-        throw error
+            "Failed to create booking",
+        );
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError, checkBookingAvailability]
-  )
+    [setLoading, setError, clearError, checkBookingAvailability],
+  );
 
   const searchProperties = useCallback(
     async (searchCriteria) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.post(
-          '/properties/search',
-          searchCriteria
-        )
-        const { properties } = response.data
+          "/properties/search",
+          searchCriteria,
+        );
+        const { properties } = response.data;
 
-        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties })
-        return properties
+        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties });
+        return properties;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const getFeaturedProperties = useCallback(
     async (limit = 10) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.get(
-          `/properties/featured?limit=${limit}`
-        )
-        const { properties } = response.data
+          `/properties/featured?limit=${limit}`,
+        );
+        const { properties } = response.data;
 
-        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties })
-        return properties
+        dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties });
+        return properties;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   // Premium plan methods
   const getPremiumImages = useCallback(async () => {
     try {
-      const response = await axiosInstance.get('/premium/featured-images')
-      return response.data
+      const response = await axiosInstance.get("/premium/featured-images");
+      return response.data;
     } catch (error) {
-      console.error('Error fetching premium images:', error)
-      return { images: [] } // Return empty array on error
+      console.error("Error fetching premium images:", error);
+      return { images: [] }; // Return empty array on error
     }
-  }, [])
+  }, []);
 
   const getWeeklyHeaderImages = useCallback(async () => {
     try {
-      const response = await axiosInstance.get('/featured/header-images')
-      return response.data
+      const response = await axiosInstance.get("/featured/header-images");
+      return response.data;
     } catch (error) {
-      console.error('Error fetching weekly header images:', error)
+      console.error("Error fetching weekly header images:", error);
       return {
         success: false,
         images: [],
         useLocal: true,
-        message: 'Using fallback images',
-      }
+        message: "Using fallback images",
+      };
     }
-  }, [])
+  }, []);
 
   const getRandomFeaturedImages = useCallback(async (limit = 6) => {
     try {
       const response = await axiosInstance.get(
-        `/featured/featured-random?limit=${limit}`
-      )
-      return response.data
+        `/featured/featured-random?limit=${limit}`,
+      );
+      return response.data;
     } catch (error) {
-      console.error('Error fetching random featured images:', error)
+      console.error("Error fetching random featured images:", error);
       return {
         success: false,
         images: [],
         useLocal: true,
-      }
+      };
     }
-  }, [])
+  }, []);
 
   const getPremiumShowcase = useCallback(async () => {
     try {
-      const response = await axiosInstance.get('/featured/premium-showcase')
-      return response.data
+      const response = await axiosInstance.get("/featured/premium-showcase");
+      return response.data;
     } catch (error) {
-      console.error('Error fetching premium showcase:', error)
+      console.error("Error fetching premium showcase:", error);
       return {
         success: false,
         showcase: [],
         useLocal: true,
-      }
+      };
     }
-  }, [])
+  }, []);
 
   const getHeroImages = useCallback(async (limit = 6) => {
     try {
       const response = await axiosInstance.get(
-        `/featured/hero-images?limit=${limit}`
-      )
-      return response.data
+        `/featured/hero-images?limit=${limit}`,
+      );
+      return response.data;
     } catch (error) {
-      console.error('Error fetching hero images:', error)
+      console.error("Error fetching hero images:", error);
       return {
         success: false,
         images: [],
         useLocal: true,
         excludedHeaderDuplicates: false,
-      }
+      };
     }
-  }, [])
+  }, []);
 
   const upgradeToPremium = useCallback(
     async (planData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.post('/premium/upgrade', planData)
-        return response.data
+        const response = await axiosInstance.post("/premium/upgrade", planData);
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const getPremiumStatus = useCallback(async () => {
     try {
-      const response = await axiosInstance.get('/premium/status')
-      return response.data
+      const response = await axiosInstance.get("/premium/status");
+      return response.data;
     } catch (error) {
-      console.error('Error fetching premium status:', error)
-      return { isPremium: false }
+      console.error("Error fetching premium status:", error);
+      return { isPremium: false };
     }
-  }, [])
+  }, []);
 
   // ================================
   // ADDITIONAL BOOKING METHODS
@@ -809,13 +897,13 @@ export const APIProvider = ({ children }) => {
   // Get booking by ID
   const getBookingById = useCallback(async (bookingId) => {
     try {
-      const response = await axiosInstance.get(`/bookings/${bookingId}`)
-      return response.data
+      const response = await axiosInstance.get(`/bookings/${bookingId}`);
+      return response.data;
     } catch (error) {
-      console.error('Error fetching booking:', error)
-      throw error
+      console.error("Error fetching booking:", error);
+      throw error;
     }
-  }, [])
+  }, []);
 
   // Cancel booking
   const cancelBooking = useCallback(async (bookingId) => {
@@ -823,31 +911,31 @@ export const APIProvider = ({ children }) => {
       const response = await axiosInstance.put(
         `/bookings/${bookingId}/status`,
         {
-          status: 'cancelled',
-        }
-      )
+          status: "cancelled",
+        },
+      );
 
-      dispatch({ type: actionTypes.UPDATE_BOOKING, payload: response.data })
-      return response.data
+      dispatch({ type: actionTypes.UPDATE_BOOKING, payload: response.data });
+      return response.data;
     } catch (error) {
-      console.error('Error cancelling booking:', error)
-      throw error
+      console.error("Error cancelling booking:", error);
+      throw error;
     }
-  }, [])
+  }, []);
 
   // Send booking confirmation email
   const sendBookingEmail = useCallback(async (bookingId) => {
     try {
       const response = await axiosInstance.post(
-        `/bookings/${bookingId}/send-email`
-      )
-      return response.data
+        `/bookings/${bookingId}/send-email`,
+      );
+      return response.data;
     } catch (error) {
-      console.error('Error sending booking email:', error)
+      console.error("Error sending booking email:", error);
       // Don't throw error for email sending failures
-      return null
+      return null;
     }
-  }, [])
+  }, []);
 
   // ================================
   // FAVORITES API CALLS
@@ -855,62 +943,62 @@ export const APIProvider = ({ children }) => {
 
   const getFavorites = useCallback(async () => {
     try {
-      setLoading(true)
-      clearError()
+      setLoading(true);
+      clearError();
 
-      const response = await axiosInstance.get('/favorites')
-      const { favorites } = response.data
+      const response = await axiosInstance.get("/favorites");
+      const { favorites } = response.data;
 
-      dispatch({ type: actionTypes.SET_FAVORITES, payload: favorites })
-      return favorites
+      dispatch({ type: actionTypes.SET_FAVORITES, payload: favorites });
+      return favorites;
     } catch (error) {
-      setError(error)
-      throw error
+      setError(error);
+      throw error;
     }
-  }, [setLoading, setError, clearError])
+  }, [setLoading, setError, clearError]);
 
   const addToFavorites = useCallback(
     async (propertyId) => {
       try {
-        const response = await axiosInstance.post(`/favorites/${propertyId}`)
+        const response = await axiosInstance.post(`/favorites/${propertyId}`);
 
         const favoriteData = {
           propertyId,
           userId: state.user?.userId,
           savedAt: new Date(),
-        }
+        };
 
-        dispatch({ type: actionTypes.ADD_FAVORITE, payload: favoriteData })
-        return response.data
+        dispatch({ type: actionTypes.ADD_FAVORITE, payload: favoriteData });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [state.user, setError]
-  )
+    [state.user, setError],
+  );
 
   const removeFromFavorites = useCallback(
     async (propertyId) => {
       try {
-        const response = await axiosInstance.delete(`/favorites/${propertyId}`)
+        const response = await axiosInstance.delete(`/favorites/${propertyId}`);
 
-        dispatch({ type: actionTypes.REMOVE_FAVORITE, payload: propertyId })
-        return response.data
+        dispatch({ type: actionTypes.REMOVE_FAVORITE, payload: propertyId });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       }
     },
-    [setError]
-  )
+    [setError],
+  );
 
   const isFavorite = useCallback(
     (propertyId) => {
-      return state.favorites.some((fav) => fav.propertyId === propertyId)
+      return state.favorites.some((fav) => fav.propertyId === propertyId);
     },
-    [state.favorites]
-  )
+    [state.favorites],
+  );
 
   // ================================
   // BOOKINGS API CALLS
@@ -918,66 +1006,114 @@ export const APIProvider = ({ children }) => {
 
   const getBookings = useCallback(async () => {
     try {
-      setLoading(true)
-      clearError()
+      setLoading(true);
+      clearError();
 
-      const response = await axiosInstance.get('/bookings')
-      const { bookings } = response.data
+      console.log("🔍 Fetching bookings...");
+      const response = await axiosInstance.get("/bookings");
+      console.log("📦 Bookings response:", response.data);
+      const { bookings } = response.data;
 
-      dispatch({ type: actionTypes.SET_BOOKINGS, payload: bookings })
-      return bookings
+      console.log("✅ Bookings fetched:", bookings?.length || 0);
+      dispatch({ type: actionTypes.SET_BOOKINGS, payload: bookings });
+      return bookings;
     } catch (error) {
-      setError(error)
-      throw error
+      console.error("❌ Error fetching bookings:", error);
+      setError(error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
-  }, [setLoading, setError, clearError])
+  }, [setLoading, setError, clearError]);
 
   const createBooking = useCallback(
     async (bookingData) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
-        const response = await axiosInstance.post('/bookings', bookingData)
-        const newBooking = { ...bookingData, id: response.data.bookingId }
+        console.log("📝 Creating booking:", bookingData);
+        const response = await axiosInstance.post("/bookings", bookingData);
+        console.log("✅ Booking created:", response.data);
 
-        dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking })
-        return response.data
+        const newBooking = {
+          ...bookingData,
+          _id: response.data.bookingId,
+          id: response.data.bookingId,
+          status: "pending",
+        };
+
+        dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking });
+        return newBooking;
       } catch (error) {
-        setError(error)
-        throw error
+        console.error("❌ Error creating booking:", error);
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
 
   const updateBookingStatus = useCallback(
     async (bookingId, status) => {
       try {
-        setLoading(true)
-        clearError()
+        setLoading(true);
+        clearError();
 
         const response = await axiosInstance.put(
           `/bookings/${bookingId}/status`,
-          { status }
-        )
+          { status },
+        );
 
         dispatch({
           type: actionTypes.UPDATE_BOOKING,
           payload: { id: bookingId, status },
-        })
-        return response.data
+        });
+        return response.data;
       } catch (error) {
-        setError(error)
-        throw error
+        setError(error);
+        throw error;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
-  )
+    [setLoading, setError, clearError],
+  );
+
+  const confirmBooking = useCallback(
+    async (bookingId, paymentIntentId) => {
+      try {
+        setLoading(true);
+        clearError();
+
+        console.log("📝 Confirming booking:", bookingId, paymentIntentId);
+        const response = await axiosInstance.post(
+          `/bookings/${bookingId}/confirm`,
+          { paymentIntentId },
+        );
+        console.log("✅ Booking confirmed:", response.data);
+
+        dispatch({
+          type: actionTypes.UPDATE_BOOKING,
+          payload: {
+            id: bookingId,
+            status: "confirmed",
+            paymentStatus: "paid",
+          },
+        });
+        return response.data;
+      } catch (error) {
+        console.error("❌ Error confirming booking:", error);
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError, clearError],
+  );
 
   // ================================
   // CONTEXT VALUE
@@ -1031,29 +1167,30 @@ export const APIProvider = ({ children }) => {
     createBookingWithValidation,
     checkBookingAvailability,
     updateBookingStatus,
+    confirmBooking,
     getUserBookings: getBookings, // Alias for consistency
     getBookingById,
     cancelBooking,
     sendBookingEmail,
-  }
+  };
 
   return (
     <APIContext.Provider value={contextValue}>{children}</APIContext.Provider>
-  )
-}
+  );
+};
 
 // ================================
 // CUSTOM HOOK TO USE CONTEXT
 // ================================
 
 export const useAPI = () => {
-  const context = useContext(APIContext)
+  const context = useContext(APIContext);
 
   if (!context) {
-    throw new Error('useAPI must be used within an APIProvider')
+    throw new Error("useAPI must be used within an APIProvider");
   }
 
-  return context
-}
+  return context;
+};
 
-export default APIContext
+export default APIContext;

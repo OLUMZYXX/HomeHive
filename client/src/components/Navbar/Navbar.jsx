@@ -114,7 +114,8 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await apiLogout();
+      // User navbar should logout as user (isHost = false)
+      await apiLogout(false);
       toast.success("Logged out successfully");
       setMenuOpen(false);
       setProfileMenuOpen(false);
@@ -309,7 +310,7 @@ const Navbar = () => {
             {location.pathname === "/" && (
               <AnimatedButton
                 onClick={navigateToHost}
-                className="px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200"
+                className="px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 rounded-full transition-all duration-200"
               >
                 Become a Host
               </AnimatedButton>
@@ -323,7 +324,7 @@ const Navbar = () => {
                     onClick={() =>
                       setCurrencyDropdownOpen(!currencyDropdownOpen)
                     }
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-300 hover:border-gray-400 rounded-full transition-all duration-200"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-full transition-all duration-200"
                   >
                     <span className="text-lg">
                       {selectedCurrencyData?.symbol}

@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
 // Property Schema
 const propertySchema = new mongoose.Schema(
@@ -6,17 +6,17 @@ const propertySchema = new mongoose.Schema(
     title: { type: String, required: true },
     description: { type: String, required: true },
     type: { type: String, required: true }, // Apartment, House, Villa, etc.
-    category: { type: String, default: 'Standard' }, // Standard, Premium, Luxury, Executive
+    category: { type: String, default: "Standard" }, // Standard, Premium, Luxury, Executive
     price: { type: Number, required: true },
     originalPrice: { type: Number },
-    currency: { type: String, default: 'NGN' },
+    currency: { type: String, default: "NGN" },
 
     // Location
     address: {
       street: String,
       city: { type: String, required: true },
       state: String,
-      country: { type: String, default: 'Nigeria' },
+      country: { type: String, default: "Nigeria" },
       coordinates: {
         lat: Number,
         lng: Number,
@@ -54,16 +54,16 @@ const propertySchema = new mongoose.Schema(
   },
   {
     timestamps: true, // Automatically handle createdAt and updatedAt
-  }
-)
+  },
+);
 
 // Indexes for better query performance
-propertySchema.index({ city: 1, isActive: 1 })
-propertySchema.index({ price: 1, isActive: 1 })
-propertySchema.index({ hostId: 1, isActive: 1 })
-propertySchema.index({ category: 1, price: -1 })
-propertySchema.index({ imageQuality: -1, views: -1 })
-propertySchema.index({ isFeatured: 1, isActive: 1 })
+propertySchema.index({ city: 1, isActive: 1 });
+propertySchema.index({ price: 1, isActive: 1 });
+propertySchema.index({ hostId: 1, isActive: 1 });
+propertySchema.index({ category: 1, price: -1 });
+propertySchema.index({ imageQuality: -1, views: -1 });
+propertySchema.index({ isFeatured: 1, isActive: 1 });
 
 // User Schema
 const userSchema = new mongoose.Schema(
@@ -76,20 +76,20 @@ const userSchema = new mongoose.Schema(
     phone: String,
     avatar: String,
     profilePicture: String, // For Google OAuth profile pictures
-    role: { type: String, enum: ['user', 'host', 'admin'], default: 'user' },
+    role: { type: String, enum: ["user", "host", "admin"], default: "user" },
     isActive: { type: Boolean, default: true },
     isPremium: { type: Boolean, default: false },
     premiumExpiresAt: Date,
 
     // OAuth fields
-    provider: { type: String, enum: ['local', 'google'], default: 'local' },
+    provider: { type: String, enum: ["local", "google"], default: "local" },
     googleId: String, // Google user ID for OAuth users
     lastLogin: Date,
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 // Host Schema (Separate from User)
 const hostSchema = new mongoose.Schema(
@@ -105,7 +105,7 @@ const hostSchema = new mongoose.Schema(
 
     // Business Information
     businessName: { type: String, required: true },
-    businessType: { type: String, default: 'Individual' }, // Individual, Company, etc.
+    businessType: { type: String, default: "Individual" }, // Individual, Company, etc.
     businessAddress: String,
     businessPhone: String,
 
@@ -122,21 +122,21 @@ const hostSchema = new mongoose.Schema(
     totalReviews: { type: Number, default: 0 },
 
     // OAuth fields
-    provider: { type: String, enum: ['local', 'google'], default: 'local' },
+    provider: { type: String, enum: ["local", "google"], default: "local" },
     googleId: String, // Google user ID for OAuth users
     lastLogin: Date,
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 // Booking Schema
 const bookingSchema = new mongoose.Schema(
   {
     propertyId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Property',
+      ref: "Property",
       required: true,
     },
     userId: { type: String, required: true },
@@ -147,22 +147,25 @@ const bookingSchema = new mongoose.Schema(
     guests: { type: Number, required: true },
 
     totalAmount: { type: Number, required: true },
+    currency: { type: String, default: "NGN" },
     status: {
       type: String,
-      enum: ['pending', 'confirmed', 'cancelled', 'completed'],
-      default: 'pending',
+      enum: ["pending", "confirmed", "cancelled", "completed"],
+      default: "pending",
     },
 
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'refunded'],
-      default: 'pending',
+      enum: ["pending", "paid", "refunded", "failed"],
+      default: "pending",
     },
+    paymentIntentId: { type: String },
+    confirmedAt: { type: Date },
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 // Favorite Schema
 const favoriteSchema = new mongoose.Schema(
@@ -170,14 +173,14 @@ const favoriteSchema = new mongoose.Schema(
     userId: { type: String, required: true },
     propertyId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Property',
+      ref: "Property",
       required: true,
     },
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 // Featured Images Schema
 const featuredSchema = new mongoose.Schema(
@@ -185,11 +188,11 @@ const featuredSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: [
-        'weekly-header',
-        'hero-rotation',
-        'premium-showcase',
-        'used-header',
-        'used-hero',
+        "weekly-header",
+        "hero-rotation",
+        "premium-showcase",
+        "used-header",
+        "used-hero",
       ],
       required: true,
     },
@@ -222,20 +225,20 @@ const featuredSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 // Testimonial Schema
 const testimonialSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
       required: false, // Make optional to support guest testimonials
     },
     propertyId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Property',
+      ref: "Property",
       required: false, // Make optional for general testimonials
     },
     rating: {
@@ -267,13 +270,13 @@ const testimonialSchema = new mongoose.Schema(
     guestName: {
       type: String,
       required: function () {
-        return this.isGuest
+        return this.isGuest;
       },
     },
     guestEmail: {
       type: String,
       required: function () {
-        return this.isGuest
+        return this.isGuest;
       },
     },
     approvedAt: {
@@ -281,19 +284,19 @@ const testimonialSchema = new mongoose.Schema(
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: "User",
     },
   },
   {
     timestamps: true,
-  }
-)
+  },
+);
 
 // Export Models
-export const Property = mongoose.model('Property', propertySchema)
-export const User = mongoose.model('User', userSchema)
-export const Host = mongoose.model('Host', hostSchema)
-export const Booking = mongoose.model('Booking', bookingSchema)
-export const Favorite = mongoose.model('Favorite', favoriteSchema)
-export const Featured = mongoose.model('Featured', featuredSchema)
-export const Testimonial = mongoose.model('Testimonial', testimonialSchema)
+export const Property = mongoose.model("Property", propertySchema);
+export const User = mongoose.model("User", userSchema);
+export const Host = mongoose.model("Host", hostSchema);
+export const Booking = mongoose.model("Booking", bookingSchema);
+export const Favorite = mongoose.model("Favorite", favoriteSchema);
+export const Featured = mongoose.model("Featured", featuredSchema);
+export const Testimonial = mongoose.model("Testimonial", testimonialSchema);
