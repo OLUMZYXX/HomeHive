@@ -266,13 +266,13 @@ const Header = () => {
             {/* Main Heading - Consistent Typography */}
             <div className="space-y-6">
               <h1 className="font-NotoSans leading-[1.1]">
-                <span className="block text-4xl sm:text-5xl lg:text-6xl font-black text-primary-900">
+                <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary-900">
                   Find
                 </span>
-                <span className="block text-4xl sm:text-5xl lg:text-6xl font-light text-primary-600 -mt-2">
+                <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-primary-600 -mt-2">
                   Your Dream
                 </span>
-                <span className="block text-4xl sm:text-5xl lg:text-6xl font-black text-transparent bg-gradient-to-r from-primary-700 via-primary-800 to-primary-900 bg-clip-text -mt-2">
+                <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-gradient-to-r from-primary-700 via-primary-800 to-primary-900 bg-clip-text -mt-2">
                   Accommodation
                 </span>
               </h1>
@@ -287,7 +287,7 @@ const Header = () => {
 
             {/* Description with Consistent Style */}
             <div className="space-y-6">
-              <p className="text-lg lg:text-xl text-primary-700 font-medium leading-relaxed max-w-2xl">
+              <p className="text-base sm:text-lg lg:text-xl text-primary-700 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
                 Experience luxury redefined with our handpicked collection of
                 premium accommodations
                 <span className="text-primary-900 font-semibold">
@@ -325,24 +325,24 @@ const Header = () => {
 
             {/* CTA Section - Different Style */}
             <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 <button
                   onClick={handleExploreClick}
-                  className="group relative overflow-hidden bg-primary-900 text-white font-bold py-5 px-10 rounded-2xl shadow-strong hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1"
+                  className="group relative overflow-hidden bg-primary-900 text-white font-bold py-3 sm:py-5 px-6 sm:px-10 rounded-2xl shadow-strong hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-primary-800 to-primary-900 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-                  <span className="relative flex items-center justify-center gap-3">
+                  <span className="relative flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
                     Start Exploring
-                    <HiArrowRight className="text-xl group-hover:translate-x-2 transition-transform duration-300" />
+                    <HiArrowRight className="text-lg sm:text-xl group-hover:translate-x-2 transition-transform duration-300" />
                   </span>
                 </button>
 
                 <button
                   onClick={handleLearnMore}
-                  className="group flex items-center gap-3 text-primary-800 font-semibold py-5 px-6 hover:bg-primary-50 rounded-2xl transition-all duration-300"
+                  className="group flex items-center gap-2 sm:gap-3 text-primary-800 font-semibold py-3 sm:py-5 px-4 sm:px-6 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-sm sm:text-base"
                 >
-                  <div className="w-12 h-12 bg-primary-100 group-hover:bg-primary-200 rounded-full flex items-center justify-center transition-colors duration-300">
-                    <HiPlay className="text-primary-800 text-lg ml-1" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 group-hover:bg-primary-200 rounded-full flex items-center justify-center transition-colors duration-300">
+                    <HiPlay className="text-primary-800 text-base sm:text-lg ml-1" />
                   </div>
                   <span>Watch Our Story</span>
                 </button>

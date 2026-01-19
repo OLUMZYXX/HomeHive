@@ -1,52 +1,52 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FaSearch, FaMoneyBillAlt } from 'react-icons/fa'
-import { FaLocationDot } from 'react-icons/fa6'
-import { AiFillPropertySafety } from 'react-icons/ai'
-import { HiChevronDown } from 'react-icons/hi'
-import { toast } from 'sonner'
-import { useAPI } from '../../contexts/APIContext'
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { FaSearch, FaMoneyBillAlt } from "react-icons/fa";
+import { FaLocationDot } from "react-icons/fa6";
+import { AiFillPropertySafety } from "react-icons/ai";
+import { HiChevronDown } from "react-icons/hi";
+import { toast } from "sonner";
+import { useAPI } from "../../contexts/APIContext";
 
 const Location = () => {
-  const navigate = useNavigate()
-  const { searchProperties, getProperties, loading } = useAPI()
+  const navigate = useNavigate();
+  const { searchProperties, getProperties, loading } = useAPI();
 
-  const [location, setLocation] = useState('')
-  const [propertyType, setPropertyType] = useState('')
-  const [priceRange, setPriceRange] = useState('')
-  const [searchKeyword, setSearchKeyword] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
-  const [availableLocations, setAvailableLocations] = useState([])
+  const [location, setLocation] = useState("");
+  const [propertyType, setPropertyType] = useState("");
+  const [priceRange, setPriceRange] = useState("");
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [availableLocations, setAvailableLocations] = useState([]);
 
   // Static fallback locations (memoized to avoid dependency issues)
   const defaultLocations = useMemo(
     () => [
-      'Abuja, Nigeria',
-      'Lagos, Nigeria',
-      'Port Harcourt, Nigeria',
-      'Ibadan, Nigeria',
-      'Abeokuta, Nigeria',
+      "Abuja, Nigeria",
+      "Lagos, Nigeria",
+      "Port Harcourt, Nigeria",
+      "Ibadan, Nigeria",
+      "Abeokuta, Nigeria",
     ],
-    []
-  )
+    [],
+  );
 
-  const propertyTypes = ['Apartment', 'Villa', 'Condo', 'Studio', 'House']
+  const propertyTypes = ["Apartment", "Villa", "Condo", "Studio", "House"];
 
   // More realistic price ranges (converted to numbers for backend)
   const priceRanges = [
-    { label: '₦50,000 - ₦150,000', min: 50000, max: 150000 },
-    { label: '₦150,000 - ₦300,000', min: 150000, max: 300000 },
-    { label: '₦300,000 - ₦500,000', min: 300000, max: 500000 },
-    { label: '₦500,000 - ₦750,000', min: 500000, max: 750000 },
-    { label: '₦750,000+', min: 750000, max: null },
-  ]
+    { label: "₦50,000 - ₦150,000", min: 50000, max: 150000 },
+    { label: "₦150,000 - ₦300,000", min: 150000, max: 300000 },
+    { label: "₦300,000 - ₦500,000", min: 300000, max: 500000 },
+    { label: "₦500,000 - ₦750,000", min: 500000, max: 750000 },
+    { label: "₦750,000+", min: 750000, max: null },
+  ];
 
   // Fetch available locations from properties on component mount
   useEffect(() => {
     const fetchAvailableLocations = async () => {
       try {
-        const properties = await getProperties({ limit: 1000 }) // Get all to extract locations
+        const properties = await getProperties({ limit: 1000 }); // Get all to extract locations
         // Only use string locations, not objects
         const locations = [
           ...new Set(
@@ -54,50 +54,50 @@ const Location = () => {
               .map((property) => {
                 // If property.location is an object, format it as a string
                 const loc =
-                  property.location || property.city || property.address
-                if (typeof loc === 'object' && loc !== null) {
+                  property.location || property.city || property.address;
+                if (typeof loc === "object" && loc !== null) {
                   // Try to format as 'city, state, country' if possible
                   return [loc.city, loc.state, loc.country]
                     .filter(Boolean)
-                    .join(', ')
+                    .join(", ");
                 }
-                return loc
+                return loc;
               })
-              .filter((loc) => typeof loc === 'string' && loc.trim() !== '')
+              .filter((loc) => typeof loc === "string" && loc.trim() !== ""),
           ),
-        ]
+        ];
         setAvailableLocations(
-          locations.length > 0 ? locations : defaultLocations
-        )
+          locations.length > 0 ? locations : defaultLocations,
+        );
       } catch (error) {
-        console.error('Error fetching locations:', error)
-        setAvailableLocations(defaultLocations)
+        console.error("Error fetching locations:", error);
+        setAvailableLocations(defaultLocations);
       }
-    }
-    fetchAvailableLocations()
-  }, [getProperties, defaultLocations])
+    };
+    fetchAvailableLocations();
+  }, [getProperties, defaultLocations]);
 
   const handleSearch = async () => {
     // At least one field must be filled
     if (!location && !propertyType && !priceRange && !searchKeyword) {
-      toast.error('Missing Information', {
-        description: 'Please fill at least one field to search',
+      toast.error("Missing Information", {
+        description: "Please fill at least one field to search",
         duration: 4000,
-      })
-      return
+      });
+      return;
     }
 
-    setIsSearching(true)
+    setIsSearching(true);
 
     try {
       // Parse price range
-      let selectedPriceRange = null
+      let selectedPriceRange = null;
       if (priceRange) {
         selectedPriceRange = priceRanges.find(
-          (range) => range.label === priceRange
-        )
+          (range) => range.label === priceRange,
+        );
         if (!selectedPriceRange) {
-          throw new Error('Invalid price range selected')
+          throw new Error("Invalid price range selected");
         }
       }
 
@@ -113,33 +113,33 @@ const Location = () => {
         ...(searchKeyword && {
           search: searchKeyword.trim(),
           // Search in multiple fields
-          searchFields: ['title', 'description', 'amenities', 'address'],
+          searchFields: ["title", "description", "amenities", "address"],
         }),
         // Additional filters
         available: true, // Only show available properties
-        status: 'active', // Only show active listings
-      }
+        status: "active", // Only show active listings
+      };
 
-      console.log('Search criteria:', searchCriteria) // Debug log
+      console.log("Search criteria:", searchCriteria); // Debug log
 
       // Call backend search API
-      const searchResults = await searchProperties(searchCriteria)
+      const searchResults = await searchProperties(searchCriteria);
 
       // Ensure searchResults is an array
-      const results = Array.isArray(searchResults) ? searchResults : []
+      const results = Array.isArray(searchResults) ? searchResults : [];
 
       // Show success message with results count
       if (results.length > 0) {
-        toast.success('Search Complete', {
+        toast.success("Search Complete", {
           description: `Found ${results.length} properties matching your criteria`,
           duration: 3000,
-        })
+        });
       } else {
-        toast.info('No Results Found', {
+        toast.info("No Results Found", {
           description:
-            'No properties match your search criteria. Try adjusting your filters.',
+            "No properties match your search criteria. Try adjusting your filters.",
           duration: 4000,
-        })
+        });
       }
 
       // Navigate to results page with search results
@@ -149,73 +149,73 @@ const Location = () => {
         ...(priceRange && { priceRange }),
         ...(searchKeyword && { keyword: searchKeyword }),
         resultsCount: results.length.toString(),
-      }).toString()
+      }).toString();
 
       navigate(`/listings?${queryParams}`, {
         state: {
           searchResults: results,
           searchCriteria,
         },
-      })
+      });
     } catch (error) {
-      console.error('Search error:', error)
-      toast.error('Search Failed', {
+      console.error("Search error:", error);
+      toast.error("Search Failed", {
         description:
-          error.message || 'Unable to search properties. Please try again.',
+          error.message || "Unable to search properties. Please try again.",
         duration: 4000,
-      })
+      });
     } finally {
-      setIsSearching(false)
+      setIsSearching(false);
     }
-  }
+  };
 
   const handleQuickSearch = async (quickSearchType) => {
     try {
-      let searchCriteria = {}
+      let searchCriteria = {};
 
       switch (quickSearchType) {
-        case 'lagos-apartments':
-          setLocation('Lagos, Nigeria')
-          setPropertyType('Apartment')
-          setPriceRange('₦150,000 - ₦300,000')
-          setSearchKeyword('') // Clear keyword for quick search
+        case "lagos-apartments":
+          setLocation("Lagos, Nigeria");
+          setPropertyType("Apartment");
+          setPriceRange("₦150,000 - ₦300,000");
+          setSearchKeyword(""); // Clear keyword for quick search
           searchCriteria = {
-            location: 'Lagos, Nigeria',
-            propertyType: 'apartment',
+            location: "Lagos, Nigeria",
+            propertyType: "apartment",
             minPrice: 150000,
             maxPrice: 300000,
             available: true,
-            status: 'active',
-          }
-          break
-        case 'luxury-villas':
-          setPropertyType('Villa')
-          setPriceRange('₦500,000 - ₦750,000')
-          setSearchKeyword('luxury') // Add relevant keyword
+            status: "active",
+          };
+          break;
+        case "luxury-villas":
+          setPropertyType("Villa");
+          setPriceRange("₦500,000 - ₦750,000");
+          setSearchKeyword("luxury"); // Add relevant keyword
           searchCriteria = {
-            propertyType: 'villa',
+            propertyType: "villa",
             minPrice: 500000,
             maxPrice: 750000,
-            search: 'luxury',
-            searchFields: ['title', 'description', 'amenities'],
+            search: "luxury",
+            searchFields: ["title", "description", "amenities"],
             available: true,
-            status: 'active',
-          }
-          break
-        case 'budget-options':
-          setPriceRange('₦50,000 - ₦150,000')
-          setSearchKeyword('budget') // Add relevant keyword
+            status: "active",
+          };
+          break;
+        case "budget-options":
+          setPriceRange("₦50,000 - ₦150,000");
+          setSearchKeyword("budget"); // Add relevant keyword
           searchCriteria = {
             minPrice: 50000,
             maxPrice: 150000,
-            search: 'budget affordable',
-            searchFields: ['title', 'description'],
+            search: "budget affordable",
+            searchFields: ["title", "description"],
             available: true,
-            status: 'active',
-          }
-          break
+            status: "active",
+          };
+          break;
         default:
-          return
+          return;
       }
 
       // If we have enough criteria, perform search
@@ -224,23 +224,23 @@ const Location = () => {
         searchCriteria.propertyType ||
         (searchCriteria.minPrice && searchCriteria.maxPrice)
       ) {
-        setIsSearching(true)
-        const searchResults = await searchProperties(searchCriteria)
+        setIsSearching(true);
+        const searchResults = await searchProperties(searchCriteria);
 
         // Ensure searchResults is an array
-        const results = Array.isArray(searchResults) ? searchResults : []
+        const results = Array.isArray(searchResults) ? searchResults : [];
 
         if (results.length > 0) {
-          toast.success('Quick Search Complete', {
+          toast.success("Quick Search Complete", {
             description: `Found ${results.length} properties`,
             duration: 3000,
-          })
+          });
         } else {
-          toast.info('No Results Found', {
+          toast.info("No Results Found", {
             description:
-              'No properties match this quick search. Try a different option.',
+              "No properties match this quick search. Try a different option.",
             duration: 3000,
-          })
+          });
         }
 
         navigate(`/listings?quick=${quickSearchType}`, {
@@ -248,104 +248,104 @@ const Location = () => {
             searchResults: results,
             searchCriteria,
           },
-        })
-        setIsSearching(false)
+        });
+        setIsSearching(false);
       }
     } catch (error) {
-      console.error('Quick search error:', error)
-      toast.error('Quick Search Failed', {
+      console.error("Quick search error:", error);
+      toast.error("Quick Search Failed", {
         description:
-          'Unable to perform quick search. Please try manual search.',
+          "Unable to perform quick search. Please try manual search.",
         duration: 4000,
-      })
-      setIsSearching(false)
+      });
+      setIsSearching(false);
     }
-  }
+  };
 
   return (
     <section
-      className='py-2 lg:py-4 bg-gradient-to-br from-primary-50 via-white to-neutral-50'
-      id='accomodation'
+      className="py-2 lg:py-4 bg-gradient-to-br from-primary-50 via-white to-neutral-50"
+      id="accomodation"
     >
-      <div className='container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl'>
-        <div className='grid grid-cols-1 gap-6 items-start'>
+      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
+        <div className="grid grid-cols-1 gap-6 items-start">
           {/* Header */}
-          <div className='text-center space-y-2 mb-8'>
-            <h2 className='font-NotoSans text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-800'>
+          <div className="text-center space-y-3 sm:space-y-2 mb-6 sm:mb-8">
+            <h2 className="font-NotoSans text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-primary-800">
               Find Your Perfect
-              <span className='text-transparent bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text block sm:inline sm:ml-3'>
+              <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text block sm:inline sm:ml-3">
                 Accommodation
               </span>
             </h2>
-            <p className='text-lg text-primary-600 max-w-2xl mx-auto'>
+            <p className="text-base sm:text-lg text-primary-600 max-w-2xl mx-auto px-4 sm:px-0">
               Search through our premium collection of accommodations tailored
               to your needs
             </p>
           </div>
           {/* Search Form */}
-          <div className='bg-white/90 backdrop-blur-sm border-2 border-primary-200 rounded-3xl p-6 lg:p-8 shadow-strong'>
+          <div className="bg-white/90 backdrop-blur-sm border-2 border-primary-200 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-strong">
             {/* Keyword Search - Full Width */}
-            <div className='mb-6'>
-              <label className='block text-sm font-semibold text-primary-700 mb-2'>
+            <div className="mb-4 sm:mb-6">
+              <label className="block text-sm font-semibold text-primary-700 mb-2">
                 Search by keyword (optional)
               </label>
-              <div className='relative'>
-                <div className='flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-xl p-4 transition-all duration-300'>
-                  <FaSearch className='text-primary-600 text-lg mr-3 flex-shrink-0' />
+              <div className="relative">
+                <div className="flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-300">
+                  <FaSearch className="text-primary-600 text-base sm:text-lg mr-3 flex-shrink-0" />
                   <input
-                    type='text'
-                    placeholder='e.g., "luxury apartment", "swimming pool", "city center"...'
+                    type="text"
+                    placeholder='e.g., "luxury apartment", "swimming pool"...'
                     value={searchKeyword}
                     onChange={(e) => setSearchKeyword(e.target.value)}
-                    className='flex-1 bg-transparent text-primary-800 placeholder-primary-500 focus:outline-none font-medium'
+                    className="flex-1 bg-transparent text-primary-800 placeholder-primary-500 focus:outline-none font-medium text-sm sm:text-base"
                   />
                 </div>
               </div>
             </div>
 
             {/* Main Search Filters */}
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6'>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {/* Location Dropdown */}
-              <div className='space-y-2'>
-                <label className='block text-sm font-semibold text-primary-700'>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-primary-700">
                   Location
                 </label>
-                <div className='relative'>
-                  <div className='flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-xl p-4 transition-all duration-300'>
-                    <FaLocationDot className='text-primary-600 text-lg mr-3 flex-shrink-0' />
+                <div className="relative">
+                  <div className="flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-300">
+                    <FaLocationDot className="text-primary-600 text-base sm:text-lg mr-3 flex-shrink-0" />
                     <select
-                      className='flex-1 bg-transparent text-primary-800 focus:outline-none cursor-pointer font-medium appearance-none'
+                      className="flex-1 bg-transparent text-primary-800 focus:outline-none cursor-pointer font-medium text-sm sm:text-base appearance-none"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
                     >
-                      <option value='' disabled>
+                      <option value="" disabled>
                         Choose location
                       </option>
                       {availableLocations.map((loc, idx) => (
-                        <option key={loc + '-' + idx} value={loc}>
+                        <option key={loc + "-" + idx} value={loc}>
                           {loc}
                         </option>
                       ))}
                     </select>
-                    <HiChevronDown className='text-primary-600 text-lg ml-2 flex-shrink-0' />
+                    <HiChevronDown className="text-primary-600 text-base sm:text-lg ml-2 flex-shrink-0" />
                   </div>
                 </div>
               </div>
 
               {/* Property Type Dropdown */}
-              <div className='space-y-2'>
-                <label className='block text-sm font-semibold text-primary-700'>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-primary-700">
                   Property Type
                 </label>
-                <div className='relative'>
-                  <div className='flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-xl p-4 transition-all duration-300'>
-                    <AiFillPropertySafety className='text-primary-600 text-lg mr-3 flex-shrink-0' />
+                <div className="relative">
+                  <div className="flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-300">
+                    <AiFillPropertySafety className="text-primary-600 text-base sm:text-lg mr-3 flex-shrink-0" />
                     <select
-                      className='flex-1 bg-transparent text-primary-800 focus:outline-none cursor-pointer font-medium appearance-none'
+                      className="flex-1 bg-transparent text-primary-800 focus:outline-none cursor-pointer font-medium text-sm sm:text-base appearance-none"
                       value={propertyType}
                       onChange={(e) => setPropertyType(e.target.value)}
                     >
-                      <option value='' disabled>
+                      <option value="" disabled>
                         Select type
                       </option>
                       {propertyTypes.map((type) => (
@@ -354,25 +354,25 @@ const Location = () => {
                         </option>
                       ))}
                     </select>
-                    <HiChevronDown className='text-primary-600 text-lg ml-2 flex-shrink-0' />
+                    <HiChevronDown className="text-primary-600 text-base sm:text-lg ml-2 flex-shrink-0" />
                   </div>
                 </div>
               </div>
 
               {/* Price Range Dropdown */}
-              <div className='space-y-2'>
-                <label className='block text-sm font-semibold text-primary-700'>
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-primary-700">
                   Price Range
                 </label>
-                <div className='relative'>
-                  <div className='flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-xl p-4 transition-all duration-300'>
-                    <FaMoneyBillAlt className='text-primary-600 text-lg mr-3 flex-shrink-0' />
+                <div className="relative">
+                  <div className="flex items-center bg-primary-50 border-2 border-primary-200 hover:border-primary-300 focus-within:border-primary-500 rounded-lg sm:rounded-xl p-3 sm:p-4 transition-all duration-300">
+                    <FaMoneyBillAlt className="text-primary-600 text-base sm:text-lg mr-3 flex-shrink-0" />
                     <select
-                      className='flex-1 bg-transparent text-primary-800 focus:outline-none cursor-pointer font-medium appearance-none'
+                      className="flex-1 bg-transparent text-primary-800 focus:outline-none cursor-pointer font-medium text-sm sm:text-base appearance-none"
                       value={priceRange}
                       onChange={(e) => setPriceRange(e.target.value)}
                     >
-                      <option value='' disabled>
+                      <option value="" disabled>
                         Select budget
                       </option>
                       {priceRanges.map((price) => (
@@ -381,7 +381,7 @@ const Location = () => {
                         </option>
                       ))}
                     </select>
-                    <HiChevronDown className='text-primary-600 text-lg ml-2 flex-shrink-0' />
+                    <HiChevronDown className="text-primary-600 text-base sm:text-lg ml-2 flex-shrink-0" />
                   </div>
                 </div>
               </div>
@@ -389,24 +389,24 @@ const Location = () => {
               {/* Search Button - Full Width */}
             </div>
 
-            <div className='mt-6'>
+            <div className="mt-4 sm:mt-6">
               <button
                 onClick={handleSearch}
                 disabled={isSearching || loading}
-                className={`w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3 ${
+                className={`w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-3 sm:py-4 px-4 sm:px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base ${
                   isSearching || loading
-                    ? 'cursor-not-allowed'
-                    : 'cursor-pointer'
+                    ? "cursor-not-allowed"
+                    : "cursor-pointer"
                 }`}
               >
                 {isSearching || loading ? (
                   <>
-                    <div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>Searching...</span>
                   </>
                 ) : (
                   <>
-                    <FaSearch className='text-lg' />
+                    <FaSearch className="text-base sm:text-lg" />
                     <span>Search Properties</span>
                   </>
                 )}
@@ -414,29 +414,29 @@ const Location = () => {
             </div>
 
             {/* Increased spacing between form and quick actions */}
-            <div className='mt-6 pt-4 border-t border-primary-200'>
-              <div className='flex flex-wrap items-center gap-3'>
-                <span className='text-sm font-medium text-primary-700'>
+            <div className="mt-4 sm:mt-6 pt-4 border-t border-primary-200">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                <span className="text-sm font-medium text-primary-700">
                   Quick search:
                 </span>
                 <button
-                  onClick={() => handleQuickSearch('lagos-apartments')}
+                  onClick={() => handleQuickSearch("lagos-apartments")}
                   disabled={isSearching || loading}
-                  className='px-4 py-2 bg-primary-100 hover:bg-primary-200 disabled:bg-primary-50 disabled:text-primary-400 text-primary-800 text-sm font-medium rounded-full transition-colors duration-300'
+                  className="px-3 sm:px-4 py-2 bg-primary-100 hover:bg-primary-200 disabled:bg-primary-50 disabled:text-primary-400 text-primary-800 text-xs sm:text-sm font-medium rounded-full transition-colors duration-300"
                 >
                   Lagos Apartments
                 </button>
                 <button
-                  onClick={() => handleQuickSearch('luxury-villas')}
+                  onClick={() => handleQuickSearch("luxury-villas")}
                   disabled={isSearching || loading}
-                  className='px-4 py-2 bg-primary-100 hover:bg-primary-200 disabled:bg-primary-50 disabled:text-primary-400 text-primary-800 text-sm font-medium rounded-full transition-colors duration-300'
+                  className="px-3 sm:px-4 py-2 bg-primary-100 hover:bg-primary-200 disabled:bg-primary-50 disabled:text-primary-400 text-primary-800 text-xs sm:text-sm font-medium rounded-full transition-colors duration-300"
                 >
                   Luxury Villas
                 </button>
                 <button
-                  onClick={() => handleQuickSearch('budget-options')}
+                  onClick={() => handleQuickSearch("budget-options")}
                   disabled={isSearching || loading}
-                  className='px-4 py-2 bg-primary-100 hover:bg-primary-200 disabled:bg-primary-50 disabled:text-primary-400 text-primary-800 text-sm font-medium rounded-full transition-colors duration-300'
+                  className="px-3 sm:px-4 py-2 bg-primary-100 hover:bg-primary-200 disabled:bg-primary-50 disabled:text-primary-400 text-primary-800 text-xs sm:text-sm font-medium rounded-full transition-colors duration-300"
                 >
                   Budget Options
                 </button>
@@ -446,7 +446,7 @@ const Location = () => {
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default Location
+export default Location;

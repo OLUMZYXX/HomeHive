@@ -651,7 +651,8 @@ const Listings = () => {
                   <div className="relative flex items-center gap-4">
                     <button
                       className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 overflow-hidden relative focus:outline-none"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
                         setProfileMenuOpen((open) => !open);
                       }}
                       aria-label="Profile menu"
@@ -994,6 +995,7 @@ const Listings = () => {
             transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
             style={{ right: "2.5rem", top: "4.5rem" }}
             className="absolute w-96 bg-white/95 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-strong z-50 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Profile Header */}
             <div className="p-6 bg-gradient-to-r from-neutral-50 to-primary-50 border-b border-neutral-200/30">

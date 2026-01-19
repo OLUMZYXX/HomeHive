@@ -131,13 +131,13 @@ const Hero = () => {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-neutral-100 rounded-full opacity-50 blur-3xl"></div>
       </div>
 
-      <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-32 pb-16 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[80vh]">
+      <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[70vh] sm:min-h-[80vh]">
           {/* Left Content Section */}
           <ScrollReveal
             direction="left"
             delay={0.2}
-            className="flex flex-col justify-center space-y-8 text-center lg:text-left order-2 lg:order-1"
+            className="flex flex-col justify-center space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1"
           >
             {/* Badge */}
             <ScrollReveal direction="up" delay={0.4}>
@@ -151,8 +151,8 @@ const Hero = () => {
 
             {/* Main Heading */}
             <ScrollReveal direction="up" delay={0.6}>
-              <div className="space-y-4">
-                <h1 className="font-NotoSans text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
+              <div className="space-y-3 sm:space-y-4">
+                <h1 className="font-NotoSans text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
                   <span className="text-primary-800">Gateway to your</span>
                   <br />
                   <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text">
@@ -160,13 +160,13 @@ const Hero = () => {
                   </span>
                 </h1>
 
-                <div className="w-24 h-1 bg-gradient-to-r from-primary-600 to-primary-800 mx-auto lg:mx-0 rounded-full"></div>
+                <div className="w-20 sm:w-24 h-1 bg-gradient-to-r from-primary-600 to-primary-800 mx-auto lg:mx-0 rounded-full"></div>
               </div>
             </ScrollReveal>
 
             {/* Description */}
             <ScrollReveal direction="up" delay={0.8}>
-              <p className="text-lg sm:text-xl lg:text-2xl text-primary-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+              <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-primary-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
                 Discover exceptional accommodations tailored to your needs.
                 Experience comfort, luxury, and memorable stays with our curated
                 collection.
@@ -203,18 +203,18 @@ const Hero = () => {
 
             {/* CTA Buttons */}
             <ScrollReveal direction="up" delay={1.0}>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
                 <AnimatedButton
                   onClick={handleExploreClick}
-                  className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center justify-center gap-2 min-w-[200px]"
+                  className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center justify-center gap-2 min-w-[180px] sm:min-w-[200px] text-sm sm:text-base"
                 >
                   Explore Stays
-                  <HiArrowRight className="text-lg group-hover:translate-x-1 transition-transform duration-300" />
+                  <HiArrowRight className="text-base sm:text-lg group-hover:translate-x-1 transition-transform duration-300" />
                 </AnimatedButton>
 
                 <AnimatedButton
                   onClick={handleLearnMore}
-                  className="border-2 border-primary-800 text-primary-800 hover:bg-primary-800 hover:text-white font-semibold py-4 px-8 rounded-full transition-all duration-300 min-w-[200px]"
+                  className="border-2 border-primary-800 text-primary-800 hover:bg-primary-800 hover:text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-full transition-all duration-300 min-w-[180px] sm:min-w-[200px] text-sm sm:text-base"
                 >
                   Learn More
                 </AnimatedButton>
@@ -268,7 +268,7 @@ const Hero = () => {
                 <img
                   src={currentImage}
                   alt="Beautiful accommodation showcasing comfort and luxury"
-                  className="w-full max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl object-cover transform group-hover:scale-105 transition-all duration-700 ease-out"
+                  className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl object-cover transform group-hover:scale-105 transition-all duration-700 ease-out"
                   loading="eager"
                   decoding="async"
                   width={1024}
