@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaCog, FaSignOutAlt, FaBook, FaCalendarCheck } from "react-icons/fa";
 import { TokenManager } from "../../services/jwtAuthService";
 import { toast } from "../../utils/toast.jsx";
+import { PropertyCardSkeleton } from "../common/SkeletonLoaders";
 
 const Listings = () => {
   // Use scroll to top hook
@@ -1182,112 +1183,121 @@ const Listings = () => {
 
               {/* Listings Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {filteredListings.map((property, idx) => (
-                  <div
-                    key={property._id}
-                    className="bg-white border border-primary-100 rounded-2xl overflow-hidden shadow-soft hover:shadow-strong transition-all duration-500 transform hover:-translate-y-1"
-                  >
-                    <div className="flex flex-col">
-                      {/* Image */}
-                      <div className="relative group h-48 overflow-hidden">
-                        <img
-                          src={
-                            property.images &&
-                            property.images.length > 0 &&
-                            property.images[0]
-                              ? typeof property.images[0] === "object" &&
-                                property.images[0].data
-                                ? property.images[0].data
-                                : property.images[0]
-                              : demoImages[idx % demoImages.length]
-                          }
-                          alt={property.title}
-                          className="w-full h-full object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105"
-                          onClick={() => handleClick(property._id)}
-                        />
-
-                        {/* Badge */}
-                        {property.badge && (
-                          <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold text-primary-800 shadow-md">
-                            {property.badge}
-                          </div>
-                        )}
-
-                        {/* Action Buttons */}
-                        <div className="absolute top-3 right-3 flex gap-2">
-                          <button
-                            onClick={() => toggleFavorite(property._id)}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300 ${
-                              favorites.has(property._id)
-                                ? "bg-red-500 text-white"
-                                : "bg-white/90 text-primary-600 hover:bg-white"
-                            }`}
-                          >
-                            <FaHeart className="text-sm" />
-                          </button>
-                          <button className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary-600 hover:bg-white transition-all duration-300">
-                            <FaShare className="text-sm" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-4 flex flex-col justify-between flex-1">
-                        <div className="space-y-3">
-                          <div>
-                            <div className="flex items-center gap-1.5 mb-2">
-                              <HiLocationMarker className="text-primary-500 text-sm" />
-                              <span className="text-primary-600 font-medium text-sm">
-                                {property.address?.city || property.location}
-                              </span>
-                            </div>
-                            <h2
-                              className="text-lg font-bold text-primary-900 cursor-pointer hover:text-primary-800 transition-colors duration-300 leading-tight"
+                {loadingProperties && properties.length === 0
+                  ? // Show skeleton loaders while loading initial properties
+                    Array(8)
+                      .fill(0)
+                      .map((_, idx) => (
+                        <PropertyCardSkeleton key={`skeleton-${idx}`} />
+                      ))
+                  : // Show actual properties
+                    filteredListings.map((property, idx) => (
+                      <div
+                        key={property._id}
+                        className="bg-white border border-primary-100 rounded-2xl overflow-hidden shadow-soft hover:shadow-strong transition-all duration-500 transform hover:-translate-y-1"
+                      >
+                        <div className="flex flex-col">
+                          {/* Image */}
+                          <div className="relative group h-48 overflow-hidden">
+                            <img
+                              src={
+                                property.images &&
+                                property.images.length > 0 &&
+                                property.images[0]
+                                  ? typeof property.images[0] === "object" &&
+                                    property.images[0].data
+                                    ? property.images[0].data
+                                    : property.images[0]
+                                  : demoImages[idx % demoImages.length]
+                              }
+                              alt={property.title}
+                              className="w-full h-full object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105"
                               onClick={() => handleClick(property._id)}
-                            >
-                              {property.title}
-                            </h2>
+                            />
+
+                            {/* Badge */}
+                            {property.badge && (
+                              <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-semibold text-primary-800 shadow-md">
+                                {property.badge}
+                              </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="absolute top-3 right-3 flex gap-2">
+                              <button
+                                onClick={() => toggleFavorite(property._id)}
+                                className={`w-8 h-8 rounded-full flex items-center justify-center backdrop-blur-sm transition-all duration-300 ${
+                                  favorites.has(property._id)
+                                    ? "bg-red-500 text-white"
+                                    : "bg-white/90 text-primary-600 hover:bg-white"
+                                }`}
+                              >
+                                <FaHeart className="text-sm" />
+                              </button>
+                              <button className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-primary-600 hover:bg-white transition-all duration-300">
+                                <FaShare className="text-sm" />
+                              </button>
+                            </div>
                           </div>
 
-                          <p className="text-primary-600 text-sm leading-relaxed">
-                            {truncateText(property.description, 100)}
-                          </p>
-                        </div>
+                          {/* Content */}
+                          <div className="p-4 flex flex-col justify-between flex-1">
+                            <div className="space-y-3">
+                              <div>
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  <HiLocationMarker className="text-primary-500 text-sm" />
+                                  <span className="text-primary-600 font-medium text-sm">
+                                    {property.address?.city ||
+                                      property.location}
+                                  </span>
+                                </div>
+                                <h2
+                                  className="text-lg font-bold text-primary-900 cursor-pointer hover:text-primary-800 transition-colors duration-300 leading-tight"
+                                  onClick={() => handleClick(property._id)}
+                                >
+                                  {property.title}
+                                </h2>
+                              </div>
 
-                        {/* Bottom Row */}
-                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-primary-100">
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <FaStar className="text-amber-400 text-sm" />
-                              <span className="font-bold text-primary-900 text-sm">
-                                {property.averageRating || "New"}
-                              </span>
+                              <p className="text-primary-600 text-sm leading-relaxed">
+                                {truncateText(property.description, 100)}
+                              </p>
                             </div>
-                            <span className="text-primary-600 text-xs">
-                              ({property.totalReviews || 0} reviews)
-                            </span>
-                          </div>
 
-                          <div className="text-right">
-                            <div className="text-lg font-black text-primary-900">
-                              {selectedCurrencyData?.symbol}
-                              {convertPrice(
-                                typeof property.price === "number" &&
-                                  !isNaN(property.price)
-                                  ? property.price
-                                  : 0,
-                                property.currency || "NGN",
-                              )}
-                            </div>
-                            <div className="text-primary-600 text-xs">
-                              per night
+                            {/* Bottom Row */}
+                            <div className="flex items-center justify-between mt-4 pt-3 border-t border-primary-100">
+                              <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
+                                  <FaStar className="text-amber-400 text-sm" />
+                                  <span className="font-bold text-primary-900 text-sm">
+                                    {property.averageRating || "New"}
+                                  </span>
+                                </div>
+                                <span className="text-primary-600 text-xs">
+                                  ({property.totalReviews || 0} reviews)
+                                </span>
+                              </div>
+
+                              <div className="text-right">
+                                <div className="text-lg font-black text-primary-900">
+                                  {selectedCurrencyData?.symbol}
+                                  {convertPrice(
+                                    typeof property.price === "number" &&
+                                      !isNaN(property.price)
+                                      ? property.price
+                                      : 0,
+                                    property.currency || "NGN",
+                                  )}
+                                </div>
+                                <div className="text-primary-600 text-xs">
+                                  per night
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    ))}
               </div>
 
               {/* Load More Button */}

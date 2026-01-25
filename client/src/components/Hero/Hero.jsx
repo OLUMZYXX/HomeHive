@@ -131,7 +131,7 @@ const Hero = () => {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-neutral-100 rounded-full opacity-50 blur-3xl"></div>
       </div>
 
-      <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-20 sm:pt-24 md:pt-32 pb-12 sm:pb-16 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
+      <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-28 sm:pt-32 md:pt-36 pb-12 sm:pb-16 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[70vh] sm:min-h-[80vh]">
           {/* Left Content Section */}
           <ScrollReveal

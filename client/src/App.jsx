@@ -45,7 +45,10 @@ const AnimatedRoutes = () => {
         <Route
           path="/"
           element={
-            <PageWrapper variant={getPageVariant(location.pathname)}>
+            <PageWrapper
+              variant={getPageVariant(location.pathname)}
+              showLoader={false}
+            >
               <Home />
             </PageWrapper>
           }

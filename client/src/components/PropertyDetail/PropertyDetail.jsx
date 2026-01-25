@@ -29,6 +29,7 @@ import {
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 import MapboxMap from "../common/MapboxMap";
+import { PropertyDetailSkeleton } from "../common/SkeletonLoaders";
 
 // Date picker component
 const DatePicker = ({ label, value, onChange, min, disabled, error }) => {
@@ -549,33 +550,7 @@ const PropertyDetail = () => {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-white">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-600 mx-auto mb-6"></div>
-            <div className="absolute inset-0 rounded-full h-16 w-16 border-4 border-transparent border-t-primary-300 animate-ping mx-auto"></div>
-          </div>
-          <h3 className="text-xl font-semibold text-primary-900 mb-2">
-            Loading Property Details
-          </h3>
-          <p className="text-primary-600">
-            Please wait while we fetch the property information...
-          </p>
-          <div className="flex justify-center space-x-1 mt-4">
-            <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce"></div>
-            <div
-              className="w-2 h-2 bg-primary-500 rounded-full animate-bounce"
-              style={{ animationDelay: "0.1s" }}
-            ></div>
-            <div
-              className="w-2 h-2 bg-primary-600 rounded-full animate-bounce"
-              style={{ animationDelay: "0.2s" }}
-            ></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <PropertyDetailSkeleton />;
   }
 
   if (error || !property) {

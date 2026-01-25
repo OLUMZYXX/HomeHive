@@ -65,6 +65,7 @@ import {
   AnimatedButton,
   FloatingElement,
 } from "../common/AnimatedComponents";
+import { FeaturedPropertiesSkeleton } from "../common/SkeletonLoaders";
 
 const Featured = () => {
   const navigate = useNavigate();
@@ -201,9 +202,7 @@ const Featured = () => {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {loading ? (
-            <div className="col-span-4 text-center py-12 text-primary-600">
-              Loading featured properties...
-            </div>
+            <FeaturedPropertiesSkeleton />
           ) : error || displayedProperties.length === 0 ? (
             fallbackProperties.slice(0, 3).map((property) => (
               <StaggerItem key={property.id}>
