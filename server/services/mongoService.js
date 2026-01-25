@@ -162,7 +162,7 @@ export const mongoPropertyService = {
 
   async getHostProperties(hostId) {
     try {
-      return await Property.find({ hostId, isActive: true }).sort({
+      return await Property.find({ hostId }).sort({
         createdAt: -1,
       });
     } catch (error) {

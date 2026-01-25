@@ -410,6 +410,18 @@ const Dashboard = () => {
     }
   };
 
+  const handleViewProperty = (propertyId) => {
+    navigate(`/listing/${propertyId}`);
+  };
+
+  const handleEditProperty = (propertyId) => {
+    // For now, navigate to the listing page. Edit functionality can be implemented later
+    toast.info(
+      "Edit functionality coming soon! For now, you can view your listing.",
+    );
+    navigate(`/listing/${propertyId}`);
+  };
+
   // Render the Host Dashboard Navbar
   const renderNavbar = () => (
     <nav
@@ -2014,12 +2026,22 @@ const Dashboard = () => {
                         </div>
                         <div className="flex items-center gap-2 self-start sm:self-center">
                           <ButtonTooltip content="View listing details">
-                            <button className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
+                            <button
+                              onClick={() =>
+                                handleViewProperty(property._id || property.id)
+                              }
+                              className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                            >
                               <FaEye className="text-base md:text-lg" />
                             </button>
                           </ButtonTooltip>
                           <ButtonTooltip content="Edit listing">
-                            <button className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
+                            <button
+                              onClick={() =>
+                                handleEditProperty(property._id || property.id)
+                              }
+                              className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                            >
                               <FaEdit className="text-base md:text-lg" />
                             </button>
                           </ButtonTooltip>
@@ -2164,12 +2186,22 @@ const Dashboard = () => {
                           </button>
                         </ButtonTooltip>
                         <ButtonTooltip content="View listing details">
-                          <button className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
+                          <button
+                            onClick={() =>
+                              handleViewProperty(property._id || property.id)
+                            }
+                            className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                          >
                             <FaEye className="text-base md:text-lg" />
                           </button>
                         </ButtonTooltip>
                         <ButtonTooltip content="Edit listing">
-                          <button className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
+                          <button
+                            onClick={() =>
+                              handleEditProperty(property._id || property.id)
+                            }
+                            className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                          >
                             <FaEdit className="text-base md:text-lg" />
                           </button>
                         </ButtonTooltip>

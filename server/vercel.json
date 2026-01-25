@@ -33,6 +33,9 @@
     }
   },
   "env": {
-    "NODE_ENV": "production"
+    "NODE_ENV": "production",
+    "FLUTTERWAVE_PUBLIC_KEY": "HL26iFQ1FumRhabuiKZwNPAqMmsWMtZQ",
+    "FLUTTERWAVE_SECRET_KEY": "HL26iFQ1FumRhabuiKZwNPAqMmsWMtZQ",
+    "FLUTTERWAVE_SECRET_HASH": "sKjCIgUAFNxUFu07VHA6+ojz4x/FxeJx6m1HMhiwkSo="
   }
 }

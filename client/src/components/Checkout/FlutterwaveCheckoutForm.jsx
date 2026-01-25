@@ -123,15 +123,6 @@ const FlutterwaveCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
         </h3>
       </div>
 
-      {/* Development Mode Notice */}
-      {(import.meta.env.MODE === "development" || import.meta.env.DEV) && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-300 rounded-lg">
-          <p className="text-sm text-yellow-800 font-medium">
-            🛠️ Development Mode: Using Flutterwave test keys
-          </p>
-        </div>
-      )}
-
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label className="block text-sm font-medium text-primary-700 mb-2">
