@@ -287,7 +287,19 @@ const Listings = () => {
   const filteredListings =
     activeFilter === "all"
       ? properties
-      : properties.filter((property) => property.category === activeFilter);
+      : activeFilter === "luxury"
+        ? properties.filter(
+            (property) => property.category?.toLowerCase() === "luxury",
+          )
+        : activeFilter === "apartment"
+          ? properties.filter(
+              (property) => property.type?.toLowerCase() === "apartment",
+            )
+          : activeFilter === "studio"
+            ? properties.filter(
+                (property) => property.type?.toLowerCase() === "studio",
+              )
+            : properties;
 
   // Demo images fallback array
   const demoImages = [
