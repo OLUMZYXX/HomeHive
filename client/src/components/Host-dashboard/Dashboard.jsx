@@ -77,6 +77,8 @@ import {
 
 import PropTypes from "prop-types";
 import HostBookingManagement from "./HostBookingManagement";
+import MapboxAddressAutocomplete from "../common/MapboxAddressAutocomplete";
+import MapboxMapWithPin from "../common/MapboxMapWithPin";
 
 // Enhanced Currency Selector Component
 const CurrencySelector = ({
@@ -332,6 +334,7 @@ const Dashboard = () => {
     propertyType: "",
     placeType: "",
     location: "",
+    coordinates: [3.3792, 6.5244], // Default to Lagos, Nigeria
     bedrooms: 1,
     bathrooms: 1,
     maxGuests: 1,
@@ -1088,9 +1091,14 @@ const Dashboard = () => {
       price: parseFloat(formData.pricePerNight) || 0,
       currency: formData.currency,
       address: {
+        street: formData.location,
         city: formData.location || "Lagos",
         state: "Lagos",
         country: "Nigeria",
+        coordinates: {
+          lat: formData.coordinates[1],
+          lng: formData.coordinates[0],
+        },
       },
       bedrooms: formData.bedrooms,
       bathrooms: formData.bathrooms,
@@ -1497,33 +1505,49 @@ const Dashboard = () => {
                 Where is your place located?
               </h3>
               <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200">
+                <div className="mb-4 p-3 bg-primary-50 border border-primary-200 rounded-lg">
+                  <p className="text-sm text-primary-700">
+                    <strong>Step 3:</strong> Enter your property address below,
+                    then use the interactive map to pin the exact location.
+                  </p>
+                </div>
                 <label className="block text-sm font-bold text-primary-700 mb-2">
                   Address
                 </label>
-                <input
-                  type="text"
+                <MapboxAddressAutocomplete
                   value={formData.location}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     setFormData((prev) => ({
                       ...prev,
-                      location: e.target.value,
+                      location: value,
                     }))
                   }
+                  onSelect={(suggestion) => {
+                    console.log(
+                      "🏠 Address selected in Dashboard:",
+                      suggestion,
+                    );
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: suggestion.address,
+                      coordinates: suggestion.coordinates,
+                    }));
+                  }}
                   placeholder="Enter your property address"
                   className="w-full p-3 md:p-4 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300 mb-4"
                 />
 
-                <div className="bg-primary-25 border-2 border-primary-200 rounded-xl h-48 md:h-64 flex items-center justify-center">
-                  <div className="text-center">
-                    <FaMapMarkerAlt className="text-4xl md:text-5xl text-primary-400 mx-auto mb-2" />
-                    <p className="text-primary-600 text-sm md:text-base">
-                      Interactive map will appear here
-                    </p>
-                    <p className="text-xs md:text-sm text-primary-500">
-                      Drag the pin to your exact location
-                    </p>
-                  </div>
-                </div>
+                <MapboxMapWithPin
+                  initialLocation={formData.coordinates}
+                  onLocationChange={(coordinates) => {
+                    console.log("📍 Map location changed:", coordinates);
+                    setFormData((prev) => ({
+                      ...prev,
+                      coordinates,
+                    }));
+                  }}
+                  className="bg-primary-25 border-2 border-primary-200 rounded-xl h-48 md:h-64"
+                />
               </div>
             </div>
 
@@ -2174,6 +2198,26 @@ const Dashboard = () => {
                 Step {currentStep} of {steps.length}
               </div>
             </div>
+
+            {/* Navigation Helper */}
+            {currentStep < 3 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <div className="text-blue-600">
+                    <FaMapMarkerAlt className="text-xl" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">
+                      Map Location Feature
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      The interactive map for pinning your exact location is
+                      available in Step 3. Click "Next" to continue.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Step Progress */}
             <div className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft">

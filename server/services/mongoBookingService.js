@@ -1,13 +1,65 @@
+import mongoose from "mongoose";
 import { Booking, Property } from "../models/mongodb-models.js";
 
 // MongoDB Booking Service
 export const mongoBookingService = {
   async createBooking(bookingData) {
     try {
+      console.log("🔍 Looking up property with ID:", bookingData.propertyId);
+      console.log("🔍 Property ID type:", typeof bookingData.propertyId);
+      console.log(
+        "🔗 MongoDB connection state:",
+        mongoose.connection.readyState,
+      );
+
+      // Ensure propertyId is a valid ObjectId
+      const propertyId =
+        typeof bookingData.propertyId === "string"
+          ? bookingData.propertyId
+          : bookingData.propertyId.toString();
+
+      console.log("🔄 Converted propertyId:", propertyId);
+      console.log(
+        "🔄 Is valid ObjectId:",
+        mongoose.Types.ObjectId.isValid(propertyId),
+      );
+
+      // Check MongoDB connection before query
+      if (mongoose.connection.readyState !== 1) {
+        throw new Error("Database connection is not available");
+      }
+
       // Fetch the property to get the hostId
-      const property = await Property.findById(bookingData.propertyId);
+      console.log("⏳ Starting property lookup...");
+      let property;
+      try {
+        // Set a timeout for the query
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error("Query timed out after 10 seconds")),
+            10000,
+          ),
+        );
+        property = await Promise.race([
+          Property.findById(propertyId),
+          timeoutPromise,
+        ]);
+        console.log("✅ Property lookup completed");
+      } catch (findError) {
+        console.error("❌ Property lookup failed:", findError.message);
+        if (
+          findError.message.includes("buffering timed out") ||
+          findError.message.includes("timed out")
+        ) {
+          throw new Error(
+            "Database query timed out. Please check your connection and try again.",
+          );
+        }
+        throw findError;
+      }
       if (!property) {
-        throw new Error("Property not found");
+        console.error("❌ Property not found for ID:", propertyId);
+        throw new Error(`Property not found with ID: ${propertyId}`);
       }
 
       console.log("🏠 Property found:", {

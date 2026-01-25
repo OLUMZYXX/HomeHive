@@ -26,9 +26,7 @@ class SimpleGoogleAuth {
       })
 
       this.isInitialized = true
-      console.log('Simple Google Auth initialized')
     } catch (error) {
-      console.error('Google Auth initialization failed:', error)
       throw error
     }
   }
@@ -108,11 +106,9 @@ class SimpleGoogleAuth {
         idToken: response.credential,
       }
 
-      console.log('Google sign-in successful:', userInfo.email)
       this.pendingPromise.resolve(userInfo)
       this.pendingPromise = null
     } catch (error) {
-      console.error('Google credential error:', error)
       this.pendingPromise.reject(error)
       this.pendingPromise = null
     }

@@ -347,8 +347,6 @@ export const APIProvider = ({ children }) => {
           idToken,
           userData,
         });
-        console.log("✅ Google auth API response:", response.data);
-
         const { user, tokens } = response.data;
 
         // Store tokens in localStorage using appropriate manager
@@ -360,11 +358,9 @@ export const APIProvider = ({ children }) => {
             TokenManager.setTokens(tokens.accessToken, tokens.refreshToken);
             TokenManager.setUserData(user);
           }
-          console.log("✅ Tokens stored in localStorage");
         }
 
         dispatch({ type: actionTypes.SET_USER, payload: user });
-        console.log("✅ User state updated:", user);
         return response.data;
       } catch (error) {
         setError(error);
@@ -616,26 +612,13 @@ export const APIProvider = ({ children }) => {
       setLoading(true);
       clearError();
 
-      console.log("🔍 Fetching host properties...");
-      console.log("📍 Endpoint: /auth/host/properties");
-      console.log("🔐 User token exists:", !!TokenManager.getAccessToken());
-
       const response = await axiosInstance.get("/auth/host/properties");
-      console.log("✅ Host properties response:", response.data);
 
       const { data } = response.data; // The server returns { success, data, count, message }
 
       dispatch({ type: actionTypes.SET_HOST_PROPERTIES, payload: data || [] });
       return data || [];
     } catch (error) {
-      console.error("❌ Error in getHostProperties:", error);
-      console.error("📄 Error response:", error.response?.data);
-      console.error("🔢 Error status:", error.response?.status);
-      console.error("🌐 Request URL:", error.config?.url);
-      console.error(
-        "Error loading properties:",
-        error.response?.data?.message || error.message,
-      );
       setError(new Error(`Endpoint not found: ${error.config?.url}`));
       throw error;
     } finally {
@@ -649,17 +632,12 @@ export const APIProvider = ({ children }) => {
         setLoading(true);
         clearError();
 
-        console.log("📊 Fetching host stats for:", hostId);
-
         const response = await axiosInstance.get(
           `/bookings/host/${hostId}/stats`,
         );
-        console.log("✅ Host stats response:", response.data);
 
         return response.data;
       } catch (error) {
-        console.error("❌ Error in getHostStats:", error);
-        console.error("📄 Error response:", error.response?.data);
         setError(
           error.response?.data?.message ||
             error.message ||
@@ -687,7 +665,6 @@ export const APIProvider = ({ children }) => {
 
         return response.data;
       } catch (error) {
-        console.error("❌ Error checking availability:", error);
         throw error;
       }
     },
@@ -716,7 +693,6 @@ export const APIProvider = ({ children }) => {
 
         // Create the booking
         const response = await axiosInstance.post("/bookings", bookingData);
-        console.log("✅ Booking created:", response.data);
 
         const newBooking = {
           id: response.data.bookingId,
@@ -728,7 +704,6 @@ export const APIProvider = ({ children }) => {
         dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking });
         return response.data;
       } catch (error) {
-        console.error("❌ Error creating booking:", error);
         setError(
           error.response?.data?.message ||
             error.message ||
@@ -795,7 +770,6 @@ export const APIProvider = ({ children }) => {
       const response = await axiosInstance.get("/premium/featured-images");
       return response.data;
     } catch (error) {
-      console.error("Error fetching premium images:", error);
       return { images: [] }; // Return empty array on error
     }
   }, []);
@@ -805,7 +779,6 @@ export const APIProvider = ({ children }) => {
       const response = await axiosInstance.get("/featured/header-images");
       return response.data;
     } catch (error) {
-      console.error("Error fetching weekly header images:", error);
       return {
         success: false,
         images: [],
@@ -822,7 +795,6 @@ export const APIProvider = ({ children }) => {
       );
       return response.data;
     } catch (error) {
-      console.error("Error fetching random featured images:", error);
       return {
         success: false,
         images: [],
@@ -836,7 +808,6 @@ export const APIProvider = ({ children }) => {
       const response = await axiosInstance.get("/featured/premium-showcase");
       return response.data;
     } catch (error) {
-      console.error("Error fetching premium showcase:", error);
       return {
         success: false,
         showcase: [],
@@ -852,7 +823,6 @@ export const APIProvider = ({ children }) => {
       );
       return response.data;
     } catch (error) {
-      console.error("Error fetching hero images:", error);
       return {
         success: false,
         images: [],
@@ -885,7 +855,6 @@ export const APIProvider = ({ children }) => {
       const response = await axiosInstance.get("/premium/status");
       return response.data;
     } catch (error) {
-      console.error("Error fetching premium status:", error);
       return { isPremium: false };
     }
   }, []);
@@ -900,7 +869,6 @@ export const APIProvider = ({ children }) => {
       const response = await axiosInstance.get(`/bookings/${bookingId}`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching booking:", error);
       throw error;
     }
   }, []);
@@ -918,7 +886,6 @@ export const APIProvider = ({ children }) => {
       dispatch({ type: actionTypes.UPDATE_BOOKING, payload: response.data });
       return response.data;
     } catch (error) {
-      console.error("Error cancelling booking:", error);
       throw error;
     }
   }, []);
@@ -931,7 +898,6 @@ export const APIProvider = ({ children }) => {
       );
       return response.data;
     } catch (error) {
-      console.error("Error sending booking email:", error);
       // Don't throw error for email sending failures
       return null;
     }
@@ -1009,16 +975,12 @@ export const APIProvider = ({ children }) => {
       setLoading(true);
       clearError();
 
-      console.log("🔍 Fetching bookings...");
       const response = await axiosInstance.get("/bookings");
-      console.log("📦 Bookings response:", response.data);
       const { bookings } = response.data;
 
-      console.log("✅ Bookings fetched:", bookings?.length || 0);
       dispatch({ type: actionTypes.SET_BOOKINGS, payload: bookings });
       return bookings;
     } catch (error) {
-      console.error("❌ Error fetching bookings:", error);
       setError(error);
       throw error;
     } finally {
@@ -1032,9 +994,7 @@ export const APIProvider = ({ children }) => {
         setLoading(true);
         clearError();
 
-        console.log("📝 Creating booking:", bookingData);
         const response = await axiosInstance.post("/bookings", bookingData);
-        console.log("✅ Booking created:", response.data);
 
         const newBooking = {
           ...bookingData,
@@ -1046,7 +1006,6 @@ export const APIProvider = ({ children }) => {
         dispatch({ type: actionTypes.ADD_BOOKING, payload: newBooking });
         return newBooking;
       } catch (error) {
-        console.error("❌ Error creating booking:", error);
         setError(error);
         throw error;
       } finally {
@@ -1088,12 +1047,10 @@ export const APIProvider = ({ children }) => {
         setLoading(true);
         clearError();
 
-        console.log("📝 Confirming booking:", bookingId, paymentIntentId);
         const response = await axiosInstance.post(
           `/bookings/${bookingId}/confirm`,
           { paymentIntentId },
         );
-        console.log("✅ Booking confirmed:", response.data);
 
         dispatch({
           type: actionTypes.UPDATE_BOOKING,
@@ -1105,7 +1062,6 @@ export const APIProvider = ({ children }) => {
         });
         return response.data;
       } catch (error) {
-        console.error("❌ Error confirming booking:", error);
         setError(error);
         throw error;
       } finally {

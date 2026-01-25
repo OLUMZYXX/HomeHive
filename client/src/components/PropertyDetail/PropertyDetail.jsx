@@ -28,6 +28,7 @@ import {
 } from "react-icons/fa";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
+import MapboxMap from "../common/MapboxMap";
 
 // Date picker component
 const DatePicker = ({ label, value, onChange, min, disabled, error }) => {
@@ -174,9 +175,6 @@ const PropertyDetail = () => {
     else if (property.nightlyRate) basePrice = property.nightlyRate;
     else basePrice = 0;
 
-    console.log("💰 Base price from property:", basePrice);
-    console.log("📊 Property currency:", property.currency || "NGN");
-
     // Convert price to selected currency - get numeric value
     const convertedPrice = convertFromCurrency(
       basePrice,
@@ -189,8 +187,6 @@ const PropertyDetail = () => {
         ? parseFloat(convertedPrice.replace(/,/g, ""))
         : convertedPrice;
 
-    console.log("🔄 Converted price per night:", pricePerNight);
-
     const totalAmount = nights * pricePerNight;
 
     return { nights, totalAmount, pricePerNight };
@@ -202,7 +198,6 @@ const PropertyDetail = () => {
       try {
         setLoading(true);
         setError(null);
-        console.log("🔍 Fetching property with ID:", id);
 
         // Add validation for property ID
         if (!id || id === "undefined" || id === "null") {
@@ -215,18 +210,8 @@ const PropertyDetail = () => {
           throw new Error("Property not found");
         }
 
-        console.log("✅ Property loaded successfully:", propertyData.title);
-        console.log("💰 Property data:", {
-          title: propertyData.title,
-          price: propertyData.price,
-          pricePerNight: propertyData.pricePerNight,
-          currency: propertyData.currency,
-          id: propertyData.id || propertyData._id,
-          maxGuests: propertyData.maxGuests || propertyData.guests,
-        });
         setProperty(propertyData);
       } catch (err) {
-        console.error("❌ Error fetching property:", err);
         const errorMessage = err.message || "Failed to load property";
         setError(errorMessage);
 
@@ -302,22 +287,11 @@ const PropertyDetail = () => {
       setAvailabilityLoading(true);
       setBookingErrors({}); // Clear previous errors
 
-      console.log(
-        "🔍 Checking availability for property:",
-        property._id || property.id,
-      );
-      console.log("📅 Dates:", {
-        checkIn: bookingForm.checkIn,
-        checkOut: bookingForm.checkOut,
-      });
-
       const response = await checkBookingAvailability(
         property._id || property.id,
         bookingForm.checkIn,
         bookingForm.checkOut,
       );
-
-      console.log("✅ Availability response:", response);
 
       if (response && response.available === true) {
         toast.success("Property is available for these dates! ✅");
@@ -329,10 +303,6 @@ const PropertyDetail = () => {
         setBookingErrors({ general: errorMessage });
       }
     } catch (err) {
-      console.error("❌ Availability check error:", err);
-      console.error("📄 Error response:", err.response?.data);
-      console.error("🔢 Error status:", err.response?.status);
-
       let errorMessage = "Failed to check availability";
 
       if (err.response?.status === 400) {
@@ -434,7 +404,6 @@ const PropertyDetail = () => {
     }
 
     // Debugging: Log booking form values
-    console.log("Booking form values before validation:", bookingForm);
 
     // Validate form fields
     const validationErrors = validateBookingForm();
@@ -460,8 +429,6 @@ const PropertyDetail = () => {
       setBookingLoading(true);
       setBookingErrors({}); // Clear previous errors
 
-      console.log("🔍 Pre-checking availability before booking...");
-
       // Show user that we're checking availability
       toast.loading("Checking availability...", { id: "availability-check" });
 
@@ -473,7 +440,6 @@ const PropertyDetail = () => {
           bookingForm.checkOut,
         );
       } catch (availabilityError) {
-        console.error("❌ Availability check failed:", availabilityError);
         toast.dismiss("availability-check");
         toast.error("Failed to check availability. Please try again.");
         setBookingErrors({
@@ -482,8 +448,6 @@ const PropertyDetail = () => {
         setBookingLoading(false);
         return;
       }
-
-      console.log("📋 Availability check result:", availabilityCheck);
 
       // Dismiss the loading toast
       toast.dismiss("availability-check");
@@ -512,16 +476,6 @@ const PropertyDetail = () => {
         return;
       }
 
-      console.log("🎯 Creating booking with data:", {
-        propertyId: property._id || property.id,
-        checkIn: bookingForm.checkIn,
-        checkOut: bookingForm.checkOut,
-        guests: bookingForm.guests,
-        nights,
-        totalAmount,
-        pricePerNight,
-      });
-
       const bookingData = {
         propertyId: property._id || property.id,
         propertyTitle: property.title,
@@ -536,7 +490,6 @@ const PropertyDetail = () => {
 
       // Create pending booking
       const result = await createBooking(bookingData);
-      console.log("✅ Pending booking created successfully:", result);
 
       toast.success("Booking reserved! You can pay later from My Bookings.", {
         duration: 3000,
@@ -553,10 +506,6 @@ const PropertyDetail = () => {
       // Navigate to My Bookings page
       navigate("/my-bookings");
     } catch (err) {
-      console.error("❌ Booking creation error:", err);
-      console.error("📄 Error response:", err.response?.data);
-      console.error("🔢 Error status:", err.response?.status);
-
       const errorMessage =
         err.response?.data?.message ||
         err.response?.data?.error ||
@@ -924,18 +873,30 @@ const PropertyDetail = () => {
                     </div>
                   </div>
                   <div className="w-full h-64 rounded-xl overflow-hidden border border-primary-200">
-                    <iframe
-                      src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${encodeURIComponent(
-                        `${property.location?.address || property.address?.street || property.title}, ${property.location?.city || property.address?.city}, ${property.location?.state || property.address?.state}`,
-                      )}`}
-                      width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
-                      allowFullScreen=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                      title="Property Location"
-                    ></iframe>
+                    <MapboxMap
+                      center={[
+                        property.location?.lng ||
+                          property.address?.lng ||
+                          3.3792, // Default to Lagos longitude
+                        property.location?.lat ||
+                          property.address?.lat ||
+                          6.5244, // Default to Lagos latitude
+                      ]}
+                      zoom={14}
+                      markers={[
+                        {
+                          coordinates: [
+                            property.location?.lng ||
+                              property.address?.lng ||
+                              3.3792,
+                            property.location?.lat ||
+                              property.address?.lat ||
+                              6.5244,
+                          ],
+                          popup: `<div><strong>${property.title}</strong><br/>${property.location?.address || property.address?.street || "Property Location"}</div>`,
+                        },
+                      ]}
+                    />
                   </div>
                 </div>
               </div>

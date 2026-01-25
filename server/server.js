@@ -27,7 +27,7 @@ const connectMongoDB = async () => {
       throw new Error("MONGODB_URI environment variable is not defined");
     await mongoose.connect(mongoUri, {
       maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
+      serverSelectionTimeoutMS: 30000, // Increased from 10000 to 30000
       socketTimeoutMS: 45000,
       dbName: "homehive",
     });

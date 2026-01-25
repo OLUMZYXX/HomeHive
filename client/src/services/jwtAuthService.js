@@ -12,7 +12,6 @@ export class TokenManager {
         localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
       }
     } catch (error) {
-      console.error("Error storing tokens:", error);
     }
   }
 
@@ -21,7 +20,6 @@ export class TokenManager {
     try {
       return localStorage.getItem(this.ACCESS_TOKEN_KEY);
     } catch (error) {
-      console.error("Error getting access token:", error);
       return null;
     }
   }
@@ -31,7 +29,6 @@ export class TokenManager {
     try {
       return localStorage.getItem(this.REFRESH_TOKEN_KEY);
     } catch (error) {
-      console.error("Error getting refresh token:", error);
       return null;
     }
   }
@@ -43,7 +40,6 @@ export class TokenManager {
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.USER_DATA_KEY);
     } catch (error) {
-      console.error("Error clearing tokens:", error);
     }
   }
 
@@ -52,7 +48,6 @@ export class TokenManager {
     try {
       localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
     } catch (error) {
-      console.error("Error storing user data:", error);
     }
   }
 
@@ -62,7 +57,6 @@ export class TokenManager {
       const userData = localStorage.getItem(this.USER_DATA_KEY);
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error("Error getting user data:", error);
       return null;
     }
   }
@@ -78,7 +72,6 @@ export class TokenManager {
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp > currentTime;
     } catch (error) {
-      console.error("Error checking token expiration:", error);
       return false;
     }
   }
@@ -103,7 +96,6 @@ export class TokenManager {
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp <= currentTime;
     } catch (error) {
-      console.error("Error checking token expiration:", error);
       return true;
     }
   }
@@ -129,7 +121,6 @@ export class TokenManager {
           return true;
         }
       } catch (error) {
-        console.error("Error checking token expiry time:", error);
       }
     }
 
@@ -158,7 +149,6 @@ export class TokenManager {
 
       return false;
     } catch (error) {
-      console.error("Error refreshing token:", error);
       return false;
     }
   }
@@ -178,7 +168,6 @@ export class TokenManager {
         exp: payload.exp,
       };
     } catch (error) {
-      console.error("Error parsing token:", error);
       return null;
     }
   }
@@ -195,7 +184,6 @@ export class TokenManager {
         });
       }
     } catch (error) {
-      console.error("Error initializing token manager:", error);
     }
   }
 }
@@ -214,7 +202,6 @@ export class HostTokenManager {
         localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
       }
     } catch (error) {
-      console.error("Error storing host tokens:", error);
     }
   }
 
@@ -223,7 +210,6 @@ export class HostTokenManager {
     try {
       return localStorage.getItem(this.ACCESS_TOKEN_KEY);
     } catch (error) {
-      console.error("Error getting host access token:", error);
       return null;
     }
   }
@@ -233,7 +219,6 @@ export class HostTokenManager {
     try {
       return localStorage.getItem(this.REFRESH_TOKEN_KEY);
     } catch (error) {
-      console.error("Error getting host refresh token:", error);
       return null;
     }
   }
@@ -245,7 +230,6 @@ export class HostTokenManager {
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.USER_DATA_KEY);
     } catch (error) {
-      console.error("Error clearing host tokens:", error);
     }
   }
 
@@ -254,7 +238,6 @@ export class HostTokenManager {
     try {
       localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
     } catch (error) {
-      console.error("Error storing host data:", error);
     }
   }
 
@@ -264,7 +247,6 @@ export class HostTokenManager {
       const userData = localStorage.getItem(this.USER_DATA_KEY);
       return userData ? JSON.parse(userData) : null;
     } catch (error) {
-      console.error("Error getting host data:", error);
       return null;
     }
   }
@@ -280,7 +262,6 @@ export class HostTokenManager {
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp > currentTime;
     } catch (error) {
-      console.error("Error checking host token expiration:", error);
       return false;
     }
   }
@@ -305,7 +286,6 @@ export class HostTokenManager {
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp <= currentTime;
     } catch (error) {
-      console.error("Error checking host token expiration:", error);
       return true;
     }
   }
@@ -325,7 +305,6 @@ export class HostTokenManager {
         exp: payload.exp,
       };
     } catch (error) {
-      console.error("Error parsing host token:", error);
       return null;
     }
   }

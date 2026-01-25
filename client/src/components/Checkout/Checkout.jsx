@@ -20,15 +20,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { useAPI } from "../../contexts/APIContext";
-import { loadStripe } from "@stripe/stripe-js";
-import { Elements } from "@stripe/react-stripe-js";
-import StripeCheckoutForm from "./StripeCheckoutForm";
-
-// Initialize Stripe
-const stripePromise = loadStripe(
-  import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ||
-    "pk_test_51QOGwYEnTmUaGP9VnrZNGgFiKqaHLLZaHqcKINQKOTFVRNsLIYWKOJo3oq6MWfPgPNAW4q8vGgGcJaBkdwTjd4H800YxNE4LVA",
-);
+import FlutterwaveCheckoutForm from "./FlutterwaveCheckoutForm";
 
 const countries = [
   "United States",
@@ -51,10 +43,9 @@ const Checkout = () => {
 
   const [open, setOpen] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState({
-    name: "Stripe",
-    logo: "",
+    name: "Flutterwave",
+    logo: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzAwQjU5NCIvPgo8dGV4dCB4PSIyMCIgeT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkZXPC90ZXh0Pgo8L3N2Zz4=",
   });
-  const [showCardDetails, setShowCardDetails] = useState(false); // Don't show manual card details by default (Stripe has its own form)
   const [loading, setLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showStripePayment, setShowStripePayment] = useState(false); // Only show after booking is created
@@ -122,22 +113,6 @@ const Checkout = () => {
       return;
     }
 
-    // Validate card details for Mastercard only (Stripe handles its own validation)
-    if (selectedPayment.name === "Mastercard" && showCardDetails) {
-      if (
-        !billingDetails.cardNumber ||
-        !billingDetails.expiryDate ||
-        !billingDetails.cvv ||
-        !billingDetails.name
-      ) {
-        toast.error("Card Details Required", {
-          description: "Please fill in all card details",
-          duration: 4000,
-        });
-        return;
-      }
-    }
-
     // Validate terms acceptance
     if (!termsAccepted) {
       toast.error("Terms & Conditions", {
@@ -160,24 +135,43 @@ const Checkout = () => {
           totalAmount:
             pricing.total || bookingData?.totalAmount || originalPrice * nights,
         };
-        console.log("Creating booking with payload:", bookingPayload);
         const bookingRes = await createBooking(bookingPayload);
-        console.log("Booking created successfully:", bookingRes);
 
         if (bookingRes && (bookingRes._id || bookingRes.id)) {
           setCreatedBooking(bookingRes);
           setShowStripePayment(true);
           toast.success("Booking created! Proceed to payment.");
         } else {
-          console.error("Invalid booking response:", bookingRes);
           toast.error("Failed to create booking. Please try again.");
         }
         setIsLoading(false);
         return;
       }
-      // ...existing code for PayPal, Paystack, Mastercard...
+
+      if (selectedPayment.name === "Flutterwave") {
+        // Create booking first
+        const bookingPayload = {
+          ...bookingData,
+          checkIn,
+          checkOut,
+          guests: guest,
+          totalAmount:
+            pricing.total || bookingData?.totalAmount || originalPrice * nights,
+        };
+        const bookingRes = await createBooking(bookingPayload);
+
+        if (bookingRes && (bookingRes._id || bookingRes.id)) {
+          setCreatedBooking(bookingRes);
+          setShowStripePayment(true); // Reuse the same state for Flutterwave
+          toast.success("Booking created! Proceed to payment.");
+        } else {
+          toast.error("Failed to create booking. Please try again.");
+        }
+        setIsLoading(false);
+        return;
+      }
+      // ...existing code for PayPal, Paystack...
     } catch (err) {
-      console.error("Booking error:", err);
       toast.error("Booking Failed", {
         description: "Unable to process your booking. Please try again.",
         duration: 4000,
@@ -187,8 +181,8 @@ const Checkout = () => {
     }
   };
 
-  // Handle successful Stripe payment
-  const handleStripePaymentSuccess = async (paymentIntent) => {
+  // Handle successful payment
+  const handlePaymentSuccess = async (paymentResponse) => {
     setShowStripePayment(false);
     setIsLoading(true);
 
@@ -196,11 +190,13 @@ const Checkout = () => {
       // Confirm the booking after successful payment
       const bookingId = createdBooking._id || createdBooking.id;
 
-      console.log("Confirming booking after payment:", bookingId);
-      await confirmBooking(bookingId, paymentIntent.id);
+      await confirmBooking(
+        bookingId,
+        paymentResponse.id || paymentResponse.transaction_id,
+      );
 
       toast.success("Booking Confirmed!", {
-        description: "Payment processed successfully via Stripe",
+        description: "Payment processed successfully",
         duration: 4000,
       });
 
@@ -216,7 +212,6 @@ const Checkout = () => {
         },
       });
     } catch (error) {
-      console.error("Error confirming booking:", error);
       toast.error("Failed to confirm booking. Please contact support.");
     } finally {
       setIsLoading(false);
@@ -225,30 +220,29 @@ const Checkout = () => {
 
   const paymentOption = (method) => {
     console.log("paymentOption called with method:", method);
-    setShowCardDetails(method === "Mastercard"); // Only show manual card details for Mastercard
 
-    // Show Stripe payment form immediately when Stripe is selected
-    if (method === "Stripe") {
-      console.log("Stripe selected, showing payment form immediately");
-      setShowStripePayment(true);
-      toast.info("Payment Method", {
-        description: "Stripe selected. Enter your payment details below.",
-        duration: 3000,
-      });
-    } else {
-      // Hide Stripe form when other methods are selected
-      setShowStripePayment(false);
-    }
+    // Don't show payment form immediately - let user click "Pay Now" button first
+    // This ensures consistent flow across all payment methods
+    setShowStripePayment(false);
 
     if (method === "PayPal") {
       toast.info("Payment Method", {
-        description: "Redirecting to PayPal...",
+        description: "PayPal selected. Click 'Pay Now' to proceed.",
         duration: 3000,
       });
-    }
-    if (method === "Paystack") {
+    } else if (method === "Paystack") {
       toast.info("Payment Method", {
-        description: "Redirecting to Paystack...",
+        description: "Paystack selected. Click 'Pay Now' to proceed.",
+        duration: 3000,
+      });
+    } else if (method === "Stripe") {
+      toast.info("Payment Method", {
+        description: "Stripe selected. Click 'Pay Now' to proceed.",
+        duration: 3000,
+      });
+    } else if (method === "Flutterwave") {
+      toast.info("Payment Method", {
+        description: "Flutterwave selected. Click 'Pay Now' to proceed.",
         duration: 3000,
       });
     }
@@ -341,8 +335,8 @@ const Checkout = () => {
       logo: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMTciIHZpZXdCb3g9IjAgMCA0MCAxNyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik0yNS4xMSA2LjczQzI0LjkgNi4xNSAyNC4zNCA1Ljc3IDIzLjY5IDUuNzdDMjIuMzkgNS43NyAyMS40NCA2LjcxIDIxLjQ0IDguMTRDMjEuNDQgMTAuMjEgMjIuNzMgMTAuOTMgMjQuMTkgMTAuOTNDMjQuOCAxMC45MyAyNS4zNSAxMC43OCAyNS43NyAxMC41M1Y5LjE0SDI0LjAzVjguMDlIMjdWMTJIMjUuOTNWMTEuNTRDMjUuNDkgMTEuODEgMjQuODYgMTEuOTcgMjQuMDcgMTEuOTdDMjEuNDEgMTEuOTcgMTkuNDUgMTAuMDggMTkuNDUgNy45M0MxOS40NSA1Ljc4IDIxLjQ3IDMuODkgMjMuODIgMy44OUMyNS4xOCAzLjg5IDI2LjMxIDQuNTUgMjYuODYgNS42NEwyNS4xMSA2LjczWiIgZmlsbD0iIzYzNTJGRiIvPgo8cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZD0iTTE3LjUgMy45M0MxNS45NyAzLjkzIDE0Ljc1IDUuMTQgMTQuNzUgNi42N1Y3LjkzQzE0Ljc1IDEwLjA4IDE2LjcgMTEuOTcgMTkuMzYgMTEuOTdDMjAuMTUgMTEuOTcgMjAuNzggMTEuODEgMjEuMjIgMTEuNTRWMTJIMjIuMjlWMy45M0gxNy41Wk0yMC4xNiA1LjY4VjYuNjdDMjAuMTYgNy41MiAxOS40OCA4LjIgMTguNjMgOC4yUzE3LjEgNy41MiAxNy4xIDYuNjdWNS42OEMxNy4xIDQuODMgMTcuNzggNC4xNSAxOC42MyA0LjE1UzIwLjE2IDQuODMgMjAuMTYgNS42OFoiIGZpbGw9IiM2MzUyRkYiLz4KPHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMTciIHZpZXdCb3g9IjAgMCA0MCAxNyIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHA+",
     },
     {
-      name: "Mastercard",
-      logo: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTUiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNFQjAwMUIiLz4KPGNpcmNsZSBjeD0iMjUiIGN5PSIxMiIgcj0iMTAiIGZpbGw9IiNGRkE1MDAiLz4KPHBhdGggZD0iTTIwIDEyYzAgLTUuNTIyIDQuNDc4IC0xMCAxMCAtMTBzMTAgNC40NzggMTAgMTBzLTQuNDc4IDEwIC0xMCAxMHMtMTAgLTQuNDc4IC0xMCAtMTB6IiBmaWxsPSIjRkZBNTAwIi8+Cjwvc3ZnPg==",
+      name: "Flutterwave",
+      logo: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCA0MCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjI0IiByeD0iNCIgZmlsbD0iIzAwQjU5NCIvPgo8dGV4dCB4PSIyMCIgeT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxMiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkZXPC90ZXh0Pgo8L3N2Zz4=",
     },
     {
       name: "PayPal",
@@ -788,157 +782,6 @@ const Checkout = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Enhanced Card Details Form */}
-              <AnimatePresence>
-                {showCardDetails && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-8 space-y-6 bg-gradient-to-r from-primary-25 to-neutral-50 p-6 rounded-xl border border-primary-200"
-                  >
-                    <h3 className="text-xl font-bold text-primary-800 mb-4">
-                      Card Details
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          Card Number
-                        </label>
-                        <input
-                          type="text"
-                          name="cardNumber"
-                          placeholder="1234 5678 9012 3456"
-                          value={billingDetails.cardNumber}
-                          onChange={handleInputChange}
-                          maxLength={19}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          Expiry Date
-                        </label>
-                        <input
-                          type="text"
-                          name="expiryDate"
-                          placeholder="MM/YY"
-                          value={billingDetails.expiryDate}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          name="cvv"
-                          placeholder="123"
-                          value={billingDetails.cvv}
-                          onChange={handleInputChange}
-                          maxLength={4}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                    </div>
-
-                    <h3 className="text-xl font-bold text-primary-800 mt-6 mb-4">
-                      Billing Address
-                    </h3>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          Name on Card
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          placeholder="John Doe"
-                          value={billingDetails.name}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          Address
-                        </label>
-                        <input
-                          type="text"
-                          name="address"
-                          placeholder="123 Main Street"
-                          value={billingDetails.address}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          City
-                        </label>
-                        <input
-                          type="text"
-                          name="city"
-                          placeholder="Lagos"
-                          value={billingDetails.city}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          State
-                        </label>
-                        <input
-                          type="text"
-                          name="state"
-                          placeholder="Lagos State"
-                          value={billingDetails.state}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          Zip Code
-                        </label>
-                        <input
-                          type="text"
-                          name="zip"
-                          placeholder="100001"
-                          value={billingDetails.zip}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-bold text-primary-700 mb-2">
-                          Country
-                        </label>
-                        <select
-                          name="country"
-                          value={billingDetails.country}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border-2 border-primary-200 rounded-xl focus:border-primary-500 focus:outline-none transition-colors duration-300"
-                        >
-                          <option value="">Select Country</option>
-                          {countries.map((country, index) => (
-                            <option key={index} value={country}>
-                              {country}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
 
             {/* Terms and Conditions */}
@@ -972,16 +815,22 @@ const Checkout = () => {
               </div>
             </div>
 
-            {/* Stripe Payment Form - Show when user clicks confirm & pay for Stripe */}
+            {/* Payment Form - Show when user clicks confirm & pay for Stripe or Flutterwave */}
             <AnimatePresence>
               {(() => {
-                console.log("Stripe form condition check:", {
+                console.log("Payment form condition check:", {
                   showStripePayment,
                   selectedPaymentName: selectedPayment.name,
                   shouldShow:
-                    showStripePayment && selectedPayment.name === "Stripe",
+                    showStripePayment &&
+                    (selectedPayment.name === "Stripe" ||
+                      selectedPayment.name === "Flutterwave"),
                 });
-                return showStripePayment && selectedPayment.name === "Stripe";
+                return (
+                  showStripePayment &&
+                  (selectedPayment.name === "Stripe" ||
+                    selectedPayment.name === "Flutterwave")
+                );
               })() && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -990,23 +839,21 @@ const Checkout = () => {
                   transition={{ duration: 0.3 }}
                   className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft border border-primary-200"
                 >
-                  <Elements stripe={stripePromise}>
-                    <StripeCheckoutForm
-                      bookingData={{
-                        ...createdBooking,
-                        totalAmount:
-                          createdBooking?.totalAmount ||
-                          bookingData?.totalAmount ||
-                          originalPrice * nights,
-                        userEmail:
-                          createdBooking?.userEmail ||
-                          bookingData?.userEmail ||
-                          "user@example.com",
-                        bookingId: createdBooking?._id,
-                      }}
-                      onPaymentSuccess={handleStripePaymentSuccess}
-                    />
-                  </Elements>
+                  <FlutterwaveCheckoutForm
+                    bookingData={{
+                      ...createdBooking,
+                      totalAmount:
+                        createdBooking?.totalAmount ||
+                        bookingData?.totalAmount ||
+                        originalPrice * nights,
+                      userEmail:
+                        createdBooking?.userEmail ||
+                        bookingData?.userEmail ||
+                        "user@example.com",
+                      bookingId: createdBooking?._id,
+                    }}
+                    onPaymentSuccess={handlePaymentSuccess}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>

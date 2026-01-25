@@ -28,6 +28,7 @@ import { RiArrowDropDownLine } from 'react-icons/ri'
 import { FaRegFlag } from 'react-icons/fa6'
 import Footer from '../Footer/Footer'
 import { toast } from 'sonner'
+import MapboxMap from '../common/MapboxMap'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
 import { AiFillHeart } from 'react-icons/ai'
@@ -148,18 +149,6 @@ const ListingDetails = () => {
         badge: home.badge,
       }
     : null
-
-  // Map location (for demo or API)
-  const mapSrc =
-    home && home.locationLat && home.locationLng
-      ? `https://maps.google.com/maps?q=${home.locationLat},${home.locationLng}&z=15&output=embed`
-      : home
-      ? home.location && home.location.includes('Banana Island')
-        ? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3971.0162195101557!2d3.4312!3d6.4541!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf4e2e2e2e2e2%3A0x514be3c08c83e989!2sBanana%20Island!5e0!3m2!1sen!2sng!4v1739368327046!5m2!1sen!2sng'
-        : home.location && home.location.includes('Lekki')
-        ? 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3971.0162195101557!2d3.4846!3d6.4361!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf4e2e2e2e2e2%3A0x514be3c08c83e989!2sLekki%20Phase%201!5e0!3m2!1sen!2sng!4v1739368327046!5m2!1sen!2sng'
-        : 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3971.0162195101557!2d3.4196!3d6.4281!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf4e2e2e2e2e2%3A0x514be3c08c83e989!2sVictoria%20Island!5e0!3m2!1sen!2sng!4v1739368327046!5m2!1sen!2sng'
-      : ''
 
   const [checkIn, setCheckIn] = useState('')
   const [checkout, setCheckOut] = useState('')
@@ -1001,19 +990,22 @@ const ListingDetails = () => {
               </h2>
 
               <div className='rounded-xl md:rounded-2xl overflow-hidden shadow-medium border border-primary-200 mb-4 md:mb-6'>
-                {mapSrc && (
-                  <iframe
-                    src={mapSrc}
-                    width='100%'
-                    height='300'
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading='lazy'
-                    referrerPolicy='no-referrer-when-downgrade'
-                    title='Map location'
-                    className='hover:opacity-90 transition-opacity duration-300 md:h-96'
-                  />
-                )}
+                <MapboxMap
+                  center={[
+                    home?.locationLng || 3.3792, // Default to Lagos longitude
+                    home?.locationLat || 6.5244   // Default to Lagos latitude
+                  ]}
+                  zoom={14}
+                  markers={home ? [{
+                    coordinates: [
+                      home.locationLng || 3.3792,
+                      home.locationLat || 6.5244
+                    ],
+                    popup: `<div><strong>${home.title || 'Property Location'}</strong><br/>${home.location || 'Location details'}</div>`
+                  }] : []}
+                  className="hover:opacity-90 transition-opacity duration-300"
+                  style={{ height: '300px' }}
+                />
               </div>
 
               <div className='bg-gradient-to-r from-primary-25 to-neutral-50 p-4 md:p-6 rounded-xl border border-primary-200'>

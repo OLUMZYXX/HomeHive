@@ -4,7 +4,6 @@ import { TokenManager, HostTokenManager } from "../services/jwtAuthService";
 // Create axios instance with base configuration
 const baseURL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
-console.log("🔧 Axios baseURL configured:", baseURL);
 
 const axiosInstance = axios.create({
   baseURL,

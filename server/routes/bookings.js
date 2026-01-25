@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { mongoBookingService } from "../services/mongoBookingService.js";
 
@@ -13,6 +14,44 @@ router.post("/", authenticateToken, async (req, res) => {
     console.log("🎭 User role:", req.user.role);
     console.log("🎭 User userType:", req.user.userType);
     console.log("🎭 Full user object keys:", Object.keys(req.user));
+
+    // Check MongoDB connection status
+    console.log("🔗 MongoDB connection state:", mongoose.connection.readyState);
+    if (mongoose.connection.readyState !== 1) {
+      return res
+        .status(500)
+        .json({
+          success: false,
+          message: "Database connection is not available",
+        });
+    }
+
+    // Validate required booking data
+    const { propertyId, checkIn, checkOut, guests } = req.body;
+    if (!propertyId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Property ID is required" });
+    }
+    if (!checkIn || !checkOut) {
+      return res.status(400).json({
+        success: false,
+        message: "Check-in and check-out dates are required",
+      });
+    }
+    if (!guests || guests < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Number of guests must be at least 1",
+      });
+    }
+
+    // Validate propertyId format
+    if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid property ID format" });
+    }
 
     // Temporarily skip role checking to test basic functionality
     console.log("⏭️ Skipping role check for debugging...");
@@ -323,12 +362,10 @@ router.post("/:id/confirm", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("Error confirming booking:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: error.message || "Failed to confirm booking",
-      });
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to confirm booking",
+    });
   }
 });
 

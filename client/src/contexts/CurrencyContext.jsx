@@ -46,7 +46,6 @@ export const CurrencyProvider = ({ children }) => {
           });
         }
       } catch (err) {
-        console.error("Failed to fetch currency rates", err);
       }
     };
     fetchRates();

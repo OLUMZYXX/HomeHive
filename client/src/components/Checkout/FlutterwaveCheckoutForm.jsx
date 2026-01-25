@@ -25,7 +25,7 @@ const FlutterwaveCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
     // Create payment link when component mounts
     const createPaymentIntent = async () => {
       try {
-        const amount = bookingData.totalAmount * 100; // Convert to cents for consistency
+        const amount = bookingData.totalAmount || 0; // Amount is already in NGN, no conversion needed
         const response = await axiosInstance.post("/payments/create-intent", {
           amount,
           bookingId: bookingData.bookingId || bookingData._id,
@@ -48,7 +48,7 @@ const FlutterwaveCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
       "FLWPUBK_TEST-e7bdb79e404b6d80ac63d8ff8bed7512-X",
     tx_ref: paymentData?.tx_ref || `booking-${Date.now()}`,
     amount: bookingData.totalAmount || 0,
-    currency: "USD",
+    currency: "NGN",
     payment_options: "card,mobilemoney,ussd",
     customer: {
       email:
