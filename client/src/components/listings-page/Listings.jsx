@@ -127,7 +127,7 @@ const Listings = () => {
         fetchingRef.current = true;
         setLoadingProperties(true);
         try {
-          const res = await fetch(`/api/properties?page=${page}&limit=3`);
+          const res = await fetch(`/api/properties?page=${page}&limit=12`);
           if (!res.ok) {
             if (res.status === 429) {
               setTimeout(() => {
