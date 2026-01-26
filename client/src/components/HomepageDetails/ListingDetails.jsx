@@ -423,6 +423,8 @@ const ListingDetails = () => {
                                 ? 'scale-100 opacity-100'
                                 : 'scale-105 opacity-90'
                             }`}
+                            loading="lazy"
+                            decoding="async"
                           />
                           {/* Smooth fade overlay for non-active images */}
                           <div
@@ -531,6 +533,8 @@ const ListingDetails = () => {
                           src={image.src}
                           alt={image.alt}
                           className='w-full h-full object-cover transition-transform duration-300'
+                          loading="lazy"
+                          decoding="async"
                         />
                       </button>
                     ))}
@@ -561,6 +565,8 @@ const ListingDetails = () => {
                         src={image.src}
                         alt={image.alt}
                         className='w-full h-full object-cover transition-all duration-300'
+                        loading="lazy"
+                        decoding="async"
                       />
                     </button>
                   ))}
@@ -598,6 +604,8 @@ const ListingDetails = () => {
                           src={hostInfo.avatar}
                           alt={hostInfo.name}
                           className='w-12 h-12 md:w-16 md:h-16 rounded-full object-cover ring-2 md:ring-3 ring-primary-200 mr-3 md:mr-0 md:mb-2'
+                          loading="lazy"
+                          decoding="async"
                         />
                         <div className='text-left md:text-center'>
                           <span className='text-sm md:text-sm font-bold text-primary-800 block'>
@@ -912,6 +920,8 @@ const ListingDetails = () => {
                   src={bedroom}
                   alt='bedroom'
                   className='w-full md:w-96 h-48 md:h-64 object-cover rounded-xl md:rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02]'
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className='flex-1'>
                   <h3 className='font-bold text-xl md:text-2xl text-primary-800 mb-2'>

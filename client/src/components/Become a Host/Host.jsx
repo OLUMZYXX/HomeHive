@@ -307,6 +307,8 @@ const Host = () => {
                           src={user.photoURL || user.profilePicture}
                           alt="Host Profile"
                           className="w-8 h-8 rounded-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             e.target.style.display = "none";
                             e.target.nextSibling.style.display = "flex";
@@ -362,6 +364,8 @@ const Host = () => {
                                     src={user.photoURL || user.profilePicture}
                                     alt="Host Profile"
                                     className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium"
+                                    loading="lazy"
+                                    decoding="async"
                                     onError={(e) => {
                                       e.target.style.display = "none";
                                       e.target.nextSibling.style.display =
@@ -626,6 +630,8 @@ const Host = () => {
                     src={feature.icon}
                     alt={feature.title}
                     className="w-full h-full object-contain"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
                 <h3 className="text-xl font-bold text-primary-900 mb-4">
@@ -675,6 +681,8 @@ const Host = () => {
                     src={testimonial.image}
                     alt={testimonial.name}
                     className="w-12 h-12 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div>
                     <h4 className="font-bold text-primary-900">

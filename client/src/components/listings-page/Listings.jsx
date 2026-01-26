@@ -32,7 +32,7 @@ const Listings = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, isAuthenticated } = useAPI();
+  const { user, logout, isAuthenticated, searchProperties } = useAPI();
   const {
     selectedCurrency,
     setSelectedCurrency,
@@ -113,55 +113,133 @@ const Listings = () => {
   const [loadingProperties, setLoadingProperties] = useState(false);
   const fetchingRef = useRef(false);
 
-  // On mount, check for search results in location.state
-  useEffect(() => {
-    if (location.state && Array.isArray(location.state.searchResults)) {
-      setProperties(location.state.searchResults);
+  // Function to perform quick search based on type
+  const performQuickSearch = async (quickSearchType) => {
+    try {
+      let searchCriteria = {};
+
+      switch (quickSearchType) {
+        case "lagos-apartments":
+          searchCriteria = {
+            location: "Lagos, Nigeria",
+            propertyType: "apartment",
+            minPrice: 150000,
+            maxPrice: 300000,
+            available: true,
+          };
+          break;
+        case "luxury-villas":
+          searchCriteria = {
+            propertyType: "house|villa",
+            minPrice: 500000,
+            maxPrice: null,
+            search: "luxury premium modern",
+            searchFields: ["title", "description", "amenities", "category"],
+            available: true,
+          };
+          break;
+        case "budget-options":
+          searchCriteria = {
+            minPrice: 50000,
+            maxPrice: 150000,
+            search: "budget affordable",
+            searchFields: ["title", "description"],
+            available: true,
+          };
+          break;
+        default:
+          return;
+      }
+
+      setLoadingProperties(true);
+      const searchResults = await searchProperties(searchCriteria);
+
+      const results = Array.isArray(searchResults) ? searchResults : [];
+      setProperties(results);
       setHasMore(false);
       setLoadingProperties(false);
-    } else {
-      // Fetch properties from backend API
-      const fetchProperties = async () => {
-        if (fetchingRef.current) {
-          return;
-        }
-        fetchingRef.current = true;
-        setLoadingProperties(true);
-        try {
-          const res = await fetch(`/api/properties?page=${page}&limit=12`);
-          if (!res.ok) {
-            if (res.status === 429) {
-              setTimeout(() => {
-                fetchingRef.current = false;
-                setLoadingProperties(false);
-              }, 2000);
+
+      // Show toast message for quick search results
+      if (results.length > 0) {
+        toast.success("Quick Search Complete", {
+          description: `Found ${results.length} properties`,
+          duration: 3000,
+        });
+      } else {
+        toast.info("No Results Found", {
+          description:
+            "No properties match this quick search. Try a different option.",
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error("Quick search error:", error);
+      setLoadingProperties(false);
+    }
+  };
+
+  // On mount, check for search results in location.state or URL parameters or URL parameters
+  useEffect(() => {
+    const handleInitialLoad = async () => {
+      if (location.state && Array.isArray(location.state.searchResults)) {
+        setProperties(location.state.searchResults);
+        setHasMore(false);
+        setLoadingProperties(false);
+      } else {
+        // Check for quick search parameter in URL
+        const urlParams = new URLSearchParams(location.search);
+        const quickSearchType = urlParams.get("quick");
+
+        if (quickSearchType) {
+          // Perform quick search based on URL parameter
+          await performQuickSearch(quickSearchType);
+        } else {
+          // Fetch properties from backend API
+          const fetchProperties = async () => {
+            if (fetchingRef.current) {
               return;
             }
-            throw new Error(`HTTP error! status: ${res.status}`);
-          }
-          const data = await res.json();
-          if (data && data.success && Array.isArray(data.properties)) {
-            setProperties((prev) =>
-              page === 1 ? data.properties : [...prev, ...data.properties],
-            );
-            setHasMore(data.hasMore || false);
-          } else {
-            // Invalid data structure received
-          }
-        } catch (err) {
-          // Failed to fetch properties
-          if (err.message.includes("429")) {
-            // Rate limit exceeded
-          }
-        } finally {
-          fetchingRef.current = false;
-          setLoadingProperties(false);
+            fetchingRef.current = true;
+            setLoadingProperties(true);
+            try {
+              const res = await fetch(`/api/properties?page=${page}&limit=12`);
+              if (!res.ok) {
+                if (res.status === 429) {
+                  setTimeout(() => {
+                    fetchingRef.current = false;
+                    setLoadingProperties(false);
+                  }, 2000);
+                  return;
+                }
+                throw new Error(`HTTP error! status: ${res.status}`);
+              }
+              const data = await res.json();
+              if (data && data.success && Array.isArray(data.properties)) {
+                setProperties((prev) =>
+                  page === 1 ? data.properties : [...prev, ...data.properties],
+                );
+                setHasMore(data.hasMore || false);
+              } else {
+                // Invalid data structure received
+              }
+            } catch (err) {
+              // Failed to fetch properties
+              if (err.message.includes("429")) {
+                // Rate limit exceeded
+              }
+            } finally {
+              fetchingRef.current = false;
+              setLoadingProperties(false);
+            }
+          };
+          const timeoutId = setTimeout(fetchProperties, 300);
+          return () => clearTimeout(timeoutId);
         }
-      };
-      const timeoutId = setTimeout(fetchProperties, 300);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [location.state, page]);
+      }
+    };
+
+    handleInitialLoad();
+  }, [location.state, location.search, page]);
 
   const filters = [
     { id: "all", name: "All", icon: HiHome },
@@ -676,6 +754,8 @@ const Listings = () => {
                           src={user.profilePicture || user.photoURL}
                           alt="User Profile"
                           className="w-full h-full object-cover"
+                          loading="lazy"
+                          decoding="async"
                           onError={(e) => {
                             e.target.style.display = "none";
                             e.target.nextSibling.style.display = "flex";
@@ -1020,6 +1100,8 @@ const Listings = () => {
                       src={user.profilePicture || user.photoURL}
                       alt="User Profile"
                       className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
@@ -1212,6 +1294,8 @@ const Listings = () => {
                               }
                               alt={property.title}
                               className="w-full h-full object-cover cursor-pointer transition-transform duration-700 group-hover:scale-105"
+                              loading="lazy"
+                              decoding="async"
                               onClick={() => handleClick(property._id)}
                             />
 

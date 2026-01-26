@@ -74,18 +74,17 @@ const Featured = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [displayedProperties, setDisplayedProperties] = useState([]);
-  const [showingMore, setShowingMore] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const featuredRes = await propertiesAPI.getFeaturedProperties(8);
+        const topRatedRes = await propertiesAPI.getTopRatedProperties(3);
         const fetchedProperties =
-          featuredRes.properties || featuredRes.data || [];
+          topRatedRes.properties || topRatedRes.data || [];
         setProperties(fetchedProperties);
-        // Initially show only 3 properties
-        setDisplayedProperties(fetchedProperties.slice(0, 3));
+        // Show all top-rated properties (should be 3)
+        setDisplayedProperties(fetchedProperties);
         const favRes = await favoritesAPI.getFavorites();
         setFavorites(
           favRes.favorites ? favRes.favorites.map((f) => f.propertyId) : [],
@@ -110,15 +109,6 @@ const Featured = () => {
     } catch {
       // Optionally show toast
     }
-  };
-
-  const handleLoadMore = () => {
-    if (showingMore || properties.length <= 3) {
-      return;
-    }
-    // Show all properties when load more is clicked
-    setDisplayedProperties(properties);
-    setShowingMore(true);
   };
 
   const handlePropertyClick = (property) => {
@@ -169,8 +159,9 @@ const Featured = () => {
                 </span>
               </h2>
               <p className="text-lg text-primary-600 leading-relaxed max-w-2xl">
-                Handpicked properties with exceptional ratings and reviews from
-                verified guests
+                Automatically selected top properties based on booking
+                popularity and guest favorites - the most sought-after
+                accommodations
               </p>
             </div>
             {/* <div className="flex-shrink-0">
@@ -215,14 +206,14 @@ const Featured = () => {
                   {/* Image Container */}
                   <div className="relative overflow-hidden">
                     <img
-                      src={property.image}
+                      src={property.images?.[0] || AptWebP}
                       alt={property.title}
                       loading="lazy"
                       decoding="async"
                       className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
                       width={512}
                       height={256}
-                      srcSet={`${property.image} 1x, ${property.image} 2x`}
+                      srcSet={`${property.images?.[0] || AptWebP} 1x, ${property.images?.[0] || AptWebP} 2x`}
                     />
                     {/* Badge */}
                     <div
@@ -339,7 +330,10 @@ const Featured = () => {
                       </h3>
                       <div className="flex items-center gap-2 text-primary-600 mb-3">
                         <HiLocationMarker className="text-sm flex-shrink-0" />
-                        <span className="text-base">{property.location}</span>
+                        <span className="text-base">
+                          {property.address?.city || "Unknown"},{" "}
+                          {property.address?.state || "Nigeria"}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
@@ -367,21 +361,6 @@ const Featured = () => {
             ))
           )}
         </StaggerContainer>
-
-        {/* Load More Button */}
-        {!showingMore && properties.length > 3 && (
-          <ScrollReveal direction="up" delay={0.3}>
-            <div className="text-center mt-12">
-              <AnimatedButton
-                onClick={handleLoadMore}
-                className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center gap-3 mx-auto"
-              >
-                Load More Properties
-                <HiArrowRight className="text-lg group-hover:translate-x-1 transition-transform duration-300" />
-              </AnimatedButton>
-            </div>
-          </ScrollReveal>
-        )}
       </div>
     </section>
   );

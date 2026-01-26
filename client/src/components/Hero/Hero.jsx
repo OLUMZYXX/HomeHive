@@ -118,9 +118,7 @@ const Hero = () => {
   };
 
   const handleLearnMore = () => {
-    document
-      .getElementById("accomodation")
-      ?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (

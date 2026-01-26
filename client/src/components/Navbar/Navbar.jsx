@@ -386,6 +386,8 @@ const Navbar = () => {
                       src={user.profilePicture || user.photoURL}
                       alt="User Profile"
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.style.display = "none";
                         e.target.nextSibling.style.display = "flex";
@@ -445,6 +447,8 @@ const Navbar = () => {
                         src={user.profilePicture || user.photoURL}
                         alt="User Profile"
                         className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => {
                           e.target.style.display = "none";
                           e.target.nextSibling.style.display = "flex";
@@ -621,6 +625,8 @@ const Navbar = () => {
                             src={user.profilePicture || user.photoURL}
                             alt="User Profile"
                             className="w-10 h-10 rounded-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               e.target.style.display = "none";
                               e.target.nextSibling.style.display = "flex";

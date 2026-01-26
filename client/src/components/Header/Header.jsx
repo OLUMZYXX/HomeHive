@@ -2,9 +2,182 @@ import React, { useState, useEffect, useCallback } from "react";
 import header1 from "../../assets/header1.jpg";
 import header from "../../assets/header.jpg";
 import { useNavigate } from "react-router-dom";
-import { HiArrowRight, HiCheckCircle, HiPlay } from "react-icons/hi";
+import {
+  HiArrowRight,
+  HiCheckCircle,
+  HiPlay,
+  HiX,
+  HiChevronLeft,
+  HiChevronRight,
+} from "react-icons/hi";
 import { useAPI } from "../../contexts/APIContext";
 import { toast } from "../../utils/toast";
+
+// Story Modal Component
+const StoryModal = ({ onClose }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Sample accommodation stories
+  const stories = [
+    {
+      id: 1,
+      title: "Luxury Downtown Apartment",
+      description:
+        "Experience the pinnacle of urban living in this meticulously designed apartment featuring floor-to-ceiling windows, premium finishes, and breathtaking city views.",
+      image: header,
+      location: "Victoria Island, Lagos",
+      price: "₦500,000/night",
+      features: [
+        "Ocean View",
+        "Private Balcony",
+        "24/7 Concierge",
+        "Fitness Center",
+      ],
+    },
+    {
+      id: 2,
+      title: "Executive Penthouse Suite",
+      description:
+        "Indulge in unparalleled luxury with this exclusive penthouse offering panoramic cityscapes, a private rooftop terrace, and world-class amenities.",
+      image: header1,
+      location: "Ikoyi, Lagos",
+      price: "₦750,000/night",
+      features: [
+        "Rooftop Terrace",
+        "Private Elevator",
+        "Chef's Kitchen",
+        "Spa Bathroom",
+      ],
+    },
+    {
+      id: 3,
+      title: "Boutique Waterfront Villa",
+      description:
+        "Escape to paradise in this stunning waterfront villa combining traditional architecture with modern luxury, perfect for special occasions.",
+      image: header,
+      location: "Banana Island, Lagos",
+      price: "₦1,200,000/night",
+      features: [
+        "Private Beach Access",
+        "Infinity Pool",
+        "Home Theater",
+        "Wine Cellar",
+      ],
+    },
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % stories.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + stories.length) % stories.length);
+  };
+
+  const currentStory = stories[currentSlide];
+
+  return (
+    <div className="relative">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <h2 className="text-2xl font-bold text-primary-900">Our Story</h2>
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <HiX className="text-2xl text-gray-500" />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div className="relative">
+        {/* Image */}
+        <div className="relative h-96 overflow-hidden">
+          <img
+            src={currentStory.image}
+            alt={currentStory.title}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+          {/* Navigation Arrows */}
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+          >
+            <HiChevronLeft className="text-2xl text-white" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/20 backdrop-blur-sm rounded-full hover:bg-white/30 transition-colors"
+          >
+            <HiChevronRight className="text-2xl text-white" />
+          </button>
+
+          {/* Slide Indicators */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {stories.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentSlide(index)}
+                className={`w-3 h-3 rounded-full transition-colors ${
+                  index === currentSlide ? "bg-white" : "bg-white/50"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Story Content */}
+        <div className="p-8">
+          <div className="max-w-2xl">
+            <h3 className="text-3xl font-bold text-primary-900 mb-4">
+              {currentStory.title}
+            </h3>
+            <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+              {currentStory.description}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div>
+                <h4 className="font-semibold text-primary-900 mb-2">
+                  Location
+                </h4>
+                <p className="text-gray-600">{currentStory.location}</p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-primary-900 mb-2">
+                  Starting from
+                </h4>
+                <p className="text-2xl font-bold text-primary-800">
+                  {currentStory.price}
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-primary-900 mb-3">
+                Key Features
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {currentStory.features.map((feature, index) => (
+                  <span
+                    key={index}
+                    className="px-4 py-2 bg-primary-100 text-primary-800 rounded-full text-sm font-medium"
+                  >
+                    {feature}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Header = () => {
   const navigate = useNavigate();
@@ -206,15 +379,20 @@ const Header = () => {
     return () => clearInterval(interval);
   }, [headerImages.useBackend, headerImages.lastUpdated, fetchWeeklyImages]);
 
+  // State for story modal
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
+
   // Event handlers
   const handleExploreClick = () => {
     navigate("/signin");
   };
 
   const handleLearnMore = () => {
-    document
-      .getElementById("testimonial")
-      ?.scrollIntoView({ behavior: "smooth" });
+    setIsStoryModalOpen(true);
+  };
+
+  const closeStoryModal = () => {
+    setIsStoryModalOpen(false);
   };
 
   const handleImageError = (imageType) => {
@@ -524,6 +702,22 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      {/* Story Modal */}
+      {isStoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop with blur */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={closeStoryModal}
+          />
+
+          {/* Modal Content */}
+          <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <StoryModal onClose={closeStoryModal} />
+          </div>
+        </div>
+      )}
     </section>
   );
 };

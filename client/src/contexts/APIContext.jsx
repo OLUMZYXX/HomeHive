@@ -4,10 +4,12 @@ import React, {
   useReducer,
   useCallback,
   useEffect,
+  useRef,
 } from "react";
 import { useLocation } from "react-router-dom";
 import axiosInstance from "../config/axios";
 import { TokenManager, HostTokenManager } from "../services/jwtAuthService";
+import { toast } from "../utils/toast";
 
 // ================================
 // CONTEXT STATE MANAGEMENT
@@ -207,6 +209,13 @@ export const APIProvider = ({ children }) => {
   const [state, dispatch] = useReducer(apiReducer, initialState);
   const location = useLocation();
 
+  // Inactivity logout refs
+  const inactivityTimerRef = useRef(null);
+  const lastActivityRef = useRef(Date.now());
+
+  // Inactivity timeout: 35 minutes (2100000 ms)
+  const INACTIVITY_TIMEOUT = 35 * 60 * 1000;
+
   // ================================
   // SYNC AUTH STATE ON ROUTE CHANGE
   // ================================
@@ -399,6 +408,84 @@ export const APIProvider = ({ children }) => {
     },
     [setLoading, setError],
   );
+
+  // ================================
+  // INACTIVITY LOGOUT FUNCTIONS
+  // ================================
+
+  const resetActivityTimer = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(
+      checkInactivity,
+      INACTIVITY_TIMEOUT,
+    );
+  }, []);
+
+  const checkInactivity = useCallback(async () => {
+    const now = Date.now();
+    const timeSinceLastActivity = now - lastActivityRef.current;
+
+    if (timeSinceLastActivity >= INACTIVITY_TIMEOUT && state.isAuthenticated) {
+      // User has been inactive, logout automatically
+      const isHost = isHostPath(location.pathname);
+      try {
+        await logout(isHost);
+        toast.warning(
+          "You have been logged out due to inactivity for security reasons.",
+          "Session Expired",
+        );
+      } catch (error) {
+        console.error("Error during inactivity logout:", error);
+      }
+    }
+  }, [state.isAuthenticated, location.pathname, logout]);
+
+  // ================================
+  // INACTIVITY LOGOUT EFFECT
+  // ================================
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      // Start/reset the inactivity timer
+      resetActivityTimer();
+
+      // Set up event listeners for user activity
+      const events = [
+        "mousedown",
+        "mousemove",
+        "keypress",
+        "scroll",
+        "touchstart",
+        "click",
+      ];
+
+      const handleActivity = () => {
+        resetActivityTimer();
+      };
+
+      // Add event listeners
+      events.forEach((event) => {
+        document.addEventListener(event, handleActivity, true);
+      });
+
+      // Cleanup function
+      return () => {
+        events.forEach((event) => {
+          document.removeEventListener(event, handleActivity, true);
+        });
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+      };
+    } else {
+      // Clear timer if not authenticated
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    }
+  }, [state.isAuthenticated, resetActivityTimer]);
 
   const getCurrentUser = useCallback(async () => {
     try {

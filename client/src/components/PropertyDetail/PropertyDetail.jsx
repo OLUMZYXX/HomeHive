@@ -676,6 +676,8 @@ const PropertyDetail = () => {
                     }
                     alt={property.title}
                     className="w-full h-96 lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
+                    decoding="async"
                   />
                   {property.images?.length > 1 && (
                     <>
@@ -716,6 +718,8 @@ const PropertyDetail = () => {
                         src={image}
                         alt={`${property.title} ${index + 1}`}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                     </button>
                   ))}

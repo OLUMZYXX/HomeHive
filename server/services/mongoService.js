@@ -472,19 +472,45 @@ export const mongoPropertyService = {
 
       // Apply location filter
       if (searchCriteria.location) {
-        // Search in address fields
-        query.$or = [
-          { "address.city": new RegExp(searchCriteria.location, "i") },
-          { "address.state": new RegExp(searchCriteria.location, "i") },
-          { "address.country": new RegExp(searchCriteria.location, "i") },
-          { title: new RegExp(searchCriteria.location, "i") },
-          { description: new RegExp(searchCriteria.location, "i") },
-        ];
+        // Split location by commas to handle multiple locations
+        const locations = searchCriteria.location
+          .split(",")
+          .map((loc) => loc.trim())
+          .filter((loc) => loc.length > 0);
+
+        const locationConditions = [];
+        locations.forEach((loc) => {
+          locationConditions.push(
+            { "address.city": new RegExp(loc, "i") },
+            { "address.state": new RegExp(loc, "i") },
+            { "address.country": new RegExp(loc, "i") },
+            { title: new RegExp(loc, "i") },
+            { description: new RegExp(loc, "i") },
+          );
+        });
+
+        query.$or = locationConditions;
       }
 
       // Apply property type filter
       if (searchCriteria.propertyType) {
-        query.type = new RegExp(searchCriteria.propertyType, "i");
+        if (searchCriteria.propertyType.includes("|")) {
+          // Handle multiple types separated by |
+          const types = searchCriteria.propertyType
+            .split("|")
+            .map((t) => t.trim());
+          const typeConditions = types.map((t) => ({
+            type: new RegExp(t, "i"),
+          }));
+          if (query.$or) {
+            query.$and = [{ $or: query.$or }, { $or: typeConditions }];
+            delete query.$or;
+          } else {
+            query.$or = typeConditions;
+          }
+        } else {
+          query.type = new RegExp(searchCriteria.propertyType, "i");
+        }
       }
 
       // Apply price range filters
@@ -506,10 +532,7 @@ export const mongoPropertyService = {
         query.isAvailable = searchCriteria.available;
       }
 
-      // Apply status filter
-      if (searchCriteria.status) {
-        query.status = searchCriteria.status;
-      }
+      // Note: Properties don't have a status field, active status is determined by isActive and isAvailable
 
       // Apply keyword search across multiple fields
       if (searchCriteria.search) {
@@ -550,6 +573,97 @@ export const mongoPropertyService = {
     } catch (error) {
       console.error("❌ Error searching properties:", error);
       throw new Error("Failed to search properties: " + error.message);
+    }
+  },
+
+  async getTopRatedProperties(limit = 3) {
+    try {
+      console.log(
+        `⭐ Fetching top ${limit} rated properties based on bookings and favorites`,
+      );
+
+      // Get all active properties
+      const properties = await Property.find({ isActive: true });
+
+      // Calculate booking and favorite counts for each property
+      const propertiesWithStats = await Promise.all(
+        properties.map(async (property) => {
+          // Count bookings for this property
+          const bookingCount = await Booking.countDocuments({
+            propertyId: property._id,
+            status: { $in: ["confirmed", "completed"] },
+          });
+
+          // Count favorites for this property
+          const favoriteCount = await Favorite.countDocuments({
+            propertyId: property._id,
+          });
+
+          return {
+            ...property.toObject(),
+            bookingCount,
+            favoriteCount,
+            // Calculate a combined score (bookings * 2 + favorites * 1)
+            popularityScore: bookingCount * 2 + favoriteCount,
+          };
+        }),
+      );
+
+      // Sort by popularity score (descending), then by average rating
+      const sortedProperties = propertiesWithStats.sort((a, b) => {
+        // First sort by popularity score
+        if (b.popularityScore !== a.popularityScore) {
+          return b.popularityScore - a.popularityScore;
+        }
+        // If scores are equal, sort by average rating
+        return b.averageRating - a.averageRating;
+      });
+
+      // Ensure image uniqueness - select properties with different images
+      const selectedProperties = [];
+      const usedImages = new Set();
+
+      for (const property of sortedProperties) {
+        const firstImage =
+          Array.isArray(property.images) && property.images.length > 0
+            ? property.images[0]
+            : null;
+
+        // Skip properties with duplicate images or no images
+        if (!firstImage || usedImages.has(firstImage)) {
+          continue;
+        }
+
+        usedImages.add(firstImage);
+        selectedProperties.push(property);
+
+        // Stop when we have enough properties
+        if (selectedProperties.length >= limit) {
+          break;
+        }
+      }
+
+      // If we don't have enough unique image properties, fill with remaining properties
+      if (selectedProperties.length < limit) {
+        for (const property of sortedProperties) {
+          if (selectedProperties.length >= limit) break;
+          if (
+            !selectedProperties.find(
+              (p) => p._id.toString() === property._id.toString(),
+            )
+          ) {
+            selectedProperties.push(property);
+          }
+        }
+      }
+
+      console.log(
+        `✅ Found ${selectedProperties.length} top-rated properties with unique images`,
+      );
+      return selectedProperties;
+    } catch (error) {
+      console.error("❌ Error fetching top-rated properties:", error);
+      throw new Error("Failed to fetch top-rated properties: " + error.message);
     }
   },
 };

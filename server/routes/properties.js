@@ -3,7 +3,7 @@ import {
   authenticateToken,
   optionalAuth,
 } from "../middleware/authMiddleware.js";
-import { mongoPropertyService } from "../services/mongoService.js";
+import mongoPropertyService from "../services/mongoService.js";
 
 const router = express.Router();
 
@@ -66,6 +66,80 @@ router.get("/", optionalAuth, async (req, res) => {
   } catch (error) {
     console.error("❌ Error fetching properties:", error);
     res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// Get Featured Properties
+router.get("/featured", optionalAuth, async (req, res) => {
+  try {
+    console.log("⭐ Fetching featured properties");
+
+    const limit = parseInt(req.query.limit) || 10;
+
+    const properties = await mongoPropertyService.getFeaturedProperties(limit);
+
+    // Ensure each property has a valid images array
+    const processedProperties = properties.map((property) => {
+      if (!Array.isArray(property.images)) {
+        property.images = [];
+      }
+      property.images = property.images.filter(
+        (img) => typeof img === "string" && img.length > 0,
+      );
+      return property;
+    });
+
+    console.log(
+      `✅ Returning ${processedProperties.length} featured properties`,
+    );
+    res.json({
+      success: true,
+      properties: processedProperties,
+      count: processedProperties.length,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching featured properties:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get Top Rated Properties (based on bookings and favorites)
+router.get("/top-rated", optionalAuth, async (req, res) => {
+  try {
+    console.log("⭐ Fetching top-rated properties");
+
+    const limit = parseInt(req.query.limit) || 3;
+
+    const properties = await mongoPropertyService.getTopRatedProperties(limit);
+
+    // Ensure each property has a valid images array and correct ID fields
+    const processedProperties = properties.map((property) => {
+      if (!Array.isArray(property.images)) {
+        property.images = [];
+      }
+      property.images = property.images.filter(
+        (img) => typeof img === "string" && img.length > 0,
+      );
+
+      // Add id and propertyId fields for frontend compatibility
+      return {
+        ...property,
+        id: property._id.toString(),
+        propertyId: property._id.toString(),
+      };
+    });
+
+    console.log(
+      `✅ Returning ${processedProperties.length} top-rated properties`,
+    );
+    res.json({
+      success: true,
+      properties: processedProperties,
+      count: processedProperties.length,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching top-rated properties:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

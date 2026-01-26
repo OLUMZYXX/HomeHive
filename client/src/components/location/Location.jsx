@@ -185,21 +185,19 @@ const Location = () => {
             minPrice: 150000,
             maxPrice: 300000,
             available: true,
-            status: "active",
           };
           break;
         case "luxury-villas":
           setPropertyType("Villa");
-          setPriceRange("₦500,000 - ₦750,000");
-          setSearchKeyword("luxury"); // Add relevant keyword
+          setPriceRange("₦500,000+");
+          setSearchKeyword("luxury premium"); // Add relevant keyword
           searchCriteria = {
-            propertyType: "villa",
+            propertyType: "house|villa",
             minPrice: 500000,
-            maxPrice: 750000,
-            search: "luxury",
-            searchFields: ["title", "description", "amenities"],
+            maxPrice: null,
+            search: "luxury premium modern",
+            searchFields: ["title", "description", "amenities", "category"],
             available: true,
-            status: "active",
           };
           break;
         case "budget-options":
@@ -211,7 +209,6 @@ const Location = () => {
             search: "budget affordable",
             searchFields: ["title", "description"],
             available: true,
-            status: "active",
           };
           break;
         default:
