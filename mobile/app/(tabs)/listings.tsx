@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../constants/Colors';
 import { Fonts, FontSizes } from '../../constants/Typography';
@@ -52,14 +52,20 @@ export default function ListingsScreen() {
     [fetchProperties],
   );
 
+  // Initial load — fetch everything
   useEffect(() => {
-    load({ category, sort });
-  }, [category, sort]);
+    load();
+  }, []);
+
+  // Re-fetch when sort changes (server-side sort)
+  useEffect(() => {
+    if (sort) load({ sort });
+  }, [sort]);
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => {
-      load({ search, category, sort });
+      if (search) load({ search });
     }, 400);
     return () => {
       if (searchTimeout.current) clearTimeout(searchTimeout.current);
@@ -68,9 +74,9 @@ export default function ListingsScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await load({ search, category, sort });
+    await load(sort ? { sort } : undefined);
     setRefreshing(false);
-  }, [search, category, sort, load]);
+  }, [sort, load]);
 
   const filteredProperties = properties.filter((p) => {
     const matchSearch =
@@ -90,7 +96,7 @@ export default function ListingsScreen() {
           style={styles.sortBtn}
           onPress={() => setShowSort((v) => !v)}
         >
-          <Text style={styles.sortIcon}>⇅</Text>
+          <Ionicons name="options-outline" size={16} color={Colors.textSecondary} />
           <Text style={styles.sortLabel}>
             {SORT_OPTIONS.find((o) => o.value === sort)?.label || 'Sort'}
           </Text>
@@ -285,8 +291,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   chipActive: {
-    backgroundColor: Colors.primary[800],
-    borderColor: Colors.primary[800],
+    backgroundColor: Colors.neutral[900],
+    borderColor: Colors.neutral[900],
   },
   chipText: {
     fontFamily: Fonts.notoSansSemiBold,

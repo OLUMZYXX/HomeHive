@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  FlatList,
   Dimensions,
   RefreshControl,
 } from 'react-native';
@@ -13,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
@@ -24,11 +24,11 @@ const { width } = Dimensions.get('window');
 
 const CATEGORIES = [
   { label: 'All', value: '' },
-  { label: '✨ Luxury', value: 'luxury' },
-  { label: '🏢 Apartment', value: 'apartment' },
-  { label: '🛏 Studio', value: 'studio' },
-  { label: '🏡 House', value: 'house' },
-  { label: '🏖 Beach', value: 'beach' },
+  { label: 'Luxury', value: 'luxury' },
+  { label: 'Apartment', value: 'apartment' },
+  { label: 'Studio', value: 'studio' },
+  { label: 'House', value: 'house' },
+  { label: 'Beach', value: 'beach' },
 ];
 
 const HERO_IMAGES = [
@@ -39,20 +39,19 @@ const HERO_IMAGES = [
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { featuredProperties, fetchFeatured, isAuthenticated, user } = useAPI();
+  const { properties, fetchProperties, isAuthenticated, user } = useAPI();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeCategory, setActiveCategory] = useState('');
   const [heroIndex, setHeroIndex] = useState(0);
 
   const load = useCallback(async () => {
-    await fetchFeatured();
+    await fetchProperties();
     setLoading(false);
-  }, [fetchFeatured]);
+  }, [fetchProperties]);
 
   useEffect(() => {
     load();
-    // Rotate hero images
     const interval = setInterval(() => {
       setHeroIndex((i) => (i + 1) % HERO_IMAGES.length);
     }, 5000);
@@ -61,16 +60,16 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchFeatured();
+    await fetchProperties();
     setRefreshing(false);
-  }, [fetchFeatured]);
+  }, [fetchProperties]);
 
-  const filteredFeatured =
+  const filtered =
     activeCategory
-      ? featuredProperties.filter(
-          (p) => p.category?.toLowerCase() === activeCategory,
+      ? properties.filter(
+          (p) => (p.category || '').toLowerCase() === activeCategory,
         )
-      : featuredProperties;
+      : properties;
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -79,7 +78,11 @@ export default function HomeScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary[800]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={Colors.amber[500]}
+          />
         }
       >
         {/* ── Header ─────────────────────────────────────── */}
@@ -92,7 +95,7 @@ export default function HomeScreen() {
             >
               <View style={styles.avatar}>
                 <Text style={styles.avatarText}>
-                  {user?.name?.charAt(0).toUpperCase() || '?'}
+                  {(user?.name || user?.email || '?').charAt(0).toUpperCase()}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -115,37 +118,31 @@ export default function HomeScreen() {
             transition={800}
           />
           <LinearGradient
-            colors={['rgba(15,23,42,0.15)', 'rgba(15,23,42,0.75)']}
+            colors={['rgba(15,23,42,0.1)', 'rgba(15,23,42,0.80)']}
             style={StyleSheet.absoluteFill}
           />
           <View style={styles.heroContent}>
-            <Text style={styles.heroSubtitle}>Discover your next stay</Text>
-            <Text style={styles.heroTitle}>Find Your Perfect Home Away</Text>
+            <Text style={styles.heroLabel}>DISCOVER YOUR NEXT STAY</Text>
+            <Text style={styles.heroTitle}>Find Your Perfect{'\n'}Home Away</Text>
             <View style={styles.heroStats}>
               <HeroStat value="500+" label="Properties" />
               <View style={styles.statDivider} />
-              <HeroStat value="4.9★" label="Avg Rating" />
+              <HeroStat value="4.9★" label="Rating" />
               <View style={styles.statDivider} />
-              <HeroStat value="10K+" label="Happy Guests" />
+              <HeroStat value="10K+" label="Guests" />
             </View>
-            <View style={styles.heroBtns}>
-              <Button
-                title="Explore Stays"
-                onPress={() => router.push('/(tabs)/listings')}
-                style={styles.heroBtn}
-              />
-              <Button
-                title="Learn More"
-                onPress={() => {}}
-                variant="outline"
-                style={[styles.heroBtn, styles.heroBtnOutline]}
-                textStyle={{ color: Colors.white }}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.exploreBtn}
+              onPress={() => router.push('/(tabs)/listings')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.exploreBtnText}>Explore Stays</Text>
+              <Ionicons name="arrow-forward" size={16} color={Colors.white} />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* ── Categories ─────────────────────────────────── */}
+        {/* ── Category Chips ─────────────────────────────── */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Browse by Type</Text>
         </View>
@@ -176,20 +173,28 @@ export default function HomeScreen() {
           ))}
         </ScrollView>
 
-        {/* ── Featured Properties ────────────────────────── */}
+        {/* ── Properties ─────────────────────────────────── */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Featured Stays</Text>
+          <Text style={styles.sectionTitle}>
+            {activeCategory
+              ? `${CATEGORIES.find((c) => c.value === activeCategory)?.label} Stays`
+              : 'All Properties'}
+          </Text>
           <TouchableOpacity onPress={() => router.push('/(tabs)/listings')}>
-            <Text style={styles.seeAll}>See All →</Text>
+            <Text style={styles.seeAll}>Browse All →</Text>
           </TouchableOpacity>
         </View>
 
         {loading ? (
           <PropertyListSkeleton count={4} />
-        ) : filteredFeatured.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🏠</Text>
-            <Text style={styles.emptyText}>No featured properties found</Text>
+            <Ionicons name="home-outline" size={48} color={Colors.neutral[300]} />
+            <Text style={styles.emptyText}>
+              {activeCategory
+                ? `No ${activeCategory} properties found`
+                : 'No properties available'}
+            </Text>
             <Button
               title="Browse All"
               onPress={() => router.push('/(tabs)/listings')}
@@ -199,7 +204,7 @@ export default function HomeScreen() {
           </View>
         ) : (
           <View style={styles.grid}>
-            {filteredFeatured.map((property) => (
+            {filtered.map((property) => (
               <PropertyCard key={property._id} property={property} />
             ))}
           </View>
@@ -209,14 +214,9 @@ export default function HomeScreen() {
         <View style={styles.whySection}>
           <Text style={styles.sectionTitle}>Why HomeHive?</Text>
           <View style={styles.whyGrid}>
-            {[
-              { icon: '🛡️', title: 'Verified Listings', desc: 'Every property is manually verified for quality.' },
-              { icon: '💳', title: 'Secure Payments', desc: 'Your payments are always safe and protected.' },
-              { icon: '⚡', title: 'Instant Booking', desc: 'Book your stay in seconds, anytime.' },
-              { icon: '🌟', title: 'Top-Rated Hosts', desc: 'Only the best hosts make our platform.' },
-            ].map((item) => (
+            {WHY_ITEMS.map((item) => (
               <View key={item.title} style={styles.whyCard}>
-                <Text style={styles.whyIcon}>{item.icon}</Text>
+                <Ionicons name={item.icon as any} size={26} color={Colors.amber[500]} />
                 <Text style={styles.whyTitle}>{item.title}</Text>
                 <Text style={styles.whyDesc}>{item.desc}</Text>
               </View>
@@ -227,6 +227,13 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
+
+const WHY_ITEMS = [
+  { icon: 'shield-checkmark-outline', title: 'Verified Listings', desc: 'Every property manually verified for quality.' },
+  { icon: 'card-outline', title: 'Secure Payments', desc: 'Your payments are always safe and protected.' },
+  { icon: 'flash-outline', title: 'Instant Booking', desc: 'Book your stay in seconds, anytime.' },
+  { icon: 'star-outline', title: 'Top-Rated Hosts', desc: 'Only the best hosts on our platform.' },
+];
 
 function HeroStat({ value, label }: { value: string; label: string }) {
   return (
@@ -240,7 +247,7 @@ function HeroStat({ value, label }: { value: string; label: string }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   scroll: { flex: 1 },
-  content: { paddingBottom: 32 },
+  content: { paddingBottom: 40 },
 
   // Header
   header: {
@@ -256,14 +263,14 @@ const styles = StyleSheet.create({
   logo: {
     fontFamily: 'Pacifico_400Regular',
     fontSize: FontSizes['2xl'],
-    color: Colors.primary[800],
+    color: Colors.neutral[900],
   },
   avatarBtn: {},
   avatar: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.primary[800],
+    backgroundColor: Colors.amber[500],
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -274,20 +281,20 @@ const styles = StyleSheet.create({
   },
   signInBtn: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: 7,
+    borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: Colors.primary[800],
+    borderColor: Colors.neutral[800],
   },
   signInText: {
     fontFamily: Fonts.notoSansSemiBold,
     fontSize: FontSizes.sm,
-    color: Colors.primary[800],
+    color: Colors.neutral[800],
   },
 
   // Hero
   heroContainer: {
-    height: 320,
+    height: 310,
     position: 'relative',
     justifyContent: 'flex-end',
   },
@@ -295,19 +302,18 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 24,
   },
-  heroSubtitle: {
-    fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.sm,
-    color: 'rgba(255,255,255,0.8)',
-    marginBottom: 6,
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+  heroLabel: {
+    fontFamily: Fonts.notoSansSemiBold,
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.7)',
+    letterSpacing: 2,
+    marginBottom: 8,
   },
   heroTitle: {
     fontFamily: Fonts.outfitBold,
     fontSize: FontSizes['3xl'],
     color: Colors.white,
-    lineHeight: 38,
+    lineHeight: 40,
     marginBottom: 16,
   },
   heroStats: {
@@ -324,27 +330,35 @@ const styles = StyleSheet.create({
   statLabel: {
     fontFamily: Fonts.notoSans,
     fontSize: FontSizes.xs,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.65)',
   },
   statDivider: {
     width: 1,
-    height: 30,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    height: 28,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     marginHorizontal: 16,
   },
-  heroBtns: {
+  exploreBtn: {
     flexDirection: 'row',
-    gap: 10,
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.amber[500],
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 6,
   },
-  heroBtn: { flex: 1 },
-  heroBtnOutline: {
-    borderColor: 'rgba(255,255,255,0.6)',
+  exploreBtnText: {
+    fontFamily: Fonts.notoSansSemiBold,
+    fontSize: FontSizes.sm,
+    color: Colors.white,
+    letterSpacing: 0.5,
   },
 
   // Categories
   categories: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 10,
     gap: 8,
   },
   chip: {
@@ -356,8 +370,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
   },
   chipActive: {
-    backgroundColor: Colors.primary[800],
-    borderColor: Colors.primary[800],
+    backgroundColor: Colors.neutral[900],
+    borderColor: Colors.neutral[900],
   },
   chipText: {
     fontFamily: Fonts.notoSansSemiBold,
@@ -366,14 +380,14 @@ const styles = StyleSheet.create({
   },
   chipTextActive: { color: Colors.white },
 
-  // Section
+  // Section headers
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingTop: 20,
-    paddingBottom: 12,
+    paddingBottom: 10,
   },
   sectionTitle: {
     fontFamily: Fonts.outfitBold,
@@ -383,7 +397,7 @@ const styles = StyleSheet.create({
   seeAll: {
     fontFamily: Fonts.notoSansSemiBold,
     fontSize: FontSizes.sm,
-    color: Colors.primary[700],
+    color: Colors.amber[600],
   },
 
   // Grid
@@ -398,39 +412,39 @@ const styles = StyleSheet.create({
   empty: {
     alignItems: 'center',
     paddingVertical: 40,
+    gap: 8,
   },
-  emptyIcon: { fontSize: 48, marginBottom: 12 },
   emptyText: {
     fontFamily: Fonts.notoSans,
     fontSize: FontSizes.base,
     color: Colors.textSecondary,
+    marginTop: 8,
   },
 
   // Why section
   whySection: {
     paddingHorizontal: 16,
-    paddingTop: 24,
+    paddingTop: 28,
   },
   whyGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginTop: 12,
+    marginTop: 14,
   },
   whyCard: {
     width: (width - 44) / 2,
     backgroundColor: Colors.white,
-    borderRadius: 16,
+    borderRadius: 12,
     padding: 16,
     borderWidth: 1,
     borderColor: Colors.border,
+    gap: 6,
   },
-  whyIcon: { fontSize: 28, marginBottom: 8 },
   whyTitle: {
     fontFamily: Fonts.notoSansSemiBold,
     fontSize: FontSizes.sm,
     color: Colors.text,
-    marginBottom: 4,
   },
   whyDesc: {
     fontFamily: Fonts.notoSans,

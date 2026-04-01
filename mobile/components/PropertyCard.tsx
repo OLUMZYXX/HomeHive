@@ -102,7 +102,7 @@ export default function PropertyCard({
             </View>
           )}
           <Text style={styles.price}>
-            <Text style={styles.priceAmount}>${property.price}</Text>
+            <Text style={styles.priceAmount}>₦{(property.price ?? 0).toLocaleString()}</Text>
             <Text style={styles.perNight}>/night</Text>
           </Text>
         </View>

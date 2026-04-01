@@ -1,11 +1,26 @@
 import { Tabs } from 'expo-router';
-import { Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { Fonts } from '../../constants/Typography';
 
-function TabIcon({ label, emoji, focused }: { label: string; emoji: string; focused: boolean }) {
+type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+
+function TabIcon({
+  name,
+  focused,
+}: {
+  name: IoniconsName;
+  focused: boolean;
+}) {
   return (
-    <Text style={{ fontSize: focused ? 22 : 20 }}>{emoji}</Text>
+    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+      <Ionicons
+        name={name}
+        size={22}
+        color={focused ? Colors.amber[500] : Colors.neutral[400]}
+      />
+    </View>
   );
 }
 
@@ -18,15 +33,21 @@ export default function TabLayout() {
           backgroundColor: Colors.white,
           borderTopColor: Colors.border,
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          height: 68,
+          paddingBottom: 10,
           paddingTop: 6,
+          elevation: 8,
+          shadowColor: Colors.black,
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
         },
-        tabBarActiveTintColor: Colors.primary[800],
+        tabBarActiveTintColor: Colors.amber[500],
         tabBarInactiveTintColor: Colors.neutral[400],
         tabBarLabelStyle: {
           fontFamily: Fonts.notoSansSemiBold,
           fontSize: 11,
+          marginTop: 2,
         },
       }}
     >
@@ -35,7 +56,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Home" emoji="🏠" focused={focused} />
+            <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
           ),
         }}
       />
@@ -44,7 +65,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Explore" emoji="🔍" focused={focused} />
+            <TabIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
           ),
         }}
       />
@@ -53,7 +74,7 @@ export default function TabLayout() {
         options={{
           title: 'Bookings',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Bookings" emoji="📅" focused={focused} />
+            <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} />
           ),
         }}
       />
@@ -62,10 +83,23 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ focused }) => (
-            <TabIcon label="Profile" emoji="👤" focused={focused} />
+            <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconWrap: {
+    width: 36,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+  },
+  iconWrapActive: {
+    backgroundColor: Colors.amber[50],
+  },
+});
