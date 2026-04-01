@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   },
 
   // List
-  list: { padding: 16, gap: 16 },
+  list: { padding: 16, paddingBottom: 110, gap: 16 },
 
   // Booking card
   card: {

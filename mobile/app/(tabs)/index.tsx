@@ -247,7 +247,7 @@ function HeroStat({ value, label }: { value: string; label: string }) {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   scroll: { flex: 1 },
-  content: { paddingBottom: 40 },
+  content: { paddingBottom: 110 },
 
   // Header
   header: {

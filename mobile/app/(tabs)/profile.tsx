@@ -94,7 +94,7 @@ export default function ProfileScreen() {
         <Text style={styles.title}>Profile</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 110 }}>
         {/* ── Avatar Card ────────────────────────────────── */}
         <View style={styles.profileCard}>
           <View style={styles.avatar}>

@@ -1,25 +1,59 @@
 import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
-import { Fonts } from '../../constants/Typography';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-function TabIcon({
-  name,
-  focused,
-}: {
-  name: IoniconsName;
-  focused: boolean;
-}) {
+const TABS: {
+  name: string;
+  label: string;
+  icon: IoniconsName;
+  iconOutline: IoniconsName;
+}[] = [
+  { name: 'index',    label: 'Home',     icon: 'home',            iconOutline: 'home-outline'     },
+  { name: 'listings', label: 'Search',   icon: 'search',          iconOutline: 'search-outline'   },
+  { name: 'bookings', label: 'Bookings', icon: 'calendar',        iconOutline: 'calendar-outline' },
+  { name: 'profile',  label: 'Profile',  icon: 'person-circle',   iconOutline: 'person-circle-outline' },
+];
+
+function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <Ionicons
-        name={name}
-        size={22}
-        color={focused ? Colors.amber[500] : Colors.neutral[400]}
-      />
+    <View
+      style={[
+        styles.wrapper,
+        { bottom: insets.bottom + 16 },
+      ]}
+      pointerEvents="box-none"
+    >
+      <View style={styles.pill}>
+        {state.routes.map((route, index) => {
+          const focused = state.index === index;
+          const tab = TABS[index];
+          if (!tab) return null;
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              onPress={() => navigation.navigate(route.name)}
+              activeOpacity={0.75}
+              style={styles.tabBtn}
+            >
+              {focused ? (
+                <View style={styles.activePill}>
+                  <Ionicons name={tab.icon} size={17} color="#0d0d1a" />
+                  <Text style={styles.activeLabel}>{tab.label}</Text>
+                </View>
+              ) : (
+                <Ionicons name={tab.iconOutline} size={20} color="rgba(255,255,255,0.45)" />
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -27,79 +61,60 @@ function TabIcon({
 export default function TabLayout() {
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarStyle: {
-          backgroundColor: Colors.white,
-          borderTopColor: Colors.border,
-          borderTopWidth: 1,
-          height: 68,
-          paddingBottom: 10,
-          paddingTop: 6,
-          elevation: 8,
-          shadowColor: Colors.black,
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.06,
-          shadowRadius: 12,
-        },
-        tabBarActiveTintColor: Colors.amber[500],
-        tabBarInactiveTintColor: Colors.neutral[400],
-        tabBarLabelStyle: {
-          fontFamily: Fonts.notoSansSemiBold,
-          fontSize: 11,
-          marginTop: 2,
-        },
-      }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'home' : 'home-outline'} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="listings"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'search' : 'search-outline'} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="bookings"
-        options={{
-          title: 'Bookings',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'calendar' : 'calendar-outline'} focused={focused} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon name={focused ? 'person' : 'person-outline'} focused={focused} />
-          ),
-        }}
-      />
+      <Tabs.Screen name="index"    options={{ title: 'Home'     }} />
+      <Tabs.Screen name="listings" options={{ title: 'Search'   }} />
+      <Tabs.Screen name="bookings" options={{ title: 'Bookings' }} />
+      <Tabs.Screen name="profile"  options={{ title: 'Profile'  }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  iconWrap: {
-    width: 36,
-    height: 28,
+  wrapper: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+    // lift above any bottom content
+    zIndex: 100,
+    elevation: 20,
+  },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#13131f',
+    borderRadius: 50,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    gap: 4,
+    // iOS shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+  },
+  tabBtn: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
+    minHeight: 44,
   },
-  iconWrapActive: {
-    backgroundColor: Colors.amber[50],
+  activePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    backgroundColor: '#ffffff',
+    borderRadius: 50,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+  },
+  activeLabel: {
+    color: '#0d0d1a',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 0.1,
   },
 });
