@@ -146,25 +146,39 @@ export const PropertyDetailSkeleton = () => {
 // Featured Properties Skeleton
 export const FeaturedPropertiesSkeleton = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {Array(6)
+    <>
+      {Array(3)
         .fill(0)
         .map((_, i) => (
           <div
             key={i}
-            className="bg-white rounded-xl overflow-hidden shadow-soft"
+            className="bg-white rounded-3xl overflow-hidden shadow-soft border border-primary-100"
           >
-            <Skeleton height={200} className="w-full" />
-            <div className="p-4">
-              <Skeleton width={150} height={20} className="mb-2" />
-              <Skeleton width={100} height={16} className="mb-3" />
-              <div className="flex justify-between items-center">
-                <Skeleton width={80} height={18} />
-                <Skeleton width={60} height={16} />
+            {/* Image placeholder */}
+            <Skeleton height={256} className="w-full" borderRadius={0} />
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              <div>
+                <Skeleton width="75%" height={22} className="mb-2" />
+                <div className="flex items-center gap-2 mb-3">
+                  <Skeleton width={14} height={14} circle />
+                  <Skeleton width={140} height={16} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton width={14} height={14} circle />
+                  <Skeleton width={30} height={16} />
+                  <Skeleton width={40} height={14} />
+                </div>
+                <div className="text-right">
+                  <Skeleton width={100} height={24} className="mb-1" />
+                  <Skeleton width={60} height={14} />
+                </div>
               </div>
             </div>
           </div>
         ))}
-    </div>
+    </>
   );
 };

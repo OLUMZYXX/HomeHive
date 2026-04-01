@@ -1,70 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AptWebP from "../../assets/Apt1.webp";
-import Apt2WebP from "../../assets/Apt2.webp";
-import Apt3WebP from "../../assets/Apt3.webp";
-// Fallback properties to show if API fails or returns no properties
-const fallbackProperties = [
-  {
-    id: 1,
-    image: AptWebP,
-    title: "Luxury Downtown Apartment",
-    location: "Lagos, Nigeria",
-    price: 250000,
-    rating: 4.9,
-    views: 127,
-    amenities: ["wifi", "car", "pool"],
-    category: "FEATURED",
-  },
-  {
-    id: 2,
-    image: Apt2WebP,
-    title: "Modern City Residence",
-    location: "Abuja, Nigeria",
-    price: 180000,
-    rating: 4.8,
-    views: 89,
-    amenities: ["wifi", "car"],
-    category: "POPULAR",
-  },
-  {
-    id: 3,
-    image: Apt3WebP,
-    title: "Elegant Waterfront Suite",
-    location: "Port Harcourt, Nigeria",
-    price: 320000,
-    rating: 4.9,
-    views: 156,
-    amenities: ["wifi", "pool"],
-    category: "LUXURY",
-  },
-  {
-    id: 4,
-    image: Apt2WebP,
-    title: "Cozy Urban Getaway",
-    location: "Ibadan, Nigeria",
-    price: 150000,
-    rating: 4.7,
-    views: 73,
-    amenities: ["wifi"],
-    category: "BUDGET",
-  },
-];
-import {
-  HiStar,
-  HiLocationMarker,
-  HiHeart,
-  HiArrowRight,
-} from "react-icons/hi";
+import { HiStar, HiLocationMarker, HiHeart, HiArrowRight } from "react-icons/hi";
 import { propertiesAPI, favoritesAPI } from "../../services/api";
-import {
-  ScrollReveal,
-  StaggerContainer,
-  StaggerItem,
-  AnimatedCard,
-  AnimatedButton,
-  FloatingElement,
-} from "../common/AnimatedComponents";
 import { FeaturedPropertiesSkeleton } from "../common/SkeletonLoaders";
 
 const Featured = () => {
@@ -80,15 +18,11 @@ const Featured = () => {
       setLoading(true);
       try {
         const topRatedRes = await propertiesAPI.getTopRatedProperties(3);
-        const fetchedProperties =
-          topRatedRes.properties || topRatedRes.data || [];
-        setProperties(fetchedProperties);
-        // Show all top-rated properties (should be 3)
-        setDisplayedProperties(fetchedProperties);
+        const fetched = topRatedRes.properties || topRatedRes.data || [];
+        setProperties(fetched);
+        setDisplayedProperties(fetched);
         const favRes = await favoritesAPI.getFavorites();
-        setFavorites(
-          favRes.favorites ? favRes.favorites.map((f) => f.propertyId) : [],
-        );
+        setFavorites(favRes.favorites ? favRes.favorites.map((f) => f.propertyId) : []);
       } catch {
         setError("Failed to load featured properties.");
       }
@@ -106,261 +40,138 @@ const Featured = () => {
         await favoritesAPI.addToFavorites(propertyId);
         setFavorites([...favorites, propertyId]);
       }
-    } catch {
-      // Optionally show toast
-    }
+    } catch { /* silent */ }
   };
 
   const handlePropertyClick = (property) => {
-    // Validate the property ID before navigation
     const propertyId = property.id || property.propertyId || property._id;
-    if (!propertyId || propertyId === "undefined" || propertyId === "null") {
-      console.error("Invalid property ID:", propertyId);
-      return;
-    }
-
-    console.log("Navigating to property:", propertyId);
+    if (!propertyId || propertyId === "undefined" || propertyId === "null") return;
     navigate(`/listing/${propertyId}`);
   };
 
   return (
-    <section className="py-10 lg:py-14 bg-gradient-to-br from-neutral-25 via-white to-primary-50 relative [content-visibility:auto] [contain-intrinsic-size:1px_1000px]">
-      {/* Background Decorations */}
-      <div className="absolute inset-0">
-        <FloatingElement
-          direction="y"
-          distance={20}
-          duration={6}
-          className="absolute top-32 right-20 w-48 h-48 bg-primary-100 rounded-full opacity-20 blur-3xl"
-        />
-        <FloatingElement
-          direction="x"
-          distance={15}
-          duration={8}
-          className="absolute bottom-32 left-20 w-40 h-40 bg-neutral-100 rounded-full opacity-30 blur-2xl"
-        />
-      </div>
+    <section className="py-16 lg:py-24 bg-white [content-visibility:auto] [contain-intrinsic-size:1px_1000px]">
+      <div className="container mx-auto px-4 sm:px-6 md:px-8 max-w-screen-xl">
 
-      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
-        {/* Header Section */}
-        <ScrollReveal direction="up" delay={0.2}>
-          <div className="flex flex-col lg:flex-row items-center justify-between mb-16 gap-8">
-            <div className="text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-primary-200 rounded-full px-4 py-2 mb-6 shadow-soft">
-                <HiStar className="text-amber-500 text-sm" />
-                <span className="text-sm font-medium text-primary-700">
-                  Top Rated Properties
-                </span>
-              </div>
-              <h2 className="font-NotoSans text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-800 mb-4">
-                Discover Top-Rated
-                <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text block sm:inline sm:ml-3">
-                  Accommodations
-                </span>
-              </h2>
-              <p className="text-lg text-primary-600 leading-relaxed max-w-2xl">
-                Automatically selected top properties based on booking
-                popularity and guest favorites - the most sought-after
-                accommodations
-              </p>
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row items-start lg:items-end justify-between mb-14 gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-8 h-px bg-amber-500" />
+              <span className="text-xs font-semibold tracking-[0.25em] uppercase text-amber-600">
+                Top Rated
+              </span>
             </div>
-            {/* <div className="flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => {
-                  console.log("Button clicked - navigating to /listings");
-                  console.log("Navigate function:", navigate);
-                  alert("Button clicked!"); // Temporary alert for testing
-                  try {
-                    navigate("/listings");
-                    console.log("Navigation attempted");
-                  } catch (error) {
-                    console.error("Navigation error:", error);
-                  }
-                }}
-                className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-4 px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center gap-3"
-                style={{ cursor: "pointer !important" }}
-              >
-                View All Properties
-                <HiArrowRight className="text-lg group-hover:translate-x-1 transition-transform duration-300" />
-              </button>
-            </div> */}
+            <h2 className="font-Cormorant text-4xl sm:text-5xl lg:text-6xl font-light text-neutral-900 leading-[1.1]">
+              Featured <span className="italic">Accommodations</span>
+            </h2>
           </div>
-        </ScrollReveal>
-        {/* Properties Grid */}
-        <StaggerContainer
-          staggerDelay={0.2}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-        >
+          <button
+            onClick={() => navigate("/listings")}
+            className="group inline-flex items-center gap-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 border-b border-neutral-300 hover:border-neutral-900 pb-0.5 transition-all duration-200 flex-shrink-0"
+          >
+            View All Properties
+            <HiArrowRight className="group-hover:translate-x-1 transition-transform duration-200" />
+          </button>
+        </div>
+
+        {/* Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {loading ? (
             <FeaturedPropertiesSkeleton />
           ) : error || displayedProperties.length === 0 ? (
-            fallbackProperties.slice(0, 3).map((property) => (
-              <StaggerItem key={property.id}>
-                <AnimatedCard
-                  className="group bg-white rounded-3xl shadow-soft hover:shadow-strong transition-all duration-500 overflow-hidden border border-primary-100 cursor-pointer"
-                  hoverScale={1.03}
-                  hoverY={-12}
-                  onClick={() => handlePropertyClick(property)}
-                >
-                  {/* Image Container */}
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={property.images?.[0] || AptWebP}
-                      alt={property.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
-                      width={512}
-                      height={256}
-                      srcSet={`${property.images?.[0] || AptWebP} 1x, ${property.images?.[0] || AptWebP} 2x`}
-                    />
-                    {/* Badge */}
-                    <div
-                      className={`absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-medium`}
-                    >
-                      {property.category}
-                    </div>
-                    {/* Heart Icon */}
-                    <AnimatedButton
-                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-medium hover:bg-white transition-all duration-300 group`}
-                      onClick={() => handleLike(property.id)}
-                      aria-label={
-                        favorites.includes(property.id) ? "Unlike" : "Like"
-                      }
-                    >
-                      <HiHeart
-                        className={`text-lg transition-colors duration-300 ${
-                          favorites.includes(property.id)
-                            ? "text-error-500"
-                            : "text-primary-600 hover:text-error-500"
-                        }`}
-                      />
-                    </AnimatedButton>
-                  </div>
-                  {/* Content */}
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <h3 className="font-NotoSans text-xl font-bold text-primary-900 mb-2 group-hover:text-primary-800 transition-colors duration-300">
-                        {property.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-primary-600 mb-3">
-                        <HiLocationMarker className="text-sm flex-shrink-0" />
-                        <span className="text-base">{property.location}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <HiStar className="text-amber-400 text-lg" />
-                        <span className="font-semibold text-primary-900">
-                          {property.rating}
-                        </span>
-                        <span className="text-primary-600 text-sm">
-                          ({property.views})
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-primary-900">
-                          ₦{property.price?.toLocaleString() || "N/A"}
-                        </div>
-                        <div className="text-sm text-primary-600">
-                          per night
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </AnimatedCard>
-              </StaggerItem>
-            ))
+            <div className="col-span-full flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-0.5 h-12 bg-amber-400/60 mb-8 mx-auto" />
+              <h3 className="font-Cormorant text-2xl font-light text-neutral-800 mb-3">
+                No Featured Properties Yet
+              </h3>
+              <p className="text-neutral-500 text-sm mb-8 max-w-sm">
+                {error
+                  ? "We couldn't load featured properties right now. Please try again later."
+                  : "Be the first to list a top-rated property on HomeHive."}
+              </p>
+              <button
+                onClick={() => navigate("/listings")}
+                className="group inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium tracking-widest uppercase px-8 py-3 transition-colors duration-300"
+              >
+                Browse All Listings
+                <HiArrowRight className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
           ) : (
             displayedProperties.map((property) => (
-              <StaggerItem key={property.id || property.propertyId}>
-                <AnimatedCard
-                  className="group bg-white rounded-3xl shadow-soft hover:shadow-strong transition-all duration-500 overflow-hidden border border-primary-100 cursor-pointer"
-                  hoverScale={1.03}
-                  hoverY={-12}
-                  onClick={() => handlePropertyClick(property)}
-                >
-                  {/* Image Container */}
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={property.url || property.image || AptWebP}
-                      alt={property.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
-                      width={512}
-                      height={256}
-                      srcSet={`${
-                        property.url || property.image || AptWebP
-                      } 1x, ${property.url || property.image || AptWebP} 2x`}
-                    />
-                    {/* Badge */}
-                    <div
-                      className={`absolute top-4 left-4 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-medium`}
-                    >
-                      {property.category || "FEATURED"}
-                    </div>
-                    {/* Heart Icon */}
-                    <AnimatedButton
-                      className={`absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-medium hover:bg-white transition-all duration-300 group`}
-                      onClick={() =>
-                        handleLike(property.propertyId || property.id)
-                      }
-                      aria-label={
+              <article
+                key={property.id || property.propertyId}
+                className="group cursor-pointer"
+                onClick={() => handlePropertyClick(property)}
+              >
+                {/* Image */}
+                <div className="relative overflow-hidden mb-4 aspect-[4/3]">
+                  <img
+                    src={property.url || property.image || AptWebP}
+                    alt={property.title}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    width={512}
+                    height={384}
+                  />
+                  {/* Category badge */}
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-neutral-800 text-xs font-semibold tracking-wider uppercase px-3 py-1">
+                    {property.category || "Featured"}
+                  </div>
+                  {/* Favourite */}
+                  <button
+                    className="absolute top-4 right-4 w-9 h-9 bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors duration-200"
+                    onClick={(e) => { e.stopPropagation(); handleLike(property.propertyId || property.id); }}
+                    aria-label={favorites.includes(property.propertyId || property.id) ? "Unlike" : "Like"}
+                  >
+                    <HiHeart
+                      className={`text-base ${
                         favorites.includes(property.propertyId || property.id)
-                          ? "Unlike"
-                          : "Like"
-                      }
-                    >
-                      <HiHeart
-                        className={`text-lg transition-colors duration-300 ${
-                          favorites.includes(property.propertyId || property.id)
-                            ? "text-error-500"
-                            : "text-primary-600 hover:text-error-500"
-                        }`}
-                      />
-                    </AnimatedButton>
-                  </div>
-                  {/* Content */}
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <h3 className="font-NotoSans text-xl font-bold text-primary-900 mb-2 group-hover:text-primary-800 transition-colors duration-300">
-                        {property.title}
-                      </h3>
-                      <div className="flex items-center gap-2 text-primary-600 mb-3">
-                        <HiLocationMarker className="text-sm flex-shrink-0" />
-                        <span className="text-base">
-                          {property.address?.city || "Unknown"},{" "}
-                          {property.address?.state || "Nigeria"}
-                        </span>
-                      </div>
+                          ? "text-red-500"
+                          : "text-neutral-500 hover:text-red-400"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-amber-400">
+                      {[...Array(5)].map((_, i) => (
+                        <svg key={i} className={`w-3 h-3 ${i < Math.round(property.rating) ? "text-amber-400" : "text-neutral-200"}`} fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
+                      <span className="text-xs text-neutral-500 ml-1">
+                        {property.rating} ({property.totalReviews || property.views || 0})
+                      </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <HiStar className="text-amber-400 text-lg" />
-                        <span className="font-semibold text-primary-900">
-                          {property.rating}
-                        </span>
-                        <span className="text-primary-600 text-sm">
-                          ({property.totalReviews || property.views || 0})
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-black text-primary-900">
-                          ₦{property.price?.toLocaleString() || "N/A"}
-                        </div>
-                        <div className="text-sm text-primary-600">
-                          per night
-                        </div>
-                      </div>
+                    <div className="text-right">
+                      <span className="font-Cormorant text-xl font-semibold text-neutral-900">
+                        ₦{property.price?.toLocaleString() || "N/A"}
+                      </span>
+                      <span className="text-xs text-neutral-400 ml-1">/night</span>
                     </div>
                   </div>
-                </AnimatedCard>
-              </StaggerItem>
+
+                  <h3 className="font-NotoSans text-base font-semibold text-neutral-800 group-hover:text-neutral-600 transition-colors duration-200 line-clamp-1">
+                    {property.title}
+                  </h3>
+
+                  <div className="flex items-center gap-1.5 text-neutral-400">
+                    <HiLocationMarker className="text-xs flex-shrink-0" />
+                    <span className="text-xs">
+                      {property.address?.city || "Unknown"}, {property.address?.state || "Nigeria"}
+                    </span>
+                  </div>
+                </div>
+              </article>
             ))
           )}
-        </StaggerContainer>
+        </div>
       </div>
     </section>
   );

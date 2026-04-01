@@ -1,5 +1,4 @@
-// eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Navbar from '../Navbar/Navbar'
 import livingroom from '../../assets/livning room.jpg'
 import bedroom from '../../assets/bedroom.jpg'

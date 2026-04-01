@@ -45,8 +45,7 @@ export const CurrencyProvider = ({ children }) => {
             GBP: data.rates.GBP,
           });
         }
-      } catch (err) {
-      }
+      } catch {}
     };
     fetchRates();
   }, []);

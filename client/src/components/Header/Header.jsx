@@ -421,189 +421,83 @@ const Header = () => {
 
   return (
     <section className="relative py-20 lg:py-32 bg-white overflow-hidden [content-visibility:auto] [contain-intrinsic-size:1px_1000px]">
-      {/* Geometric Background Pattern */}
-      <div className="absolute inset-0">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary-100 to-transparent opacity-60"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary-50 transform rotate-45 -translate-x-32 translate-y-32"></div>
-        <div className="absolute top-20 right-20 w-32 h-32 bg-neutral-100 rounded-full opacity-40"></div>
-      </div>
-
       <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
-          {/* Content Section - Takes more space */}
-          <div className="lg:col-span-7 space-y-10">
-            {/* Announcement Banner - Consistent Text */}
-            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-primary-100 to-primary-50 border border-primary-200 rounded-2xl px-6 py-3 shadow-soft">
-              <div className="w-2 h-2 bg-success-500 rounded-full animate-pulse"></div>
-              <span className="text-base font-semibold text-primary-800">
-                New Properties Added Weekly
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-12 items-center">
+          {/* Content Section */}
+          <div className="lg:col-span-6 space-y-8 order-2 lg:order-2">
+            {/* Label */}
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-px bg-amber-500"></div>
+              <span className="text-xs font-semibold tracking-[0.25em] uppercase text-amber-600">
+                Welcome to HomeHive
               </span>
-              <HiArrowRight className="text-primary-600 text-base" />
             </div>
 
-            {/* Main Heading - Consistent Typography */}
-            <div className="space-y-6">
-              <h1 className="font-NotoSans leading-[1.1]">
-                <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-primary-900">
-                  Find
-                </span>
-                <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-primary-600 -mt-2">
-                  Your Dream
-                </span>
-                <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-gradient-to-r from-primary-700 via-primary-800 to-primary-900 bg-clip-text -mt-2">
-                  Accommodation
-                </span>
-              </h1>
+            {/* Heading — Cormorant serif */}
+            <h2 className="font-Cormorant text-4xl sm:text-5xl lg:text-6xl font-light text-neutral-900 leading-[1.1]">
+              Luxury living in the{" "}
+              <span className="italic">heart of the city.</span>
+            </h2>
 
-              {/* Decorative Line */}
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-1 bg-primary-800 rounded-full"></div>
-                <div className="w-8 h-1 bg-primary-600 rounded-full"></div>
-                <div className="w-4 h-1 bg-primary-400 rounded-full"></div>
-              </div>
+            {/* Description */}
+            <p className="font-NotoSans text-neutral-500 text-base leading-relaxed max-w-md">
+              HomeHive offers over 500 handpicked premium accommodations across
+              Nigeria's finest cities. Enjoy top-tier amenities, seamless
+              booking, and a personalized experience — from arrival to checkout.
+            </p>
+
+            {/* Feature list */}
+            <div className="space-y-3">
+              {[
+                "Every property verified and quality-inspected",
+                "Instant booking with best price guarantee",
+                "24/7 concierge support for every stay",
+              ].map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <HiCheckCircle className="text-amber-500 text-lg flex-shrink-0 mt-0.5" />
+                  <span className="text-neutral-600 text-sm">{item}</span>
+                </div>
+              ))}
             </div>
 
-            {/* Description with Consistent Style */}
-            <div className="space-y-6">
-              <p className="text-base sm:text-lg lg:text-xl text-primary-700 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Experience luxury redefined with our handpicked collection of
-                premium accommodations
-                <span className="text-primary-900 font-semibold">
-                  {" "}
-                  designed for discerning travelers.
-                </span>
-              </p>
-
-              {/* Key Features - Consistent Text */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-4 bg-primary-50 rounded-xl border border-primary-100">
-                  <HiCheckCircle className="text-success-600 text-xl flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-primary-900 text-base">
-                      Verified Quality
-                    </div>
-                    <div className="text-primary-600 text-base">
-                      Every property inspected
-                    </div>
-                  </div>
+            {/* CTAs */}
+            <div className="flex flex-wrap items-center gap-5 pt-2">
+              <button
+                onClick={handleExploreClick}
+                className="group inline-flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white px-8 py-3.5 text-sm font-medium tracking-widest uppercase transition-colors duration-300"
+              >
+                Read More
+                <HiArrowRight className="group-hover:translate-x-1 transition-transform duration-300" />
+              </button>
+              <button
+                onClick={handleLearnMore}
+                className="group flex items-center gap-3 text-neutral-700 hover:text-neutral-900 text-sm font-medium transition-colors duration-200"
+              >
+                <div className="w-9 h-9 rounded-full border border-neutral-300 group-hover:border-neutral-600 flex items-center justify-center transition-colors duration-200">
+                  <HiPlay className="text-neutral-600 text-sm ml-0.5" />
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-primary-50 rounded-xl border border-primary-100">
-                  <HiCheckCircle className="text-success-600 text-xl flex-shrink-0" />
-                  <div>
-                    <div className="font-semibold text-primary-900 text-base">
-                      Best Price Promise
-                    </div>
-                    <div className="text-primary-600 text-base">
-                      Guaranteed lowest rates
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Section - Different Style */}
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <button
-                  onClick={handleExploreClick}
-                  className="group relative overflow-hidden bg-primary-900 text-white font-bold py-3 sm:py-5 px-6 sm:px-10 rounded-2xl shadow-strong hover:shadow-xl transition-all duration-500 transform hover:-translate-y-1"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary-800 to-primary-900 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-                  <span className="relative flex items-center justify-center gap-2 sm:gap-3 text-sm sm:text-base">
-                    Start Exploring
-                    <HiArrowRight className="text-lg sm:text-xl group-hover:translate-x-2 transition-transform duration-300" />
-                  </span>
-                </button>
-
-                <button
-                  onClick={handleLearnMore}
-                  className="group flex items-center gap-2 sm:gap-3 text-primary-800 font-semibold py-3 sm:py-5 px-4 sm:px-6 hover:bg-primary-50 rounded-2xl transition-all duration-300 text-sm sm:text-base"
-                >
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary-100 group-hover:bg-primary-200 rounded-full flex items-center justify-center transition-colors duration-300">
-                    <HiPlay className="text-primary-800 text-base sm:text-lg ml-1" />
-                  </div>
-                  <span>Watch Our Story</span>
-                </button>
-              </div>
-
-              {/* Trust Indicators - Consistent Text */}
-              <div className="flex flex-wrap items-center gap-8 pt-4">
-                <div className="text-center">
-                  <div className="text-2xl font-black text-primary-900">
-                    500+
-                  </div>
-                  <div className="text-base text-primary-600 font-medium">
-                    Premium Properties
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-primary-900">
-                    98%
-                  </div>
-                  <div className="text-base text-primary-600 font-medium">
-                    Satisfaction Rate
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-black text-primary-900">
-                    24/7
-                  </div>
-                  <div className="text-base text-primary-600 font-medium">
-                    Concierge Service
-                  </div>
-                </div>
-              </div>
+                Watch Our Story
+              </button>
             </div>
           </div>
 
-          {/* Images Section - Compact but Impactful */}
-          <div className="lg:col-span-5 relative">
+          {/* Images Section — Larita-style stacked layout, left side */}
+          <div className="lg:col-span-6 relative order-1 lg:order-1">
             {/* Loading State */}
             {headerImages.loading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-primary-50 rounded-3xl z-50">
-                <div className="text-center space-y-4">
-                  <div className="animate-spin w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full mx-auto"></div>
-                  <p className="text-primary-700 font-medium">
-                    Loading premium images...
-                  </p>
-                </div>
+              <div className="h-[480px] flex items-center justify-center bg-neutral-50">
+                <div className="animate-spin w-8 h-8 border-4 border-neutral-300 border-t-neutral-700 rounded-full" />
               </div>
             )}
 
-            {/* Backend Status Indicator */}
             {!headerImages.loading && (
-              <div className="absolute top-4 right-4 z-30">
-                <div
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    headerImages.useBackend
-                      ? "bg-gradient-to-r from-amber-400 to-amber-600 text-white border border-amber-300"
-                      : "bg-gradient-to-r from-blue-400 to-blue-600 text-white border border-blue-300"
-                  }`}
-                >
-                  {headerImages.useBackend
-                    ? "🏆 LUXURY WEEKLY"
-                    : "💎 CURATED LUXURY"}
-                </div>
-                {headerImages.luxuryOnly && (
-                  <div className="mt-1 px-2 py-1 bg-black/80 text-white text-xs rounded-full text-center">
-                    ₦{headerImages.minPrice / 1000}K+ Only
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Image Stack Layout */}
-            <div className="relative h-[500px] sm:h-[550px] lg:h-[600px] xl:h-[650px]">
-              {/* Main Large Image */}
-              <div className="absolute top-0 right-0 w-[85%] sm:w-[80%] lg:w-[78%] h-[70%] sm:h-[72%] lg:h-[75%]">
-                <div className="relative w-full h-full group">
-                  <div className="absolute inset-0 bg-primary-900 rounded-2xl sm:rounded-3xl transform rotate-2 opacity-10 group-hover:rotate-1 transition-transform duration-700"></div>
+              <div className="relative flex gap-4 items-end h-[480px] sm:h-[520px]">
+                {/* Tall left image */}
+                <div className="w-[52%] h-full flex-shrink-0">
                   <img
                     src={headerImages.primary}
-                    alt={`${
-                      getPrimaryData().title
-                    } - Premium accommodation showcase`}
-                    className="relative w-full h-full object-cover rounded-2xl sm:rounded-3xl shadow-xl transform group-hover:scale-[1.02] transition-transform duration-700 z-10"
+                    alt={`${getPrimaryData().title} - Premium accommodation`}
+                    className="w-full h-full object-cover"
                     loading="lazy"
                     decoding="async"
                     width={1200}
@@ -611,94 +505,37 @@ const Header = () => {
                     onError={() => handleImageError("primary")}
                   />
                 </div>
-              </div>
 
-              {/* Secondary Smaller Image */}
-              <div className="absolute bottom-0 left-0 w-[65%] sm:w-[60%] lg:w-[55%] h-[42%] sm:h-[40%] lg:h-[45%] z-20">
-                <div className="relative w-full h-full group">
-                  <div className="absolute inset-0 bg-neutral-800 rounded-xl sm:rounded-2xl transform -rotate-3 opacity-10 group-hover:-rotate-1 transition-transform duration-700"></div>
-                  <img
-                    src={headerImages.secondary}
-                    alt={`${
-                      getSecondaryData().title
-                    } - Comfortable accommodation space`}
-                    className="relative w-full h-full object-cover rounded-xl sm:rounded-2xl shadow-lg transform group-hover:scale-[1.02] transition-transform duration-700 z-10 border-4 border-white"
-                    loading="lazy"
-                    decoding="async"
-                    width={800}
-                    height={600}
-                    onError={() => handleImageError("secondary")}
-                  />
-
-                  {/* Enhanced Small Badge */}
-                  <div
-                    className={`absolute -top-2 -right-2 sm:-top-3 sm:-right-3 text-white text-xs font-bold px-2 py-1.5 sm:px-3 sm:py-2 rounded-full shadow-medium z-20 ${
-                      headerImages.useBackend
-                        ? "bg-gradient-to-r from-purple-600 to-purple-800"
-                        : "bg-gradient-to-r from-primary-700 to-primary-900"
-                    }`}
-                  >
-                    {headerImages.useBackend ? "LUXURY PICK" : "PREMIUM"}
-                  </div>
-
-                  {/* Enhanced Secondary Image Info */}
-                  <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 bg-gradient-to-r from-black/80 to-black/70 backdrop-blur-sm rounded-lg sm:rounded-xl p-2 sm:p-3 z-20">
-                    <div className="text-white font-bold text-sm mb-1">
-                      {getSecondaryData().title}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="text-white/90 text-xs">
-                        {getSecondaryData().type} •{" "}
+                {/* Shorter right image — sits at bottom */}
+                <div className="w-[44%] h-[72%] flex-shrink-0">
+                  <div className="relative w-full h-full">
+                    <img
+                      src={headerImages.secondary}
+                      alt={`${getSecondaryData().title} - Comfortable accommodation`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                      width={800}
+                      height={600}
+                      onError={() => handleImageError("secondary")}
+                    />
+                    {/* Price badge on secondary image */}
+                    <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-sm p-3">
+                      <div className="text-white text-xs font-medium truncate">
                         {getSecondaryData().location}
                       </div>
-                      <div className="text-amber-400 font-bold text-sm">
-                        {getSecondaryData().formattedPrice ||
-                          formatPrice(getSecondaryData().price)}
+                      <div className="text-amber-400 font-semibold text-sm font-Cormorant">
+                        {getSecondaryData().formattedPrice || formatPrice(getSecondaryData().price)}
+                        <span className="text-white/60 text-xs font-normal ml-1">/night</span>
                       </div>
                     </div>
-                    {headerImages.useBackend &&
-                      getSecondaryData().amenities && (
-                        <div className="flex gap-1 mt-1 flex-wrap">
-                          {getSecondaryData()
-                            .amenities.slice(0, 3)
-                            .map((amenity, idx) => (
-                              <span
-                                key={idx}
-                                className="text-xs bg-white/20 text-white px-2 py-1 rounded-full"
-                              >
-                                {amenity}
-                              </span>
-                            ))}
-                          {getSecondaryData().amenities.length > 3 && (
-                            <span className="text-xs text-white/80">
-                              +{getSecondaryData().amenities.length - 3} more
-                            </span>
-                          )}
-                        </div>
-                      )}
                   </div>
                 </div>
+
+                {/* Amber accent line — left edge */}
+                <div className="absolute left-0 top-8 bottom-8 w-0.5 bg-amber-400/50" />
               </div>
-
-              {/* Quality Indicator */}
-              {headerImages.useBackend && getPrimaryData().quality >= 9 && (
-                <div className="absolute top-16 right-16 sm:top-20 sm:right-20 bg-gradient-to-r from-amber-400 to-amber-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg animate-pulse z-30">
-                  Ultra HD
-                </div>
-              )}
-
-              {/* Geometric Accents */}
-              <div className="absolute top-16 right-2 sm:top-20 sm:right-4 w-4 h-4 sm:w-6 sm:h-6 bg-primary-600 rounded-full opacity-60"></div>
-              <div className="absolute bottom-28 right-6 sm:bottom-32 sm:right-8 w-3 h-3 sm:w-4 sm:h-4 bg-primary-800 rounded-full opacity-40"></div>
-              <div className="absolute top-1/2 left-2 sm:left-4 w-1.5 h-6 sm:w-2 sm:h-8 bg-primary-400 rounded-full opacity-30"></div>
-
-              {/* Update Timestamp */}
-              {headerImages.lastUpdated && !headerImages.loading && (
-                <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 text-xs text-primary-500/70 bg-white/80 px-2 py-1 rounded z-30">
-                  Updated: {headerImages.lastUpdated.toLocaleDateString()}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       </div>

@@ -8,10 +8,21 @@
     "start": "cd server && node server.js",
     "start:server": "cd server && npm start",
     "install:client": "cd client && npm install",
-    "install:server": "cd server && npm install"
+    "install:server": "cd server && npm install",
+    "mobile": "cd mobile && npx expo start",
+    "mobile:android": "cd mobile && npx expo start --android",
+    "mobile:ios": "cd mobile && npx expo start --ios",
+    "prepare": "husky"
   },
   "workspaces": [
     "client",
     "server"
-  ]
+  ],
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  },
+  "lint-staged": {
+    "client/src/**/*.{js,jsx}": "eslint --max-warnings=0 -c client/eslint.config.js"
+  }
 }

@@ -144,11 +144,16 @@ export default {
         shimmer: 'shimmer 2s linear infinite',
       },
 
-      // Typography
+      // Typography — DM Sans (body) + Sora (headings) + Pacifico (logo/brand)
       fontFamily: {
-        NotoSans: ['Noto Sans', 'sans-serif'],
-        primary: ['Noto Sans', 'system-ui', 'sans-serif'],
-        secondary: ['Inter', 'system-ui', 'sans-serif'],
+        // font-NotoSans class now renders DM Sans — no need to touch existing markup
+        NotoSans: ['DM Sans', 'sans-serif'],
+        DMSans: ['DM Sans', 'sans-serif'],
+        Sora: ['Sora', 'sans-serif'],
+        Cormorant: ['Cormorant Garant', 'Georgia', 'serif'],
+        Pacifico: ['Pacifico', 'cursive'],
+        primary: ['DM Sans', 'system-ui', 'sans-serif'],
+        secondary: ['Sora', 'system-ui', 'sans-serif'],
       },
 
       fontSize: {

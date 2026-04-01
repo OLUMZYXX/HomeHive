@@ -2,71 +2,41 @@
 import { useState, useEffect, useCallback } from "react";
 import heroimg from "../../assets/heroimg.png";
 import { useNavigate } from "react-router-dom";
-import {
-  HiArrowRight,
-  HiLocationMarker,
-  HiStar,
-  HiRefresh,
-} from "react-icons/hi";
-import {
-  ScrollReveal,
-  StaggerContainer,
-  StaggerItem,
-  AnimatedButton,
-  FloatingElement,
-} from "../common/AnimatedComponents";
+import { HiArrowRight, HiRefresh } from "react-icons/hi";
 import { useAPI } from "../../contexts/APIContext";
 
 const Hero = () => {
   const navigate = useNavigate();
   const { getPremiumImages, isAuthenticated } = useAPI();
 
-  // State for image rotation
   const [currentImage, setCurrentImage] = useState(heroimg);
   const [premiumImages, setPremiumImages] = useState([]);
   const [imageIndex, setImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [prevImage, setPrevImage] = useState(null);
+  const [fade, setFade] = useState(true);
 
-  // Fetch premium images on component mount
   const fetchPremiumImages = useCallback(async () => {
     try {
       setIsLoading(true);
       setImageError(false);
-
       const response = await getPremiumImages();
-
-      if (
-        response &&
-        response.images &&
-        Array.isArray(response.images) &&
-        response.images.length > 0
-      ) {
-        // Filter valid images
+      if (response?.images && Array.isArray(response.images) && response.images.length > 0) {
         const validImages = response.images.filter((img) => {
-          const imageUrl = img.imageUrl || img.url || img;
-          return (
-            imageUrl && typeof imageUrl === "string" && imageUrl.trim() !== ""
-          );
+          const url = img.imageUrl || img.url || img;
+          return url && typeof url === "string" && url.trim() !== "";
         });
-
         if (validImages.length > 0) {
           setPremiumImages(validImages);
-          const firstImage = validImages[0];
-          setCurrentImage(firstImage.imageUrl || firstImage.url || firstImage);
+          setCurrentImage(validImages[0].imageUrl || validImages[0].url || validImages[0]);
           setImageIndex(0);
-          console.log(`Loaded ${validImages.length} premium images`);
           return;
         }
       }
-
-      // No premium images available, keep default
-      console.log("No premium images available, using default");
       setCurrentImage(heroimg);
       setPremiumImages([]);
-    } catch (error) {
-      console.error("Error fetching premium images:", error);
-      // Fallback to default image on error
+    } catch {
       setCurrentImage(heroimg);
       setPremiumImages([]);
       setImageError(true);
@@ -75,38 +45,33 @@ const Hero = () => {
     }
   }, [getPremiumImages]);
 
-  // Retry fetching premium images
-  const retryFetchImages = useCallback(() => {
-    if (!isLoading) {
-      fetchPremiumImages();
-    }
-  }, [fetchPremiumImages, isLoading]);
-
-  // Setup image rotation
   useEffect(() => {
     fetchPremiumImages();
   }, [fetchPremiumImages]);
 
-  // Auto-rotate images every 5 seconds
+  // Cross-fade rotation
   useEffect(() => {
     if (premiumImages.length > 1) {
       const interval = setInterval(() => {
-        setImageIndex((prevIndex) => {
-          const nextIndex = (prevIndex + 1) % premiumImages.length;
-          const nextImage = premiumImages[nextIndex];
-          setCurrentImage(nextImage.imageUrl || nextImage.url || nextImage);
-          return nextIndex;
-        });
-      }, 5000); // 5 seconds
-
+        setFade(false);
+        setTimeout(() => {
+          setImageIndex((prevIndex) => {
+            const nextIndex = (prevIndex + 1) % premiumImages.length;
+            const next = premiumImages[nextIndex];
+            setPrevImage(currentImage);
+            setCurrentImage(next.imageUrl || next.url || next);
+            return nextIndex;
+          });
+          setFade(true);
+        }, 600);
+      }, 6000);
       return () => clearInterval(interval);
     }
-  }, [premiumImages]);
+  }, [premiumImages, currentImage]);
 
-  // Handle image load error
   const handleImageError = useCallback(() => {
     setImageError(true);
-    setCurrentImage(heroimg); // Fallback to default image
+    setCurrentImage(heroimg);
   }, []);
 
   const handleExploreClick = () => {
@@ -117,266 +82,220 @@ const Hero = () => {
     }
   };
 
-  const handleLearnMore = () => {
-    document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+  const handleScrollDown = () => {
+    window.scrollBy({ top: window.innerHeight, behavior: "smooth" });
   };
 
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 overflow-hidden">
-      {/* Background Decorative Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary-100 rounded-full opacity-50 blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-neutral-100 rounded-full opacity-50 blur-3xl"></div>
-      </div>
+    <section className="relative w-full h-screen min-h-[600px] overflow-hidden">
+      {/* Background Image — prev layer for crossfade */}
+      {prevImage && (
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${prevImage})` }}
+        />
+      )}
 
-      <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 pt-28 sm:pt-32 md:pt-36 pb-12 sm:pb-16 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[70vh] sm:min-h-[80vh]">
-          {/* Left Content Section */}
-          <ScrollReveal
-            direction="left"
-            delay={0.2}
-            className="flex flex-col justify-center space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1"
+      {/* Background Image — current */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-opacity duration-700"
+        style={{
+          backgroundImage: `url(${currentImage})`,
+          opacity: fade ? 1 : 0,
+        }}
+        onError={handleImageError}
+      />
+
+      {/* Dark gradient overlays */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent" />
+
+      {/* Loading shimmer */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-neutral-900 flex items-center justify-center">
+          <div className="w-10 h-10 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
+        </div>
+      )}
+
+      {/* Refresh button (top-right, subtle) */}
+      {!imageError && premiumImages.length > 0 && (
+        <button
+          onClick={() => !isLoading && fetchPremiumImages()}
+          disabled={isLoading}
+          className="absolute top-24 right-6 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 text-white/70 hover:text-white p-2 rounded-full transition-all duration-200 disabled:opacity-40"
+          title="Refresh images"
+        >
+          <HiRefresh className={`text-sm ${isLoading ? "animate-spin" : ""}`} />
+        </button>
+      )}
+
+      {/* Left edge — thin gold accent line */}
+      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-400/60 to-transparent z-10" />
+
+      {/* SCROLL label — vertical right side */}
+      <button
+        onClick={handleScrollDown}
+        className="absolute right-8 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-3 group hidden lg:flex"
+      >
+        <span
+          className="text-white/60 group-hover:text-white/90 text-xs font-medium tracking-[0.3em] uppercase transition-colors duration-300"
+          style={{ writingMode: "vertical-rl", letterSpacing: "0.3em" }}
+        >
+          Scroll
+        </span>
+        <div className="w-px h-16 bg-white/40 group-hover:bg-white/70 transition-colors duration-300 relative overflow-hidden">
+          <div className="absolute top-0 w-full bg-white/90 animate-[slideDown_2s_ease-in-out_infinite]" style={{ height: "30%" }} />
+        </div>
+      </button>
+
+      {/* Navigation arrows */}
+      {premiumImages.length > 1 && (
+        <>
+          <button
+            onClick={() => {
+              setFade(false);
+              setTimeout(() => {
+                setImageIndex((prev) => {
+                  const next = (prev - 1 + premiumImages.length) % premiumImages.length;
+                  const img = premiumImages[next];
+                  setCurrentImage(img.imageUrl || img.url || img);
+                  return next;
+                });
+                setFade(true);
+              }, 300);
+            }}
+            className="absolute left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white/70 hover:text-white hover:border-white/80 hover:bg-white/10 transition-all duration-200"
+            aria-label="Previous image"
           >
-            {/* Badge */}
-            <ScrollReveal direction="up" delay={0.4}>
-              <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-primary-200 rounded-full px-4 py-2 w-fit mx-auto lg:mx-0 shadow-soft">
-                <HiLocationMarker className="text-primary-600 text-sm" />
-                <span className="text-sm font-medium text-primary-700">
-                  Premium Accommodations
-                </span>
-              </div>
-            </ScrollReveal>
-
-            {/* Main Heading */}
-            <ScrollReveal direction="up" delay={0.6}>
-              <div className="space-y-3 sm:space-y-4">
-                <h1 className="font-NotoSans text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
-                  <span className="text-primary-800">Gateway to your</span>
-                  <br />
-                  <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text">
-                    Perfect Stay
-                  </span>
-                </h1>
-
-                <div className="w-20 sm:w-24 h-1 bg-gradient-to-r from-primary-600 to-primary-800 mx-auto lg:mx-0 rounded-full"></div>
-              </div>
-            </ScrollReveal>
-
-            {/* Description */}
-            <ScrollReveal direction="up" delay={0.8}>
-              <p className="text-base sm:text-lg lg:text-xl xl:text-2xl text-primary-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                Discover exceptional accommodations tailored to your needs.
-                Experience comfort, luxury, and memorable stays with our curated
-                collection.
-              </p>
-            </ScrollReveal>
-
-            {/* Stats Row */}
-            <StaggerContainer
-              staggerDelay={0.15}
-              className="flex flex-wrap justify-center lg:justify-start gap-8 py-4"
-            >
-              <StaggerItem className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-primary-800">
-                  500+
-                </div>
-                <div className="text-sm text-primary-600">Properties</div>
-              </StaggerItem>
-              <StaggerItem className="text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <span className="text-2xl sm:text-3xl font-bold text-primary-800">
-                    4.9
-                  </span>
-                  <HiStar className="text-amber-400 text-lg" />
-                </div>
-                <div className="text-sm text-primary-600">Rating</div>
-              </StaggerItem>
-              <StaggerItem className="text-center">
-                <div className="text-2xl sm:text-3xl font-bold text-primary-800">
-                  10K+
-                </div>
-                <div className="text-sm text-primary-600">Happy Guests</div>
-              </StaggerItem>
-            </StaggerContainer>
-
-            {/* CTA Buttons */}
-            <ScrollReveal direction="up" delay={1.0}>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-                <AnimatedButton
-                  onClick={handleExploreClick}
-                  className="group bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 flex items-center justify-center gap-2 min-w-[180px] sm:min-w-[200px] text-sm sm:text-base"
-                >
-                  Explore Stays
-                  <HiArrowRight className="text-base sm:text-lg group-hover:translate-x-1 transition-transform duration-300" />
-                </AnimatedButton>
-
-                <AnimatedButton
-                  onClick={handleLearnMore}
-                  className="border-2 border-primary-800 text-primary-800 hover:bg-primary-800 hover:text-white font-semibold py-3 sm:py-4 px-6 sm:px-8 rounded-full transition-all duration-300 min-w-[180px] sm:min-w-[200px] text-sm sm:text-base"
-                >
-                  Learn More
-                </AnimatedButton>
-              </div>
-            </ScrollReveal>
-
-            {/* Trust Indicators */}
-            <StaggerContainer
-              staggerDelay={0.1}
-              className="flex flex-wrap items-center justify-center lg:justify-start gap-6 pt-4"
-            >
-              <StaggerItem className="flex items-center gap-2 text-sm text-primary-600">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-                <span>Instant Booking</span>
-              </StaggerItem>
-              <StaggerItem className="flex items-center gap-2 text-sm text-primary-600">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-                <span>24/7 Support</span>
-              </StaggerItem>
-              <StaggerItem className="flex items-center gap-2 text-sm text-primary-600">
-                <div className="w-2 h-2 bg-success-500 rounded-full"></div>
-                <span>Best Price Guarantee</span>
-              </StaggerItem>
-            </StaggerContainer>
-          </ScrollReveal>
-
-          {/* Right Image Section */}
-          <ScrollReveal
-            direction="right"
-            delay={0.3}
-            className="relative order-1 lg:order-2 flex justify-center lg:justify-end"
+            <svg className="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+          <button
+            onClick={() => {
+              setFade(false);
+              setTimeout(() => {
+                setImageIndex((prev) => {
+                  const next = (prev + 1) % premiumImages.length;
+                  const img = premiumImages[next];
+                  setCurrentImage(img.imageUrl || img.url || img);
+                  return next;
+                });
+                setFade(true);
+              }, 300);
+            }}
+            className="absolute right-20 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full border border-white/40 flex items-center justify-center text-white/70 hover:text-white hover:border-white/80 hover:bg-white/10 transition-all duration-200 hidden lg:flex"
+            aria-label="Next image"
           >
-            {/* Main Image Container */}
-            <div className="relative group">
-              {/* Background Decoration */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-300 rounded-3xl transform rotate-6 opacity-20 group-hover:rotate-3 transition-transform duration-500"></div>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </>
+      )}
 
-              {/* Image */}
-              <div className="relative bg-white p-3 rounded-3xl shadow-strong">
-                {isLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-white rounded-2xl z-10">
-                    <div className="flex flex-col items-center space-y-4">
-                      <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-                      <p className="text-sm text-primary-600">
-                        Loading premium images...
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <img
-                  src={currentImage}
-                  alt="Beautiful accommodation showcasing comfort and luxury"
-                  className="w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl h-auto rounded-2xl object-cover transform group-hover:scale-105 transition-all duration-700 ease-out"
-                  loading="eager"
-                  decoding="async"
-                  width={1024}
-                  height={768}
-                  onError={handleImageError}
-                  style={{
-                    opacity: isLoading ? 0.3 : 1,
-                    transition:
-                      "opacity 0.5s ease-in-out, transform 0.7s ease-out",
-                  }}
-                />
-
-                {/* Premium Badge with Refresh */}
-                {premiumImages.length > 0 && !imageError && (
-                  <ScrollReveal direction="scale" delay={0.8}>
-                    <div className="absolute top-4 right-4 flex items-center space-x-2">
-                      <div className="bg-gradient-to-r from-amber-400 to-amber-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-medium">
-                        ✨ Premium Host
-                      </div>
-                      <button
-                        onClick={retryFetchImages}
-                        disabled={isLoading}
-                        className="bg-white/90 backdrop-blur-sm text-gray-600 hover:text-gray-800 p-2 rounded-full shadow-md transition-colors duration-200 disabled:opacity-50"
-                        title="Refresh premium images"
-                      >
-                        <HiRefresh
-                          className={`text-sm ${
-                            isLoading ? "animate-spin" : ""
-                          }`}
-                        />
-                      </button>
-                    </div>
-                  </ScrollReveal>
-                )}
-
-                {/* Image Counter */}
-                {premiumImages.length > 1 && (
-                  <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-medium">
-                    {imageIndex + 1} / {premiumImages.length}
-                  </div>
-                )}
-
-                {/* Error Badge with Retry */}
-                {imageError && (
-                  <div className="absolute top-4 left-4 bg-red-100 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-xs">
-                    <div className="flex items-center space-x-2">
-                      <span>Server error - using fallback</span>
-                      <button
-                        onClick={retryFetchImages}
-                        disabled={isLoading}
-                        className="text-red-700 hover:text-red-800 underline font-medium disabled:opacity-50"
-                      >
-                        Retry
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Floating Cards */}
-                <ScrollReveal direction="scale" delay={1.2}>
-                  <div className="absolute -top-6 -left-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-medium">
-                    <div className="flex items-center gap-3">
-                      <div className="w-3 h-3 bg-success-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-primary-800">
-                        Available Now
-                      </span>
-                    </div>
-                  </div>
-                </ScrollReveal>
-
-                <ScrollReveal direction="scale" delay={1.4}>
-                  <div className="absolute -bottom-6 -right-6 bg-white/95 backdrop-blur-sm rounded-2xl p-4 shadow-medium">
-                    <div className="flex items-center gap-2">
-                      <HiStar className="text-amber-400 text-lg" />
-                      <span className="text-sm font-bold text-primary-800">
-                        4.9
-                      </span>
-                      <span className="text-xs text-primary-600">
-                        (2.1k reviews)
-                      </span>
-                    </div>
-                  </div>
-                </ScrollReveal>
-              </div>
-            </div>
-
-            {/* Floating Elements */}
-            <FloatingElement
-              direction="y"
-              distance={15}
-              duration={4}
-              className="absolute top-20 right-10 w-20 h-20 bg-primary-100 rounded-full opacity-60 hidden lg:block"
-            />
-            <FloatingElement
-              direction="x"
-              distance={10}
-              duration={5}
-              className="absolute bottom-32 left-8 w-16 h-16 bg-neutral-100 rounded-full opacity-40 hidden lg:block"
-            />
-          </ScrollReveal>
+      {/* Hero Content — centered */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+        {/* Stars */}
+        <div className="flex items-center gap-1.5 mb-6">
+          {[...Array(5)].map((_, i) => (
+            <svg key={i} className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
         </div>
 
-        {/* Scroll Indicator */}
-        <ScrollReveal direction="up" delay={1.6}>
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-            <div className="w-6 h-10 border-2 border-primary-300 rounded-full flex justify-center">
-              <div className="w-1 h-3 bg-primary-600 rounded-full mt-2 animate-pulse"></div>
-            </div>
+        {/* Main heading — Cormorant Garant serif */}
+        <h1
+          className="font-Cormorant text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light text-white leading-none tracking-wide mb-4"
+          style={{ textShadow: "0 2px 40px rgba(0,0,0,0.3)" }}
+        >
+          Gateway to your
+          <br />
+          <span className="italic font-normal">Perfect Stay</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="font-NotoSans text-white/75 text-base sm:text-lg max-w-xl mt-4 mb-10 font-light leading-relaxed">
+          Located across Nigeria's finest cities, HomeHive offers curated luxury
+          accommodations for the perfect stay.
+        </p>
+
+        {/* CTA */}
+        <button
+          onClick={handleExploreClick}
+          className="group inline-flex items-center gap-3 text-white/90 hover:text-white border border-white/50 hover:border-white px-10 py-4 text-sm font-medium tracking-[0.25em] uppercase transition-all duration-300 hover:bg-white/10 backdrop-blur-sm"
+        >
+          Explore
+          <HiArrowRight className="text-base group-hover:translate-x-1.5 transition-transform duration-300" />
+        </button>
+
+        {/* Image counter dots */}
+        {premiumImages.length > 1 && (
+          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-2">
+            {premiumImages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  setFade(false);
+                  setTimeout(() => {
+                    const img = premiumImages[i];
+                    setCurrentImage(img.imageUrl || img.url || img);
+                    setImageIndex(i);
+                    setFade(true);
+                  }, 300);
+                }}
+                className={`rounded-full transition-all duration-300 ${
+                  i === imageIndex
+                    ? "w-6 h-1.5 bg-white"
+                    : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60"
+                }`}
+              />
+            ))}
           </div>
-        </ScrollReveal>
+        )}
+      </div>
+
+      {/* Bottom strip */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex items-stretch">
+        {/* Since tag */}
+        <div className="flex items-center gap-4 bg-white px-8 py-4">
+          <div>
+            <div className="text-xs font-semibold text-neutral-400 tracking-widest uppercase">Since</div>
+            <div className="text-2xl font-bold text-neutral-800 leading-none font-Cormorant">2020</div>
+          </div>
+          <div className="w-px h-10 bg-neutral-200" />
+          <div className="text-xs text-neutral-500 tracking-wider uppercase font-medium leading-tight">
+            Nigeria's Trusted<br />Property Platform
+          </div>
+        </div>
+
+        {/* Our Story button */}
+        <button
+          onClick={() => document.getElementById("about")?.scrollIntoView({ behavior: "smooth" })}
+          className="flex items-center gap-3 bg-amber-500 hover:bg-amber-600 text-white px-7 py-4 text-xs font-semibold tracking-widest uppercase transition-colors duration-200"
+        >
+          Our Story
+          <HiArrowRight className="text-sm" />
+        </button>
+
+        {/* Stats */}
+        <div className="hidden md:flex items-center gap-8 ml-auto bg-black/50 backdrop-blur-sm px-10 py-4">
+          <div className="text-center">
+            <div className="text-white font-semibold text-lg font-Cormorant">500+</div>
+            <div className="text-white/60 text-xs tracking-wider uppercase font-medium">Properties</div>
+          </div>
+          <div className="w-px h-8 bg-white/20" />
+          <div className="text-center">
+            <div className="flex items-center gap-1.5 justify-center">
+              <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-white font-semibold text-lg font-Cormorant">4.9/5</span>
+            </div>
+            <div className="text-white/60 text-xs tracking-wider uppercase font-medium">Guest Rating</div>
+          </div>
+        </div>
       </div>
     </section>
   );

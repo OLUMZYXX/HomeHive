@@ -1,4 +1,4 @@
-import React, {
+import {
   createContext,
   useContext,
   useReducer,
@@ -201,6 +201,9 @@ const apiReducer = (state, action) => {
 
 const APIContext = createContext();
 
+// Inactivity timeout: 35 minutes (2100000 ms)
+const INACTIVITY_TIMEOUT = 35 * 60 * 1000;
+
 // ================================
 // API CONTEXT PROVIDER
 // ================================
@@ -212,9 +215,6 @@ export const APIProvider = ({ children }) => {
   // Inactivity logout refs
   const inactivityTimerRef = useRef(null);
   const lastActivityRef = useRef(Date.now());
-
-  // Inactivity timeout: 35 minutes (2100000 ms)
-  const INACTIVITY_TIMEOUT = 35 * 60 * 1000;
 
   // ================================
   // SYNC AUTH STATE ON ROUTE CHANGE
@@ -413,17 +413,6 @@ export const APIProvider = ({ children }) => {
   // INACTIVITY LOGOUT FUNCTIONS
   // ================================
 
-  const resetActivityTimer = useCallback(() => {
-    lastActivityRef.current = Date.now();
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    inactivityTimerRef.current = setTimeout(
-      checkInactivity,
-      INACTIVITY_TIMEOUT,
-    );
-  }, []);
-
   const checkInactivity = useCallback(async () => {
     const now = Date.now();
     const timeSinceLastActivity = now - lastActivityRef.current;
@@ -437,11 +426,22 @@ export const APIProvider = ({ children }) => {
           "You have been logged out due to inactivity for security reasons.",
           "Session Expired",
         );
-      } catch (error) {
-        console.error("Error during inactivity logout:", error);
+      } catch (err) {
+        console.error("Error during inactivity logout:", err);
       }
     }
   }, [state.isAuthenticated, location.pathname, logout]);
+
+  const resetActivityTimer = useCallback(() => {
+    lastActivityRef.current = Date.now();
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(
+      checkInactivity,
+      INACTIVITY_TIMEOUT,
+    );
+  }, [checkInactivity]);
 
   // ================================
   // INACTIVITY LOGOUT EFFECT
@@ -591,13 +591,21 @@ export const APIProvider = ({ children }) => {
         const response = await axiosInstance.get("/properties", {
           params: filters,
         });
-        const { properties } = response.data;
+        const properties =
+          response.data?.properties || response.data?.data || [];
 
         dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties });
         return properties;
       } catch (error) {
+        // Don't propagate network errors for non-critical fetches
+        if (error.isNetworkError) {
+          dispatch({ type: actionTypes.SET_PROPERTIES, payload: [] });
+          return [];
+        }
         setError(error);
         throw error;
+      } finally {
+        setLoading(false);
       }
     },
     [setLoading, setError, clearError],
@@ -740,20 +748,16 @@ export const APIProvider = ({ children }) => {
 
   const checkBookingAvailability = useCallback(
     async (propertyId, checkIn, checkOut) => {
-      try {
-        const response = await axiosInstance.post(
-          "/bookings/check-availability",
-          {
-            propertyId,
-            checkIn,
-            checkOut,
-          },
-        );
+      const response = await axiosInstance.post(
+        "/bookings/check-availability",
+        {
+          propertyId,
+          checkIn,
+          checkOut,
+        },
+      );
 
-        return response.data;
-      } catch (error) {
-        throw error;
-      }
+      return response.data;
     },
     [],
   );
@@ -814,18 +818,22 @@ export const APIProvider = ({ children }) => {
           "/properties/search",
           searchCriteria,
         );
-        const { properties } = response.data;
+        const properties =
+          response.data?.properties || response.data?.data || [];
 
         dispatch({ type: actionTypes.SET_PROPERTIES, payload: properties });
         return properties;
       } catch (error) {
-        setError(error);
-        throw error;
+        // Surface user-friendly message from axios interceptor
+        const msg =
+          error.userMessage || error.response?.data?.message || error.message;
+        dispatch({ type: actionTypes.SET_ERROR, payload: msg });
+        throw new Error(msg);
       } finally {
         setLoading(false);
       }
     },
-    [setLoading, setError, clearError],
+    [setLoading, clearError],
   );
 
   const getFeaturedProperties = useCallback(
@@ -856,7 +864,7 @@ export const APIProvider = ({ children }) => {
     try {
       const response = await axiosInstance.get("/premium/featured-images");
       return response.data;
-    } catch (error) {
+    } catch {
       return { images: [] }; // Return empty array on error
     }
   }, []);
@@ -865,7 +873,7 @@ export const APIProvider = ({ children }) => {
     try {
       const response = await axiosInstance.get("/featured/header-images");
       return response.data;
-    } catch (error) {
+    } catch {
       return {
         success: false,
         images: [],
@@ -881,7 +889,7 @@ export const APIProvider = ({ children }) => {
         `/featured/featured-random?limit=${limit}`,
       );
       return response.data;
-    } catch (error) {
+    } catch {
       return {
         success: false,
         images: [],
@@ -894,7 +902,7 @@ export const APIProvider = ({ children }) => {
     try {
       const response = await axiosInstance.get("/featured/premium-showcase");
       return response.data;
-    } catch (error) {
+    } catch {
       return {
         success: false,
         showcase: [],
@@ -909,7 +917,7 @@ export const APIProvider = ({ children }) => {
         `/featured/hero-images?limit=${limit}`,
       );
       return response.data;
-    } catch (error) {
+    } catch {
       return {
         success: false,
         images: [],
@@ -941,7 +949,7 @@ export const APIProvider = ({ children }) => {
     try {
       const response = await axiosInstance.get("/premium/status");
       return response.data;
-    } catch (error) {
+    } catch {
       return { isPremium: false };
     }
   }, []);
@@ -952,29 +960,18 @@ export const APIProvider = ({ children }) => {
 
   // Get booking by ID
   const getBookingById = useCallback(async (bookingId) => {
-    try {
-      const response = await axiosInstance.get(`/bookings/${bookingId}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await axiosInstance.get(`/bookings/${bookingId}`);
+    return response.data;
   }, []);
 
   // Cancel booking
   const cancelBooking = useCallback(async (bookingId) => {
-    try {
-      const response = await axiosInstance.put(
-        `/bookings/${bookingId}/status`,
-        {
-          status: "cancelled",
-        },
-      );
+    const response = await axiosInstance.put(`/bookings/${bookingId}/status`, {
+      status: "cancelled",
+    });
 
-      dispatch({ type: actionTypes.UPDATE_BOOKING, payload: response.data });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    dispatch({ type: actionTypes.UPDATE_BOOKING, payload: response.data });
+    return response.data;
   }, []);
 
   // Send booking confirmation email
@@ -984,7 +981,7 @@ export const APIProvider = ({ children }) => {
         `/bookings/${bookingId}/send-email`,
       );
       return response.data;
-    } catch (error) {
+    } catch {
       // Don't throw error for email sending failures
       return null;
     }
@@ -1226,6 +1223,7 @@ export const APIProvider = ({ children }) => {
 // CUSTOM HOOK TO USE CONTEXT
 // ================================
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAPI = () => {
   const context = useContext(APIContext);
 

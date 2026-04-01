@@ -1,51 +1,51 @@
 import axios from "axios";
 import { TokenManager, HostTokenManager } from "../services/jwtAuthService";
 
-// Create axios instance with base configuration
+// Resolve base URL — dev falls back to localhost, prod uses Render
 const baseURL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001/api";
 
 const axiosInstance = axios.create({
   baseURL,
-  timeout: 30000, // 30 seconds timeout - increased from 10 seconds
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Helper to determine if current route is for host
+// Determine route context
 const isHostRoute = () => {
   const path = window.location.pathname.toLowerCase();
   return path.includes("/host") || path.includes("/host-");
 };
 
-// Request interceptor to add auth token
+// ── Request interceptor ───────────────────────────────────────────────────────
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Use HostTokenManager for host routes, TokenManager for user routes
     const token = isHostRoute()
       ? HostTokenManager.getAccessToken()
       : TokenManager.getAccessToken();
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    if (token) config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  },
+  (error) => Promise.reject(error),
 );
 
-// Response interceptor to handle token refresh
+// ── Response interceptor ──────────────────────────────────────────────────────
 axiosInstance.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Check if error is due to expired token
+    // Network failure (no response at all)
+    if (!error.response) {
+      error.isNetworkError = true;
+      error.userMessage =
+        "Unable to connect to the server. Please check your internet connection.";
+      return Promise.reject(error);
+    }
+
+    // Token expired — attempt silent refresh once
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
@@ -55,43 +55,28 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // Use appropriate token manager based on route
         const manager = isHostRoute() ? HostTokenManager : TokenManager;
         const refreshToken = manager.getRefreshToken();
 
-        if (!refreshToken) {
-          throw new Error("No refresh token available");
-        }
+        if (!refreshToken) throw new Error("No refresh token");
 
-        // Try to refresh the token
-        const response = await fetch(`${baseURL}/auth/refresh`, {
+        const res = await fetch(`${baseURL}/auth/refresh`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ refreshToken }),
         });
 
-        if (response.ok) {
-          const data = await response.json();
+        if (res.ok) {
+          const data = await res.json();
           if (data.success && data.accessToken) {
-            manager.setTokens(
-              data.accessToken,
-              data.refreshToken || refreshToken,
-            );
-
-            // Update the authorization header with new token
-            const newToken = manager.getAccessToken();
-            originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
-            // Retry the original request
+            manager.setTokens(data.accessToken, data.refreshToken || refreshToken);
+            originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
             return axiosInstance(originalRequest);
           }
         }
 
-        throw new Error("Token refresh failed");
-      } catch (refreshError) {
-        // Refresh failed, clear tokens and redirect
+        throw new Error("Refresh failed");
+      } catch {
         if (isHostRoute()) {
           HostTokenManager.clearTokens();
           window.location.href = "/host-login";
@@ -99,8 +84,22 @@ axiosInstance.interceptors.response.use(
           TokenManager.clearTokens();
           window.location.href = "/signin";
         }
-        return Promise.reject(refreshError);
+        return Promise.reject(error);
       }
+    }
+
+    // Attach user-friendly messages for common status codes
+    if (error.response?.status === 403) {
+      error.userMessage = "You don't have permission to perform this action.";
+    } else if (error.response?.status === 404) {
+      error.userMessage = "The requested resource was not found.";
+    } else if (error.response?.status === 429) {
+      error.userMessage = "Too many requests. Please wait a moment and try again.";
+    } else if (error.response?.status >= 500) {
+      error.userMessage = "The server encountered an error. Please try again later.";
+    } else {
+      error.userMessage =
+        error.response?.data?.message || error.message || "Something went wrong.";
     }
 
     return Promise.reject(error);

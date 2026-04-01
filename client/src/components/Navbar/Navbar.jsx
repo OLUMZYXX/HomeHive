@@ -38,6 +38,7 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [scrolled, setScrolled] = useState(false);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [visible, setVisible] = useState(true);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -46,24 +47,18 @@ const Navbar = () => {
 
   const navigate = useNavigate();
   const location = useLocation();
+  const isHome = location.pathname === "/";
 
-  // Smart home navigation handler
   const handleHomeNavigation = () => {
     navigateToHome(navigate, location);
     setMenuOpen(false);
   };
 
-  // Initialize token manager and check authentication status
   useEffect(() => {
     TokenManager.initialize();
-
-    // Clear any previous errors when component mounts
-    if (error) {
-      clearError();
-    }
+    if (error) clearError();
   }, [error, clearError]);
 
-  // Error handling useEffect
   useEffect(() => {
     if (error) {
       toast.error(error);
@@ -71,7 +66,6 @@ const Navbar = () => {
     }
   }, [error, clearError]);
 
-  // Close profile menu on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (
@@ -80,8 +74,6 @@ const Navbar = () => {
       ) {
         setProfileMenuOpen(false);
       }
-
-      // Close currency dropdown when clicking outside
       if (!event.target.closest(".currency-dropdown")) {
         setCurrencyDropdownOpen(false);
       }
@@ -92,29 +84,26 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [profileMenuOpen, currencyDropdownOpen]);
 
-  // Scroll behavior
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+      setScrolled(currentScrollY > 60);
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
         setVisible(false);
-        setMenuOpen(false); // Close mobile menu when scrolling down
+        setMenuOpen(false);
       } else {
         setVisible(true);
       }
       setLastScrollY(currentScrollY);
     };
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
-  // Navigation handlers
   const navigateToHost = () => navigate("/Host");
 
   const handleLogout = async () => {
     try {
-      // User navbar should logout as user (isHost = false)
       await apiLogout(false);
       toast.success("Logged out successfully");
       setMenuOpen(false);
@@ -151,20 +140,12 @@ const Navbar = () => {
   };
 
   const handleBookingsClick = () => {
-    console.log("Navbar - Bookings clicked, authentication state:", {
-      isAuthenticated,
-      user,
-    });
-
     if (!isAuthenticated) {
-      console.log("Navbar - User not authenticated, redirecting to signin");
       localStorage.setItem("redirectAfterLogin", "/my-bookings");
       toast.info("Please log in to view your bookings");
       navigate("/signin");
       return;
     }
-
-    console.log("Navbar - User authenticated, navigating to my-bookings");
     navigate("/my-bookings");
     setMenuOpen(false);
     setProfileMenuOpen(false);
@@ -185,7 +166,6 @@ const Navbar = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       try {
-        // Navigate to search results page with query
         navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         setIsSearching(false);
         setSearchQuery("");
@@ -204,116 +184,125 @@ const Navbar = () => {
 
   const navLinks = [
     { name: "Explore", icon: <FaHome />, action: handleHomeNavigation },
-    {
-      name: "Listings",
-      icon: <FaBook />,
-      action: handleBookingClick,
-    },
-    {
-      name: "My Bookings",
-      icon: <FaCalendarCheck />,
-      action: handleBookingsClick,
-    },
+    { name: "Listings", icon: <FaBook />, action: handleBookingClick },
+    { name: "My Bookings", icon: <FaCalendarCheck />, action: handleBookingsClick },
   ];
+
+  // Transparent on home hero, white when scrolled or on other pages
+  const isTransparent = isHome && !scrolled && !menuOpen;
+  const textColor = isTransparent ? "text-white" : "text-neutral-800";
+  const borderColor = isTransparent ? "border-white/30" : "border-neutral-200";
 
   return (
     <nav
-      className={`bg-white shadow-lg border-b border-gray-100 py-4 fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ${
         visible ? "translate-y-0" : "-translate-y-full"
+      } ${
+        isTransparent
+          ? "bg-transparent"
+          : "bg-white/95 backdrop-blur-md shadow-navbar border-b border-neutral-100"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
-        <div className="flex items-center justify-between">
-          {/* Logo Section */}
+      <div className="container mx-auto px-6 md:px-10 lg:px-12 max-w-screen-xl">
+        <div className="flex items-center justify-between py-5">
+
+          {/* Logo */}
           <div
             className="flex items-center gap-3 cursor-pointer group flex-shrink-0"
             onClick={handleHomeNavigation}
           >
-            <div className="flex-shrink-0">
+            <div className={`flex-shrink-0 ${isTransparent ? "brightness-0 invert" : ""}`}>
               <HomeHiveLogo
-                className="w-12 h-12 sm:w-16 sm:h-16 object-contain transition-transform duration-200 group-hover:scale-105"
-                alt="Homehive Logo"
+                className="w-10 h-10 object-contain transition-transform duration-200 group-hover:scale-105"
+                alt="HomeHive Logo"
               />
             </div>
-            <h1 className="font-NotoSans text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 group-hover:text-gray-700 transition-colors duration-200">
-              Homehive
-            </h1>
+            <span
+              className={`font-Cormorant text-2xl font-semibold tracking-wide transition-colors duration-300 ${textColor}`}
+            >
+              HomeHive
+            </span>
           </div>
 
-          {/* Desktop Navigation - Centered */}
-          <div className="hidden lg:flex items-center justify-center flex-1 mx-8">
+          {/* Desktop Nav Links — centered */}
+          <div className="hidden lg:flex items-center justify-center flex-1 mx-10">
             {isSearching ? (
               <form
                 onSubmit={handleSearch}
-                className="flex items-center bg-gray-50 rounded-full border-2 border-gray-200 px-6 py-3 min-w-[500px] max-w-[700px]"
+                className={`flex items-center rounded-full border px-6 py-2.5 min-w-[480px] max-w-[640px] ${
+                  isTransparent
+                    ? "bg-white/15 backdrop-blur-sm border-white/40"
+                    : "bg-neutral-50 border-neutral-200"
+                }`}
               >
                 <input
                   type="text"
                   placeholder="Search accommodations..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent text-gray-700 placeholder-gray-500 focus:outline-none text-lg"
+                  className={`flex-1 bg-transparent focus:outline-none text-base ${
+                    isTransparent
+                      ? "text-white placeholder-white/60"
+                      : "text-neutral-700 placeholder-neutral-400"
+                  }`}
                   autoFocus
                 />
-                <button type="submit" className="ml-2 p-1">
-                  <CiSearch className="text-xl text-gray-600 hover:text-gray-800" />
+                <button type="submit" className="ml-2">
+                  <CiSearch className={`text-xl ${isTransparent ? "text-white/80" : "text-neutral-500"}`} />
                 </button>
-                <button
-                  type="button"
-                  onClick={closeSearch}
-                  className="ml-2 p-1 text-gray-500 hover:text-gray-700"
-                >
-                  <IoClose className="text-xl" />
+                <button type="button" onClick={closeSearch} className="ml-2">
+                  <IoClose className={`text-xl ${isTransparent ? "text-white/80" : "text-neutral-500"}`} />
                 </button>
               </form>
             ) : (
-              <div className="flex items-center bg-gray-50 border-2 border-gray-200 rounded-full px-6 py-3 shadow-sm hover:shadow-md transition-shadow duration-200">
-                <ul className="flex items-center gap-8 text-base font-medium">
-                  {navLinks.map((link) => (
-                    <li key={link.name}>
-                      <button
-                        onClick={link.action}
-                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors duration-200 whitespace-nowrap"
-                      >
-                        {link.icon}
-                        {link.name}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => setIsSearching(true)}
-                  className="ml-6 p-1 text-gray-600 hover:text-gray-800 transition-colors duration-200"
-                >
-                  <CiSearch className="text-2xl" />
-                </button>
-              </div>
+              <ul className="flex items-center gap-10">
+                {navLinks.map((link) => (
+                  <li key={link.name}>
+                    <button
+                      onClick={link.action}
+                      className={`text-sm font-medium tracking-widest uppercase transition-all duration-200 hover:opacity-70 ${textColor}`}
+                    >
+                      {link.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Toggle */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+            className="lg:hidden p-2 rounded-lg transition-colors duration-200"
             aria-label="Toggle menu"
           >
             {menuOpen ? (
-              <IoClose className="text-2xl text-gray-700" />
+              <IoClose className={`text-2xl ${textColor}`} />
             ) : (
-              <HiMenu className="text-2xl text-gray-700" />
+              <HiMenu className={`text-2xl ${textColor}`} />
             )}
           </button>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop Right Side */}
           <div className="hidden lg:flex items-center gap-4 flex-shrink-0">
-            {/* Show Become a Host button only on home page */}
-            {location.pathname === "/" && (
-              <AnimatedButton
+            {/* Search icon */}
+            {!isSearching && (
+              <button
+                onClick={() => setIsSearching(true)}
+                className={`p-1 transition-opacity duration-200 hover:opacity-70 ${textColor}`}
+              >
+                <CiSearch className="text-xl" />
+              </button>
+            )}
+
+            {/* Become a Host — always shown on home */}
+            {isHome && (
+              <button
                 onClick={navigateToHost}
-                className="px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 rounded-full transition-all duration-200"
+                className={`text-sm font-medium tracking-widest uppercase transition-all duration-200 hover:opacity-70 ${textColor}`}
               >
                 Become a Host
-              </AnimatedButton>
+              </button>
             )}
 
             {user && isAuthenticated ? (
@@ -321,26 +310,21 @@ const Navbar = () => {
                 {/* Currency Selector */}
                 <div className="relative currency-dropdown">
                   <button
-                    onClick={() =>
-                      setCurrencyDropdownOpen(!currencyDropdownOpen)
-                    }
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 rounded-full transition-all duration-200"
+                    onClick={() => setCurrencyDropdownOpen(!currencyDropdownOpen)}
+                    className={`flex items-center gap-1.5 text-sm font-medium transition-opacity duration-200 hover:opacity-70 ${textColor}`}
                   >
-                    <span className="text-lg">
-                      {selectedCurrencyData?.symbol}
-                    </span>
-                    <span className="hidden sm:block">{selectedCurrency}</span>
+                    <span>{selectedCurrencyData?.symbol}</span>
+                    <span className="hidden sm:block tracking-wide">{selectedCurrency}</span>
                   </button>
 
-                  {/* Currency Dropdown */}
                   <AnimatePresence>
                     {currencyDropdownOpen && (
                       <motion.div
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        initial={{ opacity: 0, y: -8, scale: 0.96 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full right-0 mt-2 w-56 bg-white border-2 border-gray-200 rounded-2xl shadow-strong z-50 overflow-hidden"
+                        exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                        transition={{ duration: 0.18 }}
+                        className="absolute top-full right-0 mt-2 w-56 bg-white border border-neutral-200 rounded-2xl shadow-strong z-50 overflow-hidden"
                       >
                         {currencies.map((currency) => (
                           <button
@@ -349,26 +333,19 @@ const Navbar = () => {
                               setSelectedCurrency(currency.code);
                               setCurrencyDropdownOpen(false);
                             }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-all duration-200 text-left ${
+                            className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-neutral-50 transition-all duration-200 text-left ${
                               selectedCurrency === currency.code
-                                ? "bg-gray-100 border-r-4 border-primary-500"
+                                ? "bg-neutral-50 border-r-4 border-primary-800"
                                 : ""
                             }`}
                           >
-                            <span className="text-xl font-bold text-gray-800 w-8 text-center">
+                            <span className="text-lg font-bold text-neutral-800 w-8 text-center">
                               {currency.symbol}
                             </span>
                             <div className="flex-1">
-                              <div className="font-bold text-gray-900 text-sm">
-                                {currency.code}
-                              </div>
-                              <div className="text-xs text-gray-600 font-medium">
-                                {currency.name}
-                              </div>
+                              <div className="font-semibold text-neutral-900 text-sm">{currency.code}</div>
+                              <div className="text-xs text-neutral-500">{currency.name}</div>
                             </div>
-                            {selectedCurrency === currency.code && (
-                              <div className="w-2 h-2 bg-primary-800 rounded-full"></div>
-                            )}
                           </button>
                         ))}
                       </motion.div>
@@ -376,8 +353,11 @@ const Navbar = () => {
                   </AnimatePresence>
                 </div>
 
+                {/* Avatar */}
                 <button
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-gray-200 overflow-hidden relative focus:outline-none"
+                  className={`w-10 h-10 rounded-full border-2 overflow-hidden relative focus:outline-none ${
+                    isTransparent ? "border-white/50" : "border-neutral-200"
+                  }`}
                   onClick={() => setProfileMenuOpen((open) => !open)}
                   aria-label="Profile menu"
                 >
@@ -395,38 +375,40 @@ const Navbar = () => {
                     />
                   ) : null}
                   <div
-                    className="w-full h-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg"
-                    style={{
-                      display:
-                        user.profilePicture || user.photoURL ? "none" : "flex",
-                    }}
+                    className="w-full h-full bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center text-white font-semibold"
+                    style={{ display: user.profilePicture || user.photoURL ? "none" : "flex" }}
                   >
-                    {(user.displayName || user.firstName || user.email || "U")
-                      .charAt(0)
-                      .toUpperCase()}
+                    {(user.displayName || user.firstName || user.email || "U").charAt(0).toUpperCase()}
                   </div>
-                  {/* Status indicator for authenticated users */}
-                  <span className="absolute -top-1 -right-1 w-3 h-3 md:w-4 md:h-4 bg-green-500 rounded-full border-2 border-white"></span>
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
                 </button>
               </div>
             ) : (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <Link to="/signin" className="inline-block">
-                  <AnimatedButton className="px-6 py-2.5 text-base font-medium text-gray-700 hover:text-gray-900 border-2 border-gray-800 rounded-full transition-all duration-200">
+                  <button
+                    className={`text-sm font-medium tracking-widest uppercase transition-all duration-200 hover:opacity-70 ${textColor}`}
+                  >
                     Login
-                  </AnimatedButton>
+                  </button>
                 </Link>
                 <Link to="/signup" className="inline-block">
-                  <AnimatedButton className="px-6 py-2.5 text-base font-medium bg-gray-800 text-white rounded-full hover:bg-gray-900 transition-all duration-200">
+                  <button
+                    className={`px-5 py-2 text-sm font-medium tracking-widest uppercase rounded-none border transition-all duration-300 ${
+                      isTransparent
+                        ? "border-white/70 text-white hover:bg-white hover:text-neutral-900"
+                        : "border-neutral-800 text-neutral-800 hover:bg-neutral-800 hover:text-white"
+                    }`}
+                  >
                     Sign Up
-                  </AnimatedButton>
+                  </button>
                 </Link>
               </div>
             )}
           </div>
         </div>
 
-        {/* Profile Dropdown - Only one, properly positioned */}
+        {/* Profile Dropdown */}
         <AnimatePresence>
           {profileMenuOpen && user && isAuthenticated && (
             <motion.div
@@ -434,126 +416,51 @@ const Navbar = () => {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-              style={{ right: "2.5rem", top: "4.5rem" }}
-              className="absolute w-96 bg-white/95 backdrop-blur-md border border-neutral-200/50 rounded-3xl shadow-strong z-50 overflow-hidden"
+              transition={{ duration: 0.2 }}
+              style={{ right: "2rem", top: "4.5rem" }}
+              className="absolute w-80 bg-white border border-neutral-200 rounded-2xl shadow-strong z-50 overflow-hidden"
             >
-              {/* Profile Header */}
-              <div className="p-6 bg-gradient-to-r from-neutral-50 to-primary-50 border-b border-neutral-200/30">
+              <div className="p-5 bg-neutral-50 border-b border-neutral-100">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    {user.profilePicture || user.photoURL ? (
-                      <img
-                        src={user.profilePicture || user.photoURL}
-                        alt="User Profile"
-                        className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium"
-                        loading="lazy"
-                        decoding="async"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.nextSibling.style.display = "flex";
-                        }}
-                      />
-                    ) : null}
-                    <div
-                      className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-white shadow-medium"
-                      style={{
-                        display:
-                          user.profilePicture || user.photoURL
-                            ? "none"
-                            : "flex",
-                      }}
-                    >
-                      {(user.displayName || user.firstName || user.email || "U")
-                        .charAt(0)
-                        .toUpperCase()}
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center text-white font-semibold text-base">
+                      {(user.displayName || user.firstName || user.email || "U").charAt(0).toUpperCase()}
                     </div>
-                    {/* Enhanced status indicator */}
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success-500 rounded-full border-2 border-white shadow-sm">
-                      <div className="w-full h-full bg-success-400 rounded-full animate-ping opacity-75"></div>
-                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success-500 rounded-full border-2 border-white"></div>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-neutral-800 text-lg truncate">
+                    <div className="font-semibold text-neutral-800 truncate">
                       {user.displayName || user.firstName || "User"}
                     </div>
-                    <div className="text-sm text-neutral-500 truncate">
-                      {user.email}
-                    </div>
-                    <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-success-100 text-success-700 text-xs font-medium rounded-full">
-                      <div className="w-1.5 h-1.5 bg-success-500 rounded-full"></div>
-                      {user.userType === "host" ? "Host" : "Active"}
-                    </div>
+                    <div className="text-sm text-neutral-500 truncate">{user.email}</div>
                   </div>
                 </div>
               </div>
 
-              {/* Menu Items */}
               <div className="py-2">
-                {/* Account Section */}
-                <div className="px-2 pb-2">
-                  <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-4 py-2">
-                    Account
-                  </div>
-                  <button
-                    onClick={handleSettingsClick}
-                    className="w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2"
-                  >
-                    <div className="flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-primary-100 rounded-xl transition-colors duration-200">
-                      <FaCog className="text-neutral-600 group-hover:text-primary-600 text-sm" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-sm">Settings</div>
-                      <div className="text-xs text-neutral-500">
-                        Manage preferences
-                      </div>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={handleFavoritesClick}
-                    className="w-full group flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-all duration-200 rounded-2xl mx-2"
-                  >
-                    <div className="flex items-center justify-center w-9 h-9 bg-neutral-100 group-hover:bg-accent-red-100 rounded-xl transition-colors duration-200">
-                      <FaHeart className="text-neutral-600 group-hover:text-accent-red-500 text-sm" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-sm">Favorites</div>
-                      <div className="text-xs text-neutral-500">
-                        Saved properties
-                      </div>
-                    </div>
-                  </button>
-                </div>
-
-                {/* Divider */}
-                <div className="my-2 mx-6 border-t border-neutral-200/50"></div>
-
-                {/* Quick Actions */}
-                <div className="px-2 pb-2">
-                  <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider px-4 py-2">
-                    Quick Actions
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    disabled={loading}
-                    className={`w-full group flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-all duration-200 rounded-2xl mx-2 ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    <div className="flex items-center justify-center w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-xl transition-colors duration-200">
-                      <FaSignOutAlt className="text-red-600 text-sm" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="font-medium text-sm">
-                        {loading ? "Logging out..." : "Sign Out"}
-                      </div>
-                      <div className="text-xs text-red-500">
-                        End your session
-                      </div>
-                    </div>
-                  </button>
-                </div>
+                <button
+                  onClick={handleSettingsClick}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-neutral-700 hover:bg-neutral-50 transition-colors duration-200 text-left"
+                >
+                  <FaCog className="text-neutral-400" />
+                  <span className="text-sm font-medium">Settings</span>
+                </button>
+                <button
+                  onClick={handleFavoritesClick}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-neutral-700 hover:bg-neutral-50 transition-colors duration-200 text-left"
+                >
+                  <FaHeart className="text-neutral-400" />
+                  <span className="text-sm font-medium">Favorites</span>
+                </button>
+                <div className="my-1 mx-5 border-t border-neutral-100"></div>
+                <button
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className="w-full flex items-center gap-3 px-5 py-3 text-red-500 hover:bg-red-50 transition-colors duration-200 text-left"
+                >
+                  <FaSignOutAlt className="text-red-400" />
+                  <span className="text-sm font-medium">{loading ? "Logging out..." : "Sign Out"}</span>
+                </button>
               </div>
             </motion.div>
           )}
@@ -566,148 +473,81 @@ const Navbar = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className="lg:hidden bg-white border-t border-gray-200 shadow-lg overflow-hidden"
+              transition={{ duration: 0.3 }}
+              className="lg:hidden bg-white border-t border-neutral-100 shadow-lg overflow-hidden"
             >
-              <div className="px-4 py-4 space-y-4">
-                {/* Search Bar - Mobile */}
-                <div className="relative">
-                  <form onSubmit={handleSearch} className="flex items-center">
-                    <input
-                      type="text"
-                      placeholder="Search accommodations..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-full text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    <button
-                      type="submit"
-                      className="ml-2 p-3 bg-primary-600 hover:bg-primary-700 text-white rounded-full transition-colors duration-200"
-                    >
-                      <CiSearch className="text-xl" />
-                    </button>
-                  </form>
-                </div>
+              <div className="px-6 py-5 space-y-5">
+                {/* Search */}
+                <form onSubmit={handleSearch} className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search accommodations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="flex-1 px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-full text-neutral-700 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  />
+                  <button type="submit" className="p-3 bg-primary-800 hover:bg-primary-900 text-white rounded-full transition-colors">
+                    <CiSearch className="text-lg" />
+                  </button>
+                </form>
 
-                {/* Navigation Links - Mobile */}
-                <div className="space-y-2">
+                {/* Nav links */}
+                <div className="space-y-1">
                   {navLinks.map((link) => (
                     <button
                       key={link.name}
                       onClick={link.action}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg"
+                      className="w-full flex items-center gap-3 px-3 py-3 text-neutral-700 hover:bg-neutral-50 rounded-xl transition-colors text-sm font-medium tracking-wide uppercase"
                     >
                       {link.icon}
-                      <span className="font-medium">{link.name}</span>
+                      {link.name}
                     </button>
                   ))}
-
-                  {/* Show Become a Host button only on home page */}
-                  {location.pathname === "/" && (
+                  {isHome && (
                     <button
                       onClick={navigateToHost}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg"
+                      className="w-full flex items-center gap-3 px-3 py-3 text-neutral-700 hover:bg-neutral-50 rounded-xl transition-colors text-sm font-medium tracking-wide uppercase"
                     >
                       <FaHome />
-                      <span className="font-medium">Become a Host</span>
+                      Become a Host
                     </button>
                   )}
                 </div>
 
-                {/* Authentication Section - Mobile */}
-                <div className="pt-4 border-t border-gray-200">
+                {/* Auth */}
+                <div className="pt-4 border-t border-neutral-100">
                   {user && isAuthenticated ? (
-                    <div className="space-y-4">
-                      {/* User Profile - Mobile */}
-                      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg">
-                        {user.profilePicture || user.photoURL ? (
-                          <img
-                            src={user.profilePicture || user.photoURL}
-                            alt="User Profile"
-                            className="w-10 h-10 rounded-full object-cover"
-                            loading="lazy"
-                            decoding="async"
-                            onError={(e) => {
-                              e.target.style.display = "none";
-                              e.target.nextSibling.style.display = "flex";
-                            }}
-                          />
-                        ) : null}
-                        <div
-                          className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm"
-                          style={{
-                            display:
-                              user.profilePicture || user.photoURL
-                                ? "none"
-                                : "flex",
-                          }}
-                        >
-                          {(
-                            user.displayName ||
-                            user.firstName ||
-                            user.email ||
-                            "U"
-                          )
-                            .charAt(0)
-                            .toUpperCase()}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 px-3 py-3 bg-neutral-50 rounded-xl">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center text-white font-semibold text-sm">
+                          {(user.displayName || user.firstName || user.email || "U").charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium text-gray-900 truncate">
+                          <div className="font-medium text-neutral-900 text-sm truncate">
                             {user.displayName || user.firstName || "User"}
                           </div>
-                          <div className="text-sm text-gray-500 truncate">
-                            {user.email}
-                          </div>
+                          <div className="text-xs text-neutral-500 truncate">{user.email}</div>
                         </div>
                       </div>
-
-                      {/* User Actions - Mobile */}
-                      <div className="space-y-2">
-                        <button
-                          onClick={handleSettingsClick}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg"
-                        >
-                          <FaCog />
-                          <span className="font-medium">Settings</span>
-                        </button>
-
-                        <button
-                          onClick={handleFavoritesClick}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors duration-200 rounded-lg"
-                        >
-                          <FaHeart />
-                          <span className="font-medium">Favorites</span>
-                        </button>
-
-                        <button
-                          onClick={handleLogout}
-                          disabled={loading}
-                          className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 rounded-lg ${
-                            loading ? "opacity-50 cursor-not-allowed" : ""
-                          }`}
-                        >
-                          <FaSignOutAlt />
-                          <span className="font-medium">
-                            {loading ? "Logging out..." : "Sign Out"}
-                          </span>
-                        </button>
-                      </div>
+                      <button onClick={handleSettingsClick} className="w-full flex items-center gap-3 px-3 py-3 text-neutral-700 hover:bg-neutral-50 rounded-xl transition-colors text-sm">
+                        <FaCog /> Settings
+                      </button>
+                      <button onClick={handleFavoritesClick} className="w-full flex items-center gap-3 px-3 py-3 text-neutral-700 hover:bg-neutral-50 rounded-xl transition-colors text-sm">
+                        <FaHeart /> Favorites
+                      </button>
+                      <button onClick={handleLogout} disabled={loading} className="w-full flex items-center gap-3 px-3 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors text-sm">
+                        <FaSignOutAlt /> {loading ? "Logging out..." : "Sign Out"}
+                      </button>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       <Link to="/signin" className="block">
-                        <button
-                          onClick={() => setMenuOpen(false)}
-                          className="w-full px-6 py-3 text-gray-700 hover:text-gray-900 border-2 border-gray-800 rounded-full font-medium transition-all duration-200"
-                        >
+                        <button onClick={() => setMenuOpen(false)} className="w-full py-3 border border-neutral-800 text-neutral-800 rounded-full text-sm font-medium tracking-wide uppercase">
                           Login
                         </button>
                       </Link>
                       <Link to="/signup" className="block">
-                        <button
-                          onClick={() => setMenuOpen(false)}
-                          className="w-full px-6 py-3 bg-gray-800 text-white rounded-full font-medium hover:bg-gray-900 transition-all duration-200"
-                        >
+                        <button onClick={() => setMenuOpen(false)} className="w-full py-3 bg-neutral-800 text-white rounded-full text-sm font-medium tracking-wide uppercase hover:bg-neutral-900 transition-colors">
                           Sign Up
                         </button>
                       </Link>

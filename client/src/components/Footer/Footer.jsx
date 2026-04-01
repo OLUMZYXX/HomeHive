@@ -1,5 +1,4 @@
-/* eslint-disable no-unused-vars */
-import React from "react";
+import { Link } from "react-router-dom";
 import {
   FaFacebook,
   FaTwitter,
@@ -9,236 +8,179 @@ import {
   FaEnvelope,
   FaMapMarkerAlt,
 } from "react-icons/fa";
-import { HiArrowUp } from "react-icons/hi";
-import {
-  ScrollReveal,
-  StaggerContainer,
-  StaggerItem,
-  AnimatedButton,
-  FloatingElement,
-} from "../common/AnimatedComponents";
+import { HiArrowUp, HiArrowRight } from "react-icons/hi";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
-  const footerLinks = {
-    company: [
-      { id: 1, name: "About Us", link: "/about" },
-      { id: 2, name: "Our Story", link: "/story" },
-      { id: 3, name: "Careers", link: "/careers" },
-      { id: 4, name: "Press", link: "/press" },
-    ],
-    services: [
-      { id: 1, name: "Accommodations", link: "#accomodation" },
-      { id: 2, name: "Testimonials", link: "#testimonial" },
-      { id: 3, name: "Support", link: "#support" },
-      { id: 4, name: "Become a Host", link: "/host" },
-    ],
-    support: [
-      { id: 1, name: "Help Center", link: "/help" },
-      { id: 2, name: "Contact Us", link: "/contact" },
-      { id: 3, name: "Safety", link: "/safety" },
-      { id: 4, name: "Community", link: "/community" },
-    ],
-    legal: [
-      { id: 1, name: "Privacy Policy", link: "/privacy" },
-      { id: 2, name: "Terms of Service", link: "/terms" },
-      { id: 3, name: "Cookie Policy", link: "/cookies" },
-      { id: 4, name: "GDPR", link: "/gdpr" },
-    ],
-  };
-
-  const socialLinks = [
+  const cols = [
     {
-      icon: FaFacebook,
-      href: "https://facebook.com/homehive",
-      label: "Facebook",
-    },
-    { icon: FaTwitter, href: "https://twitter.com/homehive", label: "Twitter" },
-    {
-      icon: FaInstagram,
-      href: "https://instagram.com/homehive",
-      label: "Instagram",
+      heading: "Company",
+      links: [
+        { name: "About Us", to: "/about" },
+        { name: "Our Story", to: "/story" },
+        { name: "Careers", to: "/careers" },
+        { name: "Press", to: "/press" },
+      ],
     },
     {
-      icon: FaLinkedin,
-      href: "https://linkedin.com/company/homehive",
-      label: "LinkedIn",
+      heading: "Services",
+      links: [
+        { name: "Browse Listings", to: "/listings" },
+        { name: "Become a Host", to: "/host" },
+        { name: "Testimonials", hash: "#testimonial" },
+        { name: "Contact Support", hash: "#support" },
+      ],
+    },
+    {
+      heading: "Legal",
+      links: [
+        { name: "Privacy Policy", to: "/privacy" },
+        { name: "Terms of Service", to: "/terms" },
+        { name: "Cookie Policy", to: "/cookies" },
+        { name: "GDPR", to: "/gdpr" },
+      ],
     },
   ];
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  const socials = [
+    { icon: FaFacebook, href: "https://facebook.com/homehive", label: "Facebook" },
+    { icon: FaTwitter, href: "https://twitter.com/homehive", label: "Twitter" },
+    { icon: FaInstagram, href: "https://instagram.com/homehive", label: "Instagram" },
+    { icon: FaLinkedin, href: "https://linkedin.com/company/homehive", label: "LinkedIn" },
+  ];
 
   return (
-    <footer className="bg-gradient-to-br from-primary-900 via-primary-800 to-primary-900 text-white relative overflow-hidden [content-visibility:auto] [contain-intrinsic-size:1px_600px]">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <FloatingElement
-          direction="x"
-          distance={50}
-          duration={20}
-          className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white to-transparent transform -skew-y-1"
-        />
-      </div>
+    <footer className="bg-neutral-900 text-white [content-visibility:auto] [contain-intrinsic-size:1px_500px]">
+      {/* Amber top border */}
+      <div className="h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent" />
 
-      {/* Main Footer Content */}
-      <div className="relative container mx-auto px-4 sm:px-6 md:px-8 lg:px-8 py-12 max-w-full md:max-w-screen-md xl:max-w-screen-xl">
-        {/* Top Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-          {/* Company Info */}
-          <ScrollReveal
-            direction="left"
-            delay={0.2}
-            className="lg:col-span-5 space-y-6"
-          >
+      <div className="container mx-auto px-4 sm:px-6 md:px-8 max-w-screen-xl">
+
+        {/* Main grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 py-16 border-b border-white/10">
+
+          {/* Brand col */}
+          <div className="lg:col-span-5 space-y-8">
             <div>
-              <h2 className="font-NotoSans text-3xl font-bold mb-4">
-                <span className="text-white">Home</span>
-                <span className="text-transparent bg-gradient-to-r from-primary-200 to-white bg-clip-text">
-                  hive
-                </span>
+              <h2 className="font-Cormorant text-3xl font-light text-white mb-3">
+                Home<span className="text-amber-400">Hive</span>
               </h2>
-              <p className="text-lg text-primary-100 leading-relaxed">
-                Discover exceptional accommodations that redefine comfort and
-                luxury. Your perfect stay awaits with Homehive.
+              <p className="text-neutral-400 text-sm leading-relaxed max-w-sm">
+                Discover exceptional accommodations across Nigeria's finest cities.
+                Your perfect stay, effortlessly booked.
               </p>
             </div>
 
-            {/* Contact Info */}
-            <StaggerContainer
-              staggerDelay={0.1}
-              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
-            >
-              <StaggerItem className="flex items-center gap-3">
-                <FaMapMarkerAlt className="text-primary-200 text-lg" />
-                <div>
-                  <p className="text-primary-100 text-sm">Lagos, Nigeria</p>
-                </div>
-              </StaggerItem>
-
-              <StaggerItem className="flex items-center gap-3">
-                <FaPhone className="text-primary-200 text-lg" />
-                <div>
-                  <p className="text-primary-100 text-sm">+234 800 123 4567</p>
-                </div>
-              </StaggerItem>
-
-              <StaggerItem className="flex items-center gap-3">
-                <FaEnvelope className="text-primary-200 text-lg" />
-                <div>
-                  <p className="text-primary-100 text-sm">hello@homehive.com</p>
-                </div>
-              </StaggerItem>
-            </StaggerContainer>
-          </ScrollReveal>
-
-          {/* Links Sections */}
-          <ScrollReveal
-            direction="right"
-            delay={0.3}
-            className="lg:col-span-7 grid grid-cols-2 md:grid-cols-3 gap-8"
-          >
-            {/* Company Links */}
+            {/* Newsletter */}
             <div>
-              <h3 className="text-lg font-bold text-white mb-4">Company</h3>
-              <StaggerContainer staggerDelay={0.05}>
-                {footerLinks.company.slice(0, 4).map((link) => (
-                  <StaggerItem key={link.id}>
-                    <a
-                      href={link.link}
-                      className="text-primary-100 hover:text-white transition-colors duration-300 text-sm block py-1"
-                    >
-                      {link.name}
-                    </a>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
-            </div>
-
-            {/* Services Links */}
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4">Services</h3>
-              <StaggerContainer staggerDelay={0.05}>
-                {footerLinks.services.slice(0, 4).map((link) => (
-                  <StaggerItem key={link.id}>
-                    <a
-                      href={link.link}
-                      className="text-primary-100 hover:text-white transition-colors duration-300 text-sm block py-1"
-                      onClick={
-                        link.link.startsWith("#")
-                          ? (e) => {
-                              e.preventDefault();
-                              document
-                                .querySelector(link.link)
-                                ?.scrollIntoView({ behavior: "smooth" });
-                            }
-                          : undefined
-                      }
-                    >
-                      {link.name}
-                    </a>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
-            </div>
-
-            {/* Support Links */}
-            <div>
-              <h3 className="text-lg font-bold text-white mb-4">Support</h3>
-              <StaggerContainer staggerDelay={0.05}>
-                {footerLinks.support.slice(0, 4).map((link) => (
-                  <StaggerItem key={link.id}>
-                    <a
-                      href={link.link}
-                      className="text-primary-100 hover:text-white transition-colors duration-300 text-sm block py-1"
-                    >
-                      {link.name}
-                    </a>
-                  </StaggerItem>
-                ))}
-              </StaggerContainer>
-            </div>
-          </ScrollReveal>
-        </div>
-
-        {/* Bottom Section */}
-        <ScrollReveal direction="up" delay={0.4}>
-          <div className="border-t border-primary-600/30 pt-4 sm:pt-6">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
-                <p className="text-primary-100 text-sm text-center sm:text-left">
-                  © {currentYear} Homehive. All rights reserved.
-                </p>
-                <StaggerContainer
-                  staggerDelay={0.05}
-                  className="flex gap-3 sm:gap-4"
-                >
-                  {socialLinks.map((social, index) => (
-                    <StaggerItem key={index}>
-                      <AnimatedButton
-                        onClick={() => window.open(social.href, "_blank")}
-                        className="w-8 h-8 bg-primary-700/50 hover:bg-white/10 rounded-lg flex items-center justify-center transition-all duration-300"
-                        aria-label={social.label}
-                      >
-                        <social.icon className="text-sm text-primary-100 hover:text-white transition-colors duration-300" />
-                      </AnimatedButton>
-                    </StaggerItem>
-                  ))}
-                </StaggerContainer>
-              </div>
-
-              <AnimatedButton
-                onClick={scrollToTop}
-                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full p-2 transition-all duration-300 self-center sm:self-auto"
-                aria-label="Back to top"
+              <p className="text-xs font-semibold tracking-[0.2em] uppercase text-neutral-400 mb-3">
+                Stay Updated
+              </p>
+              <form
+                onSubmit={(e) => e.preventDefault()}
+                className="flex border border-white/10 hover:border-white/20 transition-colors"
               >
-                <HiArrowUp className="text-lg text-white" />
-              </AnimatedButton>
+                <input
+                  type="email"
+                  placeholder="Your email address"
+                  className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="px-4 bg-amber-500 hover:bg-amber-600 text-white transition-colors duration-200 flex items-center"
+                  aria-label="Subscribe"
+                >
+                  <HiArrowRight className="text-sm" />
+                </button>
+              </form>
+            </div>
+
+            {/* Contact */}
+            <div className="space-y-3">
+              {[
+                { icon: FaMapMarkerAlt, text: "Lagos, Nigeria" },
+                { icon: FaPhone, text: "+234 800 123 4567" },
+                { icon: FaEnvelope, text: "hello@homehive.com" },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-3">
+                  <Icon className="text-amber-400/70 text-sm flex-shrink-0" />
+                  <span className="text-neutral-400 text-sm">{text}</span>
+                </div>
+              ))}
             </div>
           </div>
-        </ScrollReveal>
+
+          {/* Link cols */}
+          <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-3 gap-8">
+            {cols.map((col) => (
+              <div key={col.heading}>
+                <h3 className="text-xs font-semibold tracking-[0.2em] uppercase text-neutral-400 mb-5">
+                  {col.heading}
+                </h3>
+                <ul className="space-y-3">
+                  {col.links.map((link) => (
+                    <li key={link.name}>
+                      {link.hash ? (
+                        <button
+                          onClick={() =>
+                            document
+                              .querySelector(link.hash)
+                              ?.scrollIntoView({ behavior: "smooth" })
+                          }
+                          className="text-neutral-500 hover:text-white text-sm transition-colors duration-200"
+                        >
+                          {link.name}
+                        </button>
+                      ) : (
+                        <Link
+                          to={link.to}
+                          className="text-neutral-500 hover:text-white text-sm transition-colors duration-200"
+                        >
+                          {link.name}
+                        </Link>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6">
+          <p className="text-neutral-500 text-xs">
+            © {currentYear} HomeHive. All rights reserved.
+          </p>
+
+          <div className="flex items-center gap-6">
+            {/* Socials */}
+            <div className="flex items-center gap-3">
+              {socials.map(({ icon: Icon, href, label }) => (
+                <a
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="w-8 h-8 border border-white/10 hover:border-white/30 flex items-center justify-center transition-colors duration-200"
+                >
+                  <Icon className="text-neutral-500 hover:text-white text-xs transition-colors duration-200" />
+                </a>
+              ))}
+            </div>
+
+            {/* Back to top */}
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="w-8 h-8 border border-white/10 hover:border-amber-500/50 flex items-center justify-center transition-colors duration-200 group"
+              aria-label="Back to top"
+            >
+              <HiArrowUp className="text-neutral-500 group-hover:text-amber-400 text-xs transition-colors" />
+            </button>
+          </div>
+        </div>
       </div>
     </footer>
   );

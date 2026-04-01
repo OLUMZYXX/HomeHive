@@ -11,8 +11,7 @@ export class TokenManager {
       if (refreshToken) {
         localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   // Get access token
@@ -39,16 +38,14 @@ export class TokenManager {
       localStorage.removeItem(this.ACCESS_TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.USER_DATA_KEY);
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   // Store user data
   static setUserData(userData) {
     try {
       localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
-    } catch (error) {
-    }
+    } catch (error) {}
   }
 
   // Get user data
@@ -71,7 +68,7 @@ export class TokenManager {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp > currentTime;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -95,7 +92,7 @@ export class TokenManager {
       const payload = JSON.parse(atob(tokenToCheck.split(".")[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp <= currentTime;
-    } catch (error) {
+    } catch {
       return true;
     }
   }
@@ -120,8 +117,7 @@ export class TokenManager {
         if (timeUntilExpiry > 300) {
           return true;
         }
-      } catch (error) {
-      }
+      } catch {}
     }
 
     try {
@@ -148,7 +144,7 @@ export class TokenManager {
       }
 
       return false;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -167,7 +163,7 @@ export class TokenManager {
         iat: payload.iat,
         exp: payload.exp,
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -183,8 +179,7 @@ export class TokenManager {
           this.clearTokens();
         });
       }
-    } catch (error) {
-    }
+    } catch {}
   }
 }
 
@@ -201,15 +196,14 @@ export class HostTokenManager {
       if (refreshToken) {
         localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
       }
-    } catch (error) {
-    }
+    } catch {}
   }
 
   // Get access token
   static getAccessToken() {
     try {
       return localStorage.getItem(this.ACCESS_TOKEN_KEY);
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -218,7 +212,7 @@ export class HostTokenManager {
   static getRefreshToken() {
     try {
       return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -229,16 +223,14 @@ export class HostTokenManager {
       localStorage.removeItem(this.ACCESS_TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.USER_DATA_KEY);
-    } catch (error) {
-    }
+    } catch {}
   }
 
   // Store user data
   static setUserData(userData) {
     try {
       localStorage.setItem(this.USER_DATA_KEY, JSON.stringify(userData));
-    } catch (error) {
-    }
+    } catch {}
   }
 
   // Get user data
@@ -246,7 +238,7 @@ export class HostTokenManager {
     try {
       const userData = localStorage.getItem(this.USER_DATA_KEY);
       return userData ? JSON.parse(userData) : null;
-    } catch (error) {
+    } catch {
       return null;
     }
   }
@@ -261,7 +253,7 @@ export class HostTokenManager {
       const payload = JSON.parse(atob(token.split(".")[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp > currentTime;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -285,7 +277,7 @@ export class HostTokenManager {
       const payload = JSON.parse(atob(tokenToCheck.split(".")[1]));
       const currentTime = Math.floor(Date.now() / 1000);
       return payload.exp <= currentTime;
-    } catch (error) {
+    } catch {
       return true;
     }
   }
@@ -304,7 +296,7 @@ export class HostTokenManager {
         iat: payload.iat,
         exp: payload.exp,
       };
-    } catch (error) {
+    } catch {
       return null;
     }
   }
