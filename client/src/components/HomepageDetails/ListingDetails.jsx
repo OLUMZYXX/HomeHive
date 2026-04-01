@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Navbar from '../Navbar/Navbar'
 import livingroom from '../../assets/livning room.jpg'
 import bedroom from '../../assets/bedroom.jpg'
@@ -15,27 +15,24 @@ import {
   FaTv,
   FaUtensils,
   FaWifi,
+  FaStar,
+  FaHeart,
+  FaShare,
 } from 'react-icons/fa'
-import { FaStar } from 'react-icons/fa'
-import { FaRegShareFromSquare } from 'react-icons/fa6'
-import { CiHeart } from 'react-icons/ci'
 import { IoHomeOutline } from 'react-icons/io5'
 import { WiStars } from 'react-icons/wi'
 import { CiMoneyCheck1 } from 'react-icons/ci'
 import { MdOutlineCalendarToday } from 'react-icons/md'
-import { RiArrowDropDownLine } from 'react-icons/ri'
 import { FaRegFlag } from 'react-icons/fa6'
 import Footer from '../Footer/Footer'
 import { toast } from 'sonner'
 import MapboxMap from '../common/MapboxMap'
 import { useNavigate, useParams } from 'react-router-dom'
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io'
-import { AiFillHeart } from 'react-icons/ai'
-// import { navigateToHome } from '../../utils/navigation'
 import useScrollToTop from '../../hooks/useScrollToTop'
 import { useCurrency } from '../../contexts/CurrencyContext'
 
-const listingData = [
+const DEMO_LISTINGS = [
   {
     id: 1,
     name: 'Luxury Banana Island Villa',
@@ -77,34 +74,66 @@ const listingData = [
   },
 ]
 
+const STATIC_AMENITIES = [
+  { icon: FaWifi, label: 'Wifi' },
+  { icon: FaShower, label: 'Shower' },
+  { icon: FaBath, label: 'Bath' },
+  { icon: FaTv, label: 'TV' },
+  { icon: FaBed, label: 'Bed' },
+  { icon: FaCar, label: 'Car' },
+  { icon: FaParking, label: 'Parking' },
+  { icon: FaUtensils, label: 'Kitchen' },
+]
+
+const StarRow = ({ rating, reviewCount }) => (
+  <div className="flex items-center gap-1.5">
+    {[1, 2, 3, 4, 5].map((s) => (
+      <svg
+        key={s}
+        className={`w-3.5 h-3.5 ${s <= Math.round(Number(rating) || 0) ? 'text-amber-400' : 'text-neutral-300'}`}
+        fill="currentColor"
+        viewBox="0 0 20 20"
+      >
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+      </svg>
+    ))}
+    {rating && (
+      <span className="text-sm font-semibold text-neutral-700 ml-1">
+        {Number(rating).toFixed(1)}
+      </span>
+    )}
+    {reviewCount != null && (
+      <span className="text-sm text-neutral-400">({reviewCount} reviews)</span>
+    )}
+  </div>
+)
+
 const ListingDetails = () => {
   useScrollToTop()
 
   const navigate = useNavigate()
   const { id } = useParams()
-  const { selectedCurrency, formatPrice, convertFromCurrency } = useCurrency()
+  const { selectedCurrency, selectedCurrencyData, formatPrice, convertFromCurrency } = useCurrency()
 
-  // State for property details from API
   const [property, setProperty] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [saved, setSaved] = useState(false)
+  const [checkIn, setCheckIn] = useState('')
+  const [checkout, setCheckOut] = useState('')
+  const [guest, setGuest] = useState('')
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [touchStartX, setTouchStartX] = useState(0)
+  const [touchEndX, setTouchEndX] = useState(0)
 
   useEffect(() => {
     const fetchProperty = async () => {
       setLoading(true)
       try {
-        console.log('🏠 Fetching property with ID:', id)
         const res = await fetch(`/api/properties/${id}`)
         const data = await res.json()
-        console.log('📊 API Response:', data)
-        if (data && data.property) {
-          console.log('✅ Property found:', data.property)
-          setProperty(data.property)
-        } else {
-          console.log('❌ Property not found in response')
-          setProperty(null)
-        }
-      } catch (error) {
-        console.error('❌ Error fetching property:', error)
+        setProperty(data?.property || null)
+      } catch {
         setProperty(null)
       }
       setLoading(false)
@@ -112,927 +141,513 @@ const ListingDetails = () => {
     fetchProperty()
   }, [id])
 
-  // Fallback demo data if API fails
-  const homeId = parseInt(id, 10)
-  const homeDemo = listingData.find((l) => l.id === homeId)
-  const home = property || homeDemo
+  const demoHome = DEMO_LISTINGS.find((l) => l.id === parseInt(id, 10))
+  const prop = property || demoHome
 
-  // Create image gallery array
-  const imageGallery = home
-    ? home.images && home.images.length > 0
-      ? home.images.map((img, idx) => ({
+  const imageGallery = prop
+    ? prop.images && prop.images.length > 0
+      ? prop.images.map((img, i) => ({
           src: typeof img === 'object' && img.data ? img.data : img,
-          alt: (home.name || home.title || 'Property') + ' ' + (idx + 1),
+          alt: `${prop.title || prop.name || 'Property'} ${i + 1}`,
         }))
       : [
-          { src: home.image, alt: home.name || home.title || 'Property' },
+          { src: prop.image, alt: prop.name || prop.title || 'Property' },
           { src: bedroom, alt: 'Bedroom' },
           { src: dining, alt: 'Dining Room' },
           { src: kitchen, alt: 'Kitchen' },
           { src: livingroom, alt: 'Living Room' },
-          { src: home, alt: 'Exterior' },
         ]
     : []
 
-  // Host info (for demo)
-  const hostInfo = home
-    ? {
-        name:
-          home.category === 'luxury'
-            ? 'Adaobi Okafor'
-            : home.category === 'apartment'
-            ? 'Chinedu Balogun'
-            : 'Tolu Adebayo',
-        avatar:
-          'https://randomuser.me/api/portraits/men/' + (home.id + 10) + '.jpg',
-        badge: home.badge,
-      }
-    : null
-
-  const [checkIn, setCheckIn] = useState('')
-  const [checkout, setCheckOut] = useState('')
-  const [guest, setGuest] = useState('')
-  const [error, setError] = useState('')
-  const [isFilled, setIsFilled] = useState(false)
-  const [animating, setIsAnimating] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [touchStartX, setTouchStartX] = useState(0)
-  const [touchEndX, setTouchEndX] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-
-  const handleClick = () => {
-    if (!isFilled) {
-      setIsAnimating(true)
-      setTimeout(() => {
-        setIsAnimating(false)
-        setIsFilled(true)
-      }, 300)
-    } else {
-      setIsFilled(false)
-    }
-  }
-
-  // Image carousel functions with smooth animations
-  const nextImage = () => {
-    if (imageGallery.length > 0 && !isTransitioning) {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentImageIndex((prev) => (prev + 1) % imageGallery.length)
-        setIsTransitioning(false)
-      }, 150)
-    }
-  }
-
   const prevImage = () => {
-    if (imageGallery.length > 0 && !isTransitioning) {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentImageIndex(
-          (prev) => (prev - 1 + imageGallery.length) % imageGallery.length
-        )
-        setIsTransitioning(false)
-      }, 150)
-    }
+    if (isTransitioning || imageGallery.length === 0) return
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrentImageIndex((p) => (p - 1 + imageGallery.length) % imageGallery.length)
+      setIsTransitioning(false)
+    }, 150)
+  }
+
+  const nextImage = () => {
+    if (isTransitioning || imageGallery.length === 0) return
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setCurrentImageIndex((p) => (p + 1) % imageGallery.length)
+      setIsTransitioning(false)
+    }, 150)
   }
 
   const goToImage = (index) => {
-    if (index !== currentImageIndex && !isTransitioning) {
-      setIsTransitioning(true)
-      setTimeout(() => {
-        setCurrentImageIndex(index)
-        setIsTransitioning(false)
-      }, 150)
-    }
+    if (index === currentImageIndex || isTransitioning) return
+    setIsTransitioning(true)
+    setTimeout(() => { setCurrentImageIndex(index); setIsTransitioning(false) }, 150)
   }
 
-  // Touch handlers for swipe functionality
-  const handleTouchStart = (e) => {
-    setTouchStartX(e.targetTouches[0].clientX)
-  }
-
-  const handleTouchMove = (e) => {
-    setTouchEndX(e.targetTouches[0].clientX)
-  }
-
+  const handleTouchStart = (e) => setTouchStartX(e.targetTouches[0].clientX)
+  const handleTouchMove = (e) => setTouchEndX(e.targetTouches[0].clientX)
   const handleTouchEnd = () => {
     if (!touchStartX || !touchEndX) return
-
-    const distance = touchStartX - touchEndX
-    const isLeftSwipe = distance > 50
-    const isRightSwipe = distance < -50
-
-    if (isLeftSwipe) {
-      nextImage()
-    }
-    if (isRightSwipe) {
-      prevImage()
-    }
-
-    setTouchStartX(0)
-    setTouchEndX(0)
+    const dist = touchStartX - touchEndX
+    if (dist > 50) nextImage()
+    if (dist < -50) prevImage()
+    setTouchStartX(0); setTouchEndX(0)
   }
 
   const handleReservation = () => {
     if (!checkIn || !checkout || !guest) {
       toast.error('Missing Information', {
-        description:
-          'Please fill in check-in, check-out, and number of guests.',
+        description: 'Please fill in check-in, check-out, and number of guests.',
         duration: 4000,
       })
       return
     }
-
-    toast.success('Booking Successful! \ud83c\udf89', {
-      description:
-        'Your accommodation has been added to checkout. Redirecting you now...',
+    toast.success('Booking Successful!', {
+      description: 'Redirecting to checkout...',
       duration: 3000,
-      action: {
-        label: 'View Checkout',
-        onClick: () => navigate('/checkout'),
-      },
     })
-
     setTimeout(() => {
       navigate('/checkout', {
         state: {
-          checkIn,
-          checkout,
-          guest,
-          price: home.price || home.pricePerNight || home.priceUSD || 0,
-          currency: home.currency || 'NGN',
-          selectedCurrency: selectedCurrency,
+          checkIn, checkout, guest,
+          price: prop?.price || prop?.pricePerNight || prop?.priceUSD || 0,
+          currency: prop?.currency || 'NGN',
+          selectedCurrency,
           home: {
-            id: home.id || home._id,
-            name: home.name || home.title,
-            location: home.location || home.city,
-            image:
-              home.image ||
-              (home.images &&
-                home.images[0] &&
-                (typeof home.images[0] === 'object' && home.images[0].data
-                  ? home.images[0].data
-                  : home.images[0])),
+            id: prop?.id || prop?._id,
+            name: prop?.name || prop?.title,
+            location: prop?.location || prop?.city,
+            image: imageGallery[0]?.src,
           },
         },
       })
     }, 1000)
-
-    setCheckIn('')
-    setCheckOut('')
-    setGuest('')
-    setError('')
+    setCheckIn(''); setCheckOut(''); setGuest('')
   }
 
-  return (
-    <div className='min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100 pt-20 flex flex-col'>
-      {/* Loading state */}
-      {loading && (
-        <div className='flex items-center justify-center flex-grow'>
-          <div className='text-center'>
-            <div className='w-16 h-16 border-4 border-primary-600 border-t-transparent rounded-full animate-spin mx-auto mb-4'></div>
-            <h2 className='text-xl font-semibold text-primary-800'>
-              Loading property...
-            </h2>
+  const priceDisplay = prop
+    ? prop.currency && prop.price
+      ? formatPrice(
+          selectedCurrency === prop.currency
+            ? prop.price
+            : parseFloat(convertFromCurrency(prop.price, prop.currency, selectedCurrency))
+        )
+      : formatPrice(parseFloat(prop.pricePerNight || prop.priceUSD || 75))
+    : formatPrice(75)
+
+  // ── Loading ────────────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white pt-20 flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-8 h-8 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-sm text-neutral-500">Loading property…</p>
           </div>
         </div>
-      )}
+      </div>
+    )
+  }
 
-      {/* Fallback if home not found */}
-      {!loading && !home && (
-        <div className='px-4 py-10 text-center bg-white rounded-2xl shadow-medium mx-4 mt-10 flex-grow'>
-          <h2 className='text-xl md:text-2xl font-bold mb-2 text-primary-800'>
-            Property not found
-          </h2>
-          <p className='text-primary-600 mb-4 text-sm md:text-base'>
-            The listing you requested does not exist.
-          </p>
-          <button
-            className='bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105'
-            onClick={() => navigate(-1)}
-          >
-            Go Back
-          </button>
+  // ── Not Found ─────────────────────────────────────────────────────────────
+  if (!prop) {
+    return (
+      <div className="min-h-screen bg-white pt-20 flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center px-4">
+          <div className="text-center">
+            <p className="font-Cormorant text-4xl text-neutral-300 mb-4">Property not found</p>
+            <button
+              onClick={() => navigate(-1)}
+              className="px-6 py-2.5 border border-neutral-900 text-neutral-900 text-sm font-semibold hover:bg-neutral-900 hover:text-white transition-colors duration-200"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
-      )}
+      </div>
+    )
+  }
 
-      {/* Main Content - Show only when not loading and home exists */}
-      {!loading && home && (
-        <>
-          {/* Shared Navbar Component */}
-          <Navbar />
+  // ── Main ──────────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen bg-white flex flex-col pt-20">
+      <Navbar />
 
-          {/* Enhanced Listing Details */}
-          <main className='flex-grow'>
-            <div className='max-w-[1400px] mx-auto px-4 mt-4 md:mt-8'>
-            {/* Enhanced Header Section */}
-            <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-4 md:p-6 mb-6 md:mb-8'>
-              <div className='flex items-center space-x-3 md:space-x-4 mb-4 md:mb-6'>
-                <button
-                  onClick={() => navigate(-1)}
-                  className='p-2 md:p-3 hover:bg-primary-100 rounded-full transition-all duration-300 border border-primary-200'
-                >
-                  <IoIosArrowBack className='text-xl md:text-2xl text-primary-700' />
-                </button>
-                <h1 className='font-NotoSans text-xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent line-clamp-2'>
-                  {home ? home.title || home.name : 'Property Details'}
+      <main className="flex-grow">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+          {/* ── Back + Title ─────────────────────────────────── */}
+          <div className="mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-200 mb-4 group"
+            >
+              <IoIosArrowBack className="group-hover:-translate-x-0.5 transition-transform duration-200" />
+              Back to listings
+            </button>
+
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <h1 className="font-Cormorant text-4xl sm:text-5xl font-semibold text-neutral-900 leading-tight mb-2">
+                  {prop.title || prop.name}
                 </h1>
+                <div className="flex flex-wrap items-center gap-3">
+                  <StarRow rating={prop.rating || prop.averageRating} reviewCount={prop.reviewCount || prop.totalReviews} />
+                  <span className="text-neutral-300">·</span>
+                  <span className="text-sm text-neutral-600 underline cursor-pointer hover:text-neutral-900">
+                    {prop.location || prop.city}
+                  </span>
+                  {prop.badge && (
+                    <>
+                      <span className="text-neutral-300">·</span>
+                      <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide">{prop.badge}</span>
+                    </>
+                  )}
+                </div>
               </div>
 
-              {/* Mobile: Stack vertically */}
-              <div className='space-y-4 md:space-y-0 md:flex md:items-center md:justify-between md:gap-6'>
-                <div className='flex flex-wrap items-center gap-3 md:gap-4'>
-                  <div className='flex items-center gap-2 bg-accent-amber-50 px-3 py-2 rounded-full'>
-                    <FaStar className='text-accent-amber-500 text-sm md:text-lg' />
-                    <span className='font-bold text-primary-800 text-sm md:text-base'>
-                      {home ? home.rating : '-'}
-                    </span>
-                  </div>
-                  <p className='text-primary-700 font-medium underline hover:text-primary-900 cursor-pointer transition-colors duration-300 text-sm md:text-base'>
-                    {home ? `${home.reviewCount} reviews` : ''}
-                  </p>
-                  <p className='text-primary-600 font-medium text-sm md:text-base'>
-                    {home ? home.location : ''}
-                  </p>
-                </div>
-
-                <div className='flex items-center gap-3 md:gap-6'>
-                  <button className='flex items-center gap-2 bg-white/80 hover:bg-white px-3 md:px-4 py-2 md:py-3 rounded-xl border border-primary-200 hover:border-primary-300 transition-all duration-300 shadow-soft hover:shadow-medium'>
-                    <FaRegShareFromSquare className='text-primary-600 text-sm md:text-base' />
-                    <span className='font-semibold text-primary-700 text-sm md:text-base'>
-                      Share
-                    </span>
-                  </button>
-
-                  <button
-                    className='flex items-center gap-2 bg-white/80 hover:bg-white px-3 md:px-4 py-2 md:py-3 rounded-xl border border-primary-200 hover:border-primary-300 transition-all duration-300 shadow-soft hover:shadow-medium'
-                    onClick={handleClick}
-                  >
-                    <div className='relative'>
-                      <CiHeart
-                        className={`w-5 h-5 md:w-6 md:h-6 text-primary-600 transition-all duration-300 ease-in-out ${
-                          isFilled ? 'opacity-0' : 'opacity-100'
-                        }`}
-                      />
-                      <AiFillHeart
-                        className={`w-5 h-5 md:w-6 md:h-6 text-error-500 absolute top-0 left-0 transition-all duration-300 ease-in-out ${
-                          animating
-                            ? 'animate-popup'
-                            : isFilled
-                            ? 'opacity-100'
-                            : 'opacity-0'
-                        }`}
-                      />
-                    </div>
-                    <span className='font-semibold text-primary-700 text-sm md:text-base'>
-                      Save
-                    </span>
-                  </button>
-                </div>
+              <div className="flex items-center gap-3 flex-shrink-0">
+                <button className="flex items-center gap-2 px-4 py-2 border border-neutral-300 text-neutral-700 text-sm font-medium hover:border-neutral-900 hover:text-neutral-900 transition-colors duration-200">
+                  <FaShare className="text-xs" /> Share
+                </button>
+                <button
+                  onClick={() => setSaved((s) => !s)}
+                  className={`flex items-center gap-2 px-4 py-2 border text-sm font-medium transition-colors duration-200 ${
+                    saved
+                      ? 'border-red-400 text-red-500 bg-red-50'
+                      : 'border-neutral-300 text-neutral-700 hover:border-neutral-900 hover:text-neutral-900'
+                  }`}
+                >
+                  <FaHeart className="text-xs" /> {saved ? 'Saved' : 'Save'}
+                </button>
               </div>
             </div>
+          </div>
 
-            {/* Enhanced Animated Image Carousel */}
-            {home && imageGallery.length > 0 && (
-              <div className='mb-8 md:mb-10'>
-                <div className='relative rounded-xl md:rounded-2xl overflow-hidden shadow-strong group'>
-                  {/* Main Image Display with Smooth Animations */}
+          {/* ── Image Gallery ────────────────────────────────── */}
+          {imageGallery.length > 0 && (
+            <div className="mb-10">
+              {/* Desktop: CSS grid gallery */}
+              {imageGallery.length >= 3 ? (
+                <div className="hidden md:grid grid-cols-2 gap-2 h-[480px]">
+                  {/* Main image */}
                   <div
-                    className='relative w-full h-64 md:h-96 lg:h-[500px] overflow-hidden bg-neutral-100'
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
+                    className="relative overflow-hidden cursor-pointer group"
+                    onClick={() => goToImage(0)}
                   >
-                    {/* Image Container with Slide Effect */}
-                    <div
-                      className='flex transition-transform duration-700 ease-in-out h-full'
-                      style={{
-                        transform: `translateX(-${currentImageIndex * 100}%)`,
-                      }}
-                    >
-                      {imageGallery.map((image, index) => (
-                        <div
-                          key={index}
-                          className='w-full h-full flex-shrink-0 relative'
-                        >
-                          <img
-                            src={image.src}
-                            alt={image.alt}
-                            className={`w-full h-full object-cover transition-all duration-700 ease-in-out ${
-                              index === currentImageIndex
-                                ? 'scale-100 opacity-100'
-                                : 'scale-105 opacity-90'
-                            }`}
-                            loading="lazy"
-                            decoding="async"
-                          />
-                          {/* Smooth fade overlay for non-active images */}
-                          <div
-                            className={`absolute inset-0 bg-black transition-opacity duration-500 ease-in-out ${
-                              index === currentImageIndex
-                                ? 'opacity-0'
-                                : 'opacity-20'
-                            }`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Enhanced Navigation Arrows with Animations */}
+                    <img
+                      src={imageGallery[currentImageIndex]?.src}
+                      alt={imageGallery[currentImageIndex]?.alt}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                    />
+                    {/* Prev/Next overlays */}
                     <button
-                      onClick={prevImage}
+                      onClick={(e) => { e.stopPropagation(); prevImage() }}
                       disabled={isTransitioning}
-                      className='absolute left-2 md:left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-primary-800 p-2 md:p-3 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 opacity-0 md:opacity-70 hover:opacity-100 group-hover:opacity-100 z-20 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95'
-                      aria-label='Previous image'
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white shadow-md"
                     >
-                      <IoIosArrowBack className='text-lg md:text-xl transition-transform duration-200' />
+                      <IoIosArrowBack />
                     </button>
-
                     <button
-                      onClick={nextImage}
+                      onClick={(e) => { e.stopPropagation(); nextImage() }}
                       disabled={isTransitioning}
-                      className='absolute right-2 md:right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-primary-800 p-2 md:p-3 rounded-full shadow-medium hover:shadow-strong transition-all duration-300 opacity-0 md:opacity-70 hover:opacity-100 group-hover:opacity-100 z-20 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-110 active:scale-95'
-                      aria-label='Next image'
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-white shadow-md"
                     >
-                      <IoIosArrowForward className='text-lg md:text-xl transition-transform duration-200' />
+                      <IoIosArrowForward />
                     </button>
-
-                    {/* Mobile Navigation Arrows with Enhanced Animations */}
-                    <div className='md:hidden'>
-                      <button
-                        onClick={prevImage}
-                        disabled={isTransitioning}
-                        className='absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/90 text-primary-800 p-2 rounded-full shadow-medium transition-all duration-300 z-20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 hover:bg-white'
-                        aria-label='Previous image'
-                      >
-                        <IoIosArrowBack className='text-lg transition-transform duration-200' />
-                      </button>
-
-                      <button
-                        onClick={nextImage}
-                        disabled={isTransitioning}
-                        className='absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/90 text-primary-800 p-2 rounded-full shadow-medium transition-all duration-300 z-20 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 hover:bg-white'
-                        aria-label='Next image'
-                      >
-                        <IoIosArrowForward className='text-lg transition-transform duration-200' />
-                      </button>
+                    {/* Counter */}
+                    <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-medium px-2.5 py-1">
+                      {currentImageIndex + 1} / {imageGallery.length}
                     </div>
-
-                    {/* Animated Image Counter */}
-                    <div className='absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-medium transition-all duration-300 hover:bg-black/80'>
-                      <span className='transition-all duration-300'>
-                        {currentImageIndex + 1}
-                      </span>{' '}
-                      / {imageGallery.length}
-                    </div>
-
-                    {/* Animated Swipe Indicator for Mobile */}
-                    <div className='md:hidden absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs transition-all duration-300 animate-pulse'>
-                      Swipe for more
-                    </div>
-
-                    {/* Loading indicator during transitions */}
-                    {isTransitioning && (
-                      <div className='absolute inset-0 bg-black/10 flex items-center justify-center z-30'>
-                        <div className='w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin'></div>
-                      </div>
-                    )}
                   </div>
-
-                  {/* Enhanced Animated Dots Navigation */}
-                  <div className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20'>
-                    {imageGallery.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => goToImage(index)}
-                        disabled={isTransitioning}
-                        className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-500 ease-in-out disabled:cursor-not-allowed hover:scale-125 active:scale-95 ${
-                          index === currentImageIndex
-                            ? 'bg-white shadow-medium transform scale-125'
-                            : 'bg-white/50 hover:bg-white/80 transform scale-100'
-                        }`}
-                        aria-label={`Go to image ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Enhanced Animated Thumbnail Strip - Desktop Only */}
-                  <div className='lg:block absolute bottom-4 left-4 flex space-x-2 bg-black/50 backdrop-blur-sm rounded-lg p-2 transition-all duration-300 hover:bg-black/60'>
-                    {imageGallery.slice(0, 4).map((image, index) => (
-                      <button
-                        key={index}
-                        onClick={() => goToImage(index)}
-                        disabled={isTransitioning}
-                        className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-all duration-300 hover:scale-110 active:scale-95 disabled:cursor-not-allowed ${
-                          index === currentImageIndex
-                            ? 'border-white shadow-medium transform scale-110'
-                            : 'border-transparent hover:border-white/70 transform scale-100'
-                        }`}
+                  {/* Side images */}
+                  <div className="grid grid-rows-2 gap-2">
+                    {imageGallery.slice(1, 3).map((img, i) => (
+                      <div
+                        key={i}
+                        className="relative overflow-hidden cursor-pointer group"
+                        onClick={() => goToImage(i + 1)}
                       >
                         <img
-                          src={image.src}
-                          alt={image.alt}
-                          className='w-full h-full object-cover transition-transform duration-300'
+                          src={img.src}
+                          alt={img.alt}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                           loading="lazy"
-                          decoding="async"
                         />
-                      </button>
-                    ))}
-                    {imageGallery.length > 4 && (
-                      <div className='w-12 h-12 bg-black/70 rounded-md flex items-center justify-center transition-all duration-300 hover:bg-black/80'>
-                        <span className='text-white text-xs font-bold transition-transform duration-300 hover:scale-110'>
-                          +{imageGallery.length - 4}
-                        </span>
+                        {i === 1 && imageGallery.length > 3 && (
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                            <span className="text-white text-sm font-semibold">+{imageGallery.length - 3} more</span>
+                          </div>
+                        )}
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
+              ) : null}
 
-                {/* Enhanced Mobile Thumbnail Strip with Animations */}
-                <div className='lg:hidden mt-4 flex space-x-2 overflow-x-auto pb-2 scrollbar-hide'>
-                  {imageGallery.map((image, index) => (
+              {/* Mobile: full-width carousel */}
+              <div
+                className={`${imageGallery.length >= 3 ? 'md:hidden' : ''} relative overflow-hidden`}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <div
+                  className="flex transition-transform duration-500 ease-in-out h-72 sm:h-96"
+                  style={{ transform: `translateX(-${currentImageIndex * 100}%)` }}
+                >
+                  {imageGallery.map((img, i) => (
+                    <div key={i} className="w-full flex-shrink-0">
+                      <img src={img.src} alt={img.alt} className="w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
+                    </div>
+                  ))}
+                </div>
+                <button onClick={prevImage} disabled={isTransitioning} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 flex items-center justify-center shadow-md hover:bg-white">
+                  <IoIosArrowBack />
+                </button>
+                <button onClick={nextImage} disabled={isTransitioning} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/90 flex items-center justify-center shadow-md hover:bg-white">
+                  <IoIosArrowForward />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {imageGallery.map((_, i) => (
                     <button
-                      key={index}
-                      onClick={() => goToImage(index)}
-                      disabled={isTransitioning}
-                      className={`flex-shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all duration-300 hover:scale-105 active:scale-95 disabled:cursor-not-allowed ${
-                        index === currentImageIndex
-                          ? 'border-primary-600 shadow-medium transform scale-105'
-                          : 'border-primary-200 hover:border-primary-400 transform scale-100'
-                      }`}
-                    >
-                      <img
-                        src={image.src}
-                        alt={image.alt}
-                        className='w-full h-full object-cover transition-all duration-300'
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    </button>
+                      key={i}
+                      onClick={() => goToImage(i)}
+                      className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i === currentImageIndex ? 'bg-white w-4' : 'bg-white/50'}`}
+                    />
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Enhanced Main Content Grid - Mobile First */}
-            <div className='space-y-8 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0 mb-10'>
-              {/* Left Content - Takes 2 columns on desktop */}
-              <div className='lg:col-span-2'>
-                <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-6 md:p-8'>
-                  {/* Property Info Section */}
-                  <div className='flex flex-col md:flex-row md:items-start md:justify-between mb-6 md:mb-8 space-y-4 md:space-y-0'>
-                    <div className='flex-1'>
-                      <h1 className='font-NotoSans text-xl md:text-2xl lg:text-3xl font-bold text-primary-800 mb-2'>
-                        {home
-                          ? home.text ||
-                            `${home.bedrooms || 'Multiple'} bed${
-                              home.bedrooms > 1 ? 's' : ''
-                            } • ${home.bathrooms || 'Multiple'} bath${
-                              home.bathrooms > 1 ? 's' : ''
-                            } • ${home.propertyType || 'Rental'}`
-                          : 'Entire Rental unit'}
-                      </h1>
-                      <p className='text-primary-600 font-medium text-sm md:text-base'>
-                        {home ? home.location || home.city : ''}
-                      </p>
-                    </div>
+              {/* Thumbnail strip (all sizes) */}
+              {imageGallery.length > 1 && (
+                <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
+                  {imageGallery.map((img, i) => (
+                    <button
+                      key={i}
+                      onClick={() => goToImage(i)}
+                      className={`flex-shrink-0 w-16 h-12 overflow-hidden border-2 transition-all duration-200 ${
+                        i === currentImageIndex ? 'border-neutral-900' : 'border-transparent opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={img.src} alt={img.alt} className="w-full h-full object-cover" loading="lazy" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
-                    {/* Enhanced Host Info - Stack on mobile */}
-                    {hostInfo && (
-                      <div className='flex md:flex-col items-center md:items-center bg-primary-50 rounded-xl md:rounded-2xl p-3 md:p-4 border border-primary-200 self-start'>
-                        <img
-                          src={hostInfo.avatar}
-                          alt={hostInfo.name}
-                          className='w-12 h-12 md:w-16 md:h-16 rounded-full object-cover ring-2 md:ring-3 ring-primary-200 mr-3 md:mr-0 md:mb-2'
-                          loading="lazy"
-                          decoding="async"
-                        />
-                        <div className='text-left md:text-center'>
-                          <span className='text-sm md:text-sm font-bold text-primary-800 block'>
-                            {hostInfo.name}
-                          </span>
-                          <span className='text-xs bg-accent-blue-100 text-accent-blue-700 px-2 py-1 rounded-full font-medium'>
-                            {hostInfo.badge}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+          {/* ── Main 2-col grid ──────────────────────────────── */}
+          <div className="lg:grid lg:grid-cols-3 lg:gap-12">
 
-                  <hr className='border-primary-200 mb-6 md:mb-8' />
+            {/* ── Left: Info ───────────────────────────────── */}
+            <div className="lg:col-span-2 space-y-10">
 
-                  {/* Enhanced Features Section */}
-                  <div className='space-y-4 md:space-y-6 mb-6 md:mb-8'>
-                    <div className='flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300'>
-                      <div className='text-2xl md:text-3xl text-primary-600 bg-white p-2 md:p-3 rounded-xl shadow-soft'>
-                        <IoHomeOutline />
-                      </div>
-                      <div>
-                        <h3 className='font-bold text-primary-800 text-base md:text-lg'>
-                          {home
-                            ? home.category.charAt(0).toUpperCase() +
-                              home.category.slice(1)
-                            : 'Entire home'}
-                        </h3>
-                        <p className='text-primary-600 text-sm md:text-base'>
-                          {home
-                            ? home.text ||
-                              `You will have this ${
-                                home.propertyType || 'property'
-                              } to yourself with ${
-                                home.bedrooms || 'multiple'
-                              } bedroom${home.bedrooms > 1 ? 's' : ''} and ${
-                                home.bathrooms || 'multiple'
-                              } bathroom${home.bathrooms > 1 ? 's' : ''}`
-                            : 'You will have the apartment to yourself'}
-                        </p>
-                      </div>
-                    </div>
+              {/* Property meta */}
+              <div className="pb-8 border-b border-neutral-200">
+                <p className="text-neutral-600 text-base mb-1">
+                  {prop.text || [
+                    prop.bedrooms && `${prop.bedrooms} bed${prop.bedrooms > 1 ? 's' : ''}`,
+                    prop.bathrooms && `${prop.bathrooms} bath${prop.bathrooms > 1 ? 's' : ''}`,
+                    prop.propertyType || prop.category,
+                  ].filter(Boolean).join(' · ')}
+                </p>
+                {prop.category && (
+                  <span className="inline-block text-xs font-semibold uppercase tracking-widest text-amber-600 border border-amber-300 px-2 py-0.5 mt-1">
+                    {prop.category}
+                  </span>
+                )}
+              </div>
 
-                    <div className='flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300'>
-                      <div className='text-2xl md:text-3xl text-primary-600 bg-white p-2 md:p-3 rounded-xl shadow-soft'>
-                        <WiStars />
-                      </div>
-                      <div>
-                        <h3 className='font-bold text-primary-800 text-base md:text-lg'>
-                          Enhanced Clean
-                        </h3>
-                        <p className='text-primary-600 text-sm md:text-base'>
-                          This Host committed to enhanced cleaning process
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className='flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300'>
-                      <div className='text-2xl md:text-3xl text-primary-600 bg-white p-2 md:p-3 rounded-xl shadow-soft'>
-                        <CiMoneyCheck1 />
-                      </div>
-                      <div>
-                        <h3 className='font-bold text-primary-800 text-base md:text-lg'>
-                          Self check-in
-                        </h3>
-                        <p className='text-primary-600 text-sm md:text-base'>
-                          Check yourself in with the keypad
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className='flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300'>
-                      <div className='text-2xl md:text-3xl text-primary-600 bg-white p-2 md:p-3 rounded-xl shadow-soft'>
-                        <MdOutlineCalendarToday />
-                      </div>
-                      <div>
-                        <h3 className='font-bold text-primary-800 text-base md:text-lg'>
-                          Free cancellation before Feb 25
-                        </h3>
-                      </div>
-                    </div>
-                  </div>
-
-                  <hr className='border-primary-200 mb-6 md:mb-8' />
-
-                  {/* Enhanced Description */}
-                  <div className='bg-gradient-to-r from-primary-25 to-neutral-50 p-4 md:p-6 rounded-xl border border-primary-200'>
-                    <p className='text-primary-700 leading-relaxed text-sm md:text-base'>
-                      {home
-                        ? home.description ||
-                          home.about ||
-                          `Experience this beautiful ${
-                            home.propertyType || 'property'
-                          } in ${
-                            home.city || home.location || 'a prime location'
-                          }. This ${home.bedrooms || 'multi'}-bedroom, ${
-                            home.bathrooms || 'multi'
-                          }-bathroom space offers comfortable accommodation for your stay.`
-                        : 'Come and stay in this superb duplex T2, in the heart of the historic center of Bordeaux. Spacious and bright, in a real Bordeaux building in exposed stone, you will enjoy all the charms of the city thanks to its ideal location. Close to many shops, bars and restaurants, you can access the apartment by tram A and C and bus routes 27 and 44'}
+              {/* Feature highlights */}
+              <div className="space-y-5 pb-8 border-b border-neutral-200">
+                <div className="flex items-start gap-4">
+                  <IoHomeOutline className="text-2xl text-neutral-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-neutral-900">
+                      {prop.category
+                        ? prop.category.charAt(0).toUpperCase() + prop.category.slice(1)
+                        : 'Entire home'}
                     </p>
+                    <p className="text-sm text-neutral-500 mt-0.5">You'll have the place to yourself</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <WiStars className="text-2xl text-neutral-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-neutral-900">Enhanced Clean</p>
+                    <p className="text-sm text-neutral-500 mt-0.5">This host committed to enhanced cleaning process</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <CiMoneyCheck1 className="text-2xl text-neutral-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-neutral-900">Self check-in</p>
+                    <p className="text-sm text-neutral-500 mt-0.5">Check yourself in with the keypad</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <MdOutlineCalendarToday className="text-xl text-neutral-400 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-neutral-900">Free cancellation before Feb 25</p>
                   </div>
                 </div>
               </div>
 
-              {/* Enhanced Price/Booking Card - Full width on mobile */}
-              <div className='lg:col-span-1'>
-                <div className='bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-strong p-4 md:p-6 border border-primary-200 lg:sticky lg:top-24'>
-                  {/* Enhanced Price & Ratings Section */}
-                  <div className='flex items-center justify-between mb-4 md:mb-6'>
-                    <h1 className='font-NotoSans text-xl md:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent'>
-                      {home
-                        ? home.currency && home.price
-                          ? formatPrice(
-                              selectedCurrency === home.currency
-                                ? home.price
-                                : parseFloat(
-                                    convertFromCurrency(
-                                      home.price,
-                                      home.currency,
-                                      selectedCurrency
-                                    )
-                                  )
-                            )
-                          : formatPrice(
-                              parseFloat(
-                                home.pricePerNight || home.priceUSD || 75
-                              )
-                            )
-                        : formatPrice(75)}
-                      <span className='text-sm md:text-lg text-primary-600'>
-                        /night
-                      </span>
-                    </h1>
-                    <div className='flex items-center gap-2 bg-accent-amber-50 px-2 md:px-3 py-1 md:py-2 rounded-full'>
-                      <FaStar className='text-accent-amber-500 text-sm md:text-base' />
-                      <span className='font-bold text-primary-800 text-sm md:text-base'>
-                        {home ? home.rating : '5.0'}
-                      </span>
-                      <span className='text-xs md:text-sm text-primary-600'>
-                        ({home ? home.reviewCount : '5'})
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Enhanced Check-in Form */}
-                  <div className='space-y-3 md:space-y-4 mb-4 md:mb-6'>
-                    <div className='grid grid-cols-2 gap-1 md:gap-2 border-2 border-primary-200 rounded-xl overflow-hidden hover:border-primary-300 transition-colors duration-300'>
-                      <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300 relative'>
-                        <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
-                          Check-in
-                        </label>
-                        <div className='mt-1'>
-                          <input
-                            type='date'
-                            className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base border-none focus:ring-0 focus:outline-none cursor-pointer'
-                            style={{
-                              fontSize: '16px', // Prevents zoom on iOS
-                              minHeight: '44px', // iOS touch target minimum
-                              backgroundColor: 'transparent',
-                              border: 'none',
-                              outline: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'textfield',
-                              appearance: 'none',
-                            }}
-                            value={checkIn}
-                            onChange={(e) => setCheckIn(e.target.value)}
-                            min={new Date().toISOString().split('T')[0]}
-                            placeholder='Add date'
-                            onTouchStart={(e) => {
-                              // Prevent iOS from auto-selecting on touch
-                              e.preventDefault()
-                              e.currentTarget.focus()
-                            }}
-                            onClick={(e) => {
-                              // Ensure proper focus and picker opening
-                              e.currentTarget.focus()
-                              if (e.currentTarget.showPicker) {
-                                try {
-                                  e.currentTarget.showPicker()
-                                } catch {
-                                  // Fallback for older browsers
-                                  console.log('showPicker not supported')
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                      <div className='p-3 md:p-4 bg-primary-25 hover:bg-primary-50 transition-colors duration-300 relative'>
-                        <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
-                          Check-out
-                        </label>
-                        <div className='mt-1'>
-                          <input
-                            type='date'
-                            className='w-full bg-transparent text-primary-800 font-medium outline-none text-sm md:text-base border-none focus:ring-0 focus:outline-none cursor-pointer'
-                            style={{
-                              fontSize: '16px', // Prevents zoom on iOS
-                              minHeight: '44px', // iOS touch target minimum
-                              backgroundColor: 'transparent',
-                              border: 'none',
-                              outline: 'none',
-                              WebkitAppearance: 'none',
-                              MozAppearance: 'textfield',
-                              appearance: 'none',
-                            }}
-                            value={checkout}
-                            onChange={(e) => setCheckOut(e.target.value)}
-                            min={
-                              checkIn || new Date().toISOString().split('T')[0]
-                            }
-                            placeholder='Add date'
-                            onTouchStart={(e) => {
-                              // Prevent iOS from auto-selecting on touch
-                              e.preventDefault()
-                              e.currentTarget.focus()
-                            }}
-                            onClick={(e) => {
-                              // Ensure proper focus and picker opening
-                              e.currentTarget.focus()
-                              if (e.currentTarget.showPicker) {
-                                try {
-                                  e.currentTarget.showPicker()
-                                } catch {
-                                  // Fallback for older browsers
-                                  console.log('showPicker not supported')
-                                }
-                              }
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className='border-2 border-primary-200 rounded-xl p-3 md:p-4 bg-primary-25 hover:bg-primary-50 hover:border-primary-300 transition-all duration-300'>
-                      <label className='text-xs font-bold text-primary-700 uppercase tracking-wide'>
-                        Guests
-                      </label>
-                      <div className='flex items-center justify-between mt-1'>
-                        <input
-                          type='number'
-                          className='bg-transparent text-primary-800 font-medium outline-none flex-1 text-sm md:text-base'
-                          placeholder='2 guests'
-                          value={guest}
-                          onChange={(e) => setGuest(e.target.value)}
-                        />
-                        <RiArrowDropDownLine className='text-2xl md:text-3xl text-primary-600' />
-                      </div>
-                    </div>
-                  </div>
-
-                  {error && (
-                    <div className='bg-error-50 border border-error-200 rounded-xl p-3 mb-4'>
-                      <p className='text-error-700 text-sm font-medium'>
-                        {error}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Enhanced Reservation Button */}
-                  <button
-                    className='w-full bg-gradient-to-r from-primary-800 to-primary-700 hover:from-primary-900 hover:to-primary-800 text-white py-3 md:py-4 rounded-xl font-bold text-base md:text-lg shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] mb-3 md:mb-4'
-                    onClick={handleReservation}
-                  >
-                    Book Now
-                  </button>
-
-                  <p className='text-sm text-primary-600 text-center mb-4 md:mb-6'>
-                    You won&apos;t be charged yet
-                  </p>
-
-                  {/* Enhanced Amenities */}
-                  {home && home.amenities && home.amenities.length > 0 && (
-                    <div>
-                      <h3 className='font-bold text-primary-800 mb-3 md:mb-4 text-sm md:text-base'>
-                        What&apos;s included
-                      </h3>
-                      <div className='flex flex-wrap gap-2'>
-                        {home.amenities.map((amenity, idx) => (
-                          <span
-                            key={idx}
-                            className='bg-primary-100 hover:bg-primary-200 text-primary-800 px-2 md:px-3 py-1 md:py-2 rounded-full text-xs md:text-sm font-semibold transition-colors duration-300 cursor-default'
-                          >
-                            {amenity}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Report Section */}
-            <div className='flex items-center justify-center md:justify-end mb-6 md:mb-8'>
-              <button className='flex items-center gap-2 md:gap-3 text-primary-600 hover:text-primary-800 transition-colors duration-300 bg-white/80 hover:bg-white px-3 md:px-4 py-2 md:py-3 rounded-xl border border-primary-200 hover:border-primary-300 shadow-soft hover:shadow-medium'>
-                <FaRegFlag className='text-base md:text-lg' />
-                <span className='font-semibold text-sm md:text-base'>
-                  Report this Listing
-                </span>
-              </button>
-            </div>
-
-            {/* Enhanced Bedroom Section */}
-            <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-6 md:p-8 mb-8 md:mb-10'>
-              <h2 className='font-NotoSans text-2xl md:text-3xl font-bold text-primary-800 mb-4 md:mb-6'>
-                Where you&apos;ll sleep
-              </h2>
-              <div className='flex flex-col md:flex-row gap-4 md:gap-6 items-start'>
-                <img
-                  src={bedroom}
-                  alt='bedroom'
-                  className='w-full md:w-96 h-48 md:h-64 object-cover rounded-xl md:rounded-2xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02]'
-                  loading="lazy"
-                  decoding="async"
-                />
-                <div className='flex-1'>
-                  <h3 className='font-bold text-xl md:text-2xl text-primary-800 mb-2'>
-                    Bedroom
-                  </h3>
-                  <p className='text-primary-600 font-medium text-sm md:text-base'>
-                    1 queen size bed
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Amenities Section */}
-            <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-6 md:p-8 mb-8 md:mb-10'>
-              <h2 className='font-NotoSans text-2xl md:text-3xl font-bold text-primary-800 mb-6 md:mb-8'>
-                What this place offers
-              </h2>
-
-              {/* Enhanced Grid Layout for Amenities - Mobile responsive */}
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6'>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaWifi className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Wifi
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaShower className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Shower
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaBath className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Bath
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaTv className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    TV
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaBed className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Bed
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaCar className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Car
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaParking className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Parking
-                  </p>
-                </div>
-                <div className='flex items-center gap-3 p-3 md:p-4 bg-primary-25 rounded-xl hover:bg-primary-50 transition-colors duration-300 border border-primary-200'>
-                  <FaUtensils className='text-xl md:text-2xl text-primary-600 flex-shrink-0' />
-                  <p className='font-medium text-primary-800 text-sm md:text-base'>
-                    Kitchen
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Enhanced Location Section */}
-            <div className='bg-white/70 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft p-6 md:p-8 mb-8 md:mb-10'>
-              <h2 className='font-NotoSans text-2xl md:text-3xl font-bold text-primary-800 mb-4 md:mb-6'>
-                Where you&apos;ll be
-              </h2>
-
-              <div className='rounded-xl md:rounded-2xl overflow-hidden shadow-medium border border-primary-200 mb-4 md:mb-6'>
-                <MapboxMap
-                  center={[
-                    home?.locationLng || 3.3792, // Default to Lagos longitude
-                    home?.locationLat || 6.5244   // Default to Lagos latitude
-                  ]}
-                  zoom={14}
-                  markers={home ? [{
-                    coordinates: [
-                      home.locationLng || 3.3792,
-                      home.locationLat || 6.5244
-                    ],
-                    popup: `<div><strong>${home.title || 'Property Location'}</strong><br/>${home.location || 'Location details'}</div>`
-                  }] : []}
-                  className="hover:opacity-90 transition-opacity duration-300"
-                  style={{ height: '300px' }}
-                />
-              </div>
-
-              <div className='bg-gradient-to-r from-primary-25 to-neutral-50 p-4 md:p-6 rounded-xl border border-primary-200'>
-                <h3 className='font-NotoSans text-lg md:text-2xl font-bold text-primary-800 mb-2 md:mb-3'>
-                  {home ? home.location : 'Location'}
-                </h3>
-                <p className='text-primary-700 leading-relaxed text-sm md:text-base'>
-                  {home
-                    ? `Explore the vibrant area of ${home.location}. Enjoy local attractions, restaurants, and more! This location offers excellent access to public transportation, shopping centers, and entertainment venues.`
-                    : 'Location details not available.'}
+              {/* Description */}
+              <div className="pb-8 border-b border-neutral-200">
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-4">About this place</h2>
+                <p className="text-neutral-600 leading-relaxed">
+                  {prop.description || prop.about ||
+                    `Experience this beautiful ${prop.propertyType || 'property'} in ${prop.city || prop.location || 'a prime location'}. This space offers comfortable accommodation with premium amenities for your stay.`}
                 </p>
               </div>
-            </div>
-          </main>
 
-          <Footer />
-        </>
-      )}
+              {/* Where you'll sleep */}
+              <div className="pb-8 border-b border-neutral-200">
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">Where you'll sleep</h2>
+                <div className="border border-neutral-200 p-5 max-w-xs">
+                  <img src={bedroom} alt="Bedroom" className="w-full h-40 object-cover mb-4" loading="lazy" />
+                  <p className="font-semibold text-neutral-900">Bedroom</p>
+                  <p className="text-sm text-neutral-500 mt-0.5">1 queen size bed</p>
+                </div>
+              </div>
+
+              {/* Amenities */}
+              <div className="pb-8 border-b border-neutral-200">
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">What this place offers</h2>
+                {prop.amenities && prop.amenities.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4">
+                    {prop.amenities.map((a, i) => (
+                      <div key={i} className="flex items-center gap-3 text-neutral-700 text-sm">
+                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0" />
+                        {a}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    {STATIC_AMENITIES.map(({ icon: Icon, label }) => (
+                      <div key={label} className="flex items-center gap-3 p-3 border border-neutral-200 text-sm text-neutral-700 hover:border-neutral-400 transition-colors duration-200">
+                        <Icon className="text-neutral-400 flex-shrink-0" />
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Map */}
+              <div className="pb-8">
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">Where you'll be</h2>
+                <div className="overflow-hidden border border-neutral-200 mb-4" style={{ height: 300 }}>
+                  <MapboxMap
+                    center={[prop.locationLng || 3.3792, prop.locationLat || 6.5244]}
+                    zoom={14}
+                    markers={[{
+                      coordinates: [prop.locationLng || 3.3792, prop.locationLat || 6.5244],
+                      popup: `<div><strong>${prop.title || 'Property'}</strong><br/>${prop.location || ''}</div>`,
+                    }]}
+                    style={{ height: '300px' }}
+                  />
+                </div>
+                <p className="font-semibold text-neutral-900 mb-1">{prop.location}</p>
+                <p className="text-sm text-neutral-500 leading-relaxed">
+                  Explore the vibrant area of {prop.location}. Enjoy local attractions, restaurants, and great transport links nearby.
+                </p>
+              </div>
+
+              {/* Report */}
+              <div className="pb-4">
+                <button className="flex items-center gap-2 text-sm text-neutral-500 underline hover:text-neutral-900 transition-colors duration-200">
+                  <FaRegFlag className="text-xs" /> Report this listing
+                </button>
+              </div>
+            </div>
+
+            {/* ── Right: Booking Card ──────────────────────── */}
+            <div className="lg:col-span-1 mt-10 lg:mt-0">
+              <div className="border border-neutral-200 p-6 lg:sticky lg:top-28 shadow-sm">
+                {/* Price */}
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="font-Cormorant text-4xl font-semibold text-neutral-900">{priceDisplay}</span>
+                  <span className="text-sm text-neutral-500">/night</span>
+                </div>
+                <StarRow rating={prop.rating || prop.averageRating} reviewCount={prop.reviewCount || prop.totalReviews} />
+
+                <div className="mt-5 space-y-3">
+                  {/* Date grid */}
+                  <div className="grid grid-cols-2 border border-neutral-300">
+                    <div className="p-3 border-r border-neutral-300">
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">Check-in</label>
+                      <input
+                        type="date"
+                        value={checkIn}
+                        onChange={(e) => setCheckIn(e.target.value)}
+                        min={new Date().toISOString().split('T')[0]}
+                        className="w-full bg-transparent text-sm text-neutral-900 focus:outline-none cursor-pointer"
+                        style={{ fontSize: 16 }}
+                      />
+                    </div>
+                    <div className="p-3">
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">Check-out</label>
+                      <input
+                        type="date"
+                        value={checkout}
+                        onChange={(e) => setCheckOut(e.target.value)}
+                        min={checkIn || new Date().toISOString().split('T')[0]}
+                        className="w-full bg-transparent text-sm text-neutral-900 focus:outline-none cursor-pointer"
+                        style={{ fontSize: 16 }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Guests */}
+                  <div className="border border-neutral-300 p-3">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">Guests</label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="2 guests"
+                      value={guest}
+                      onChange={(e) => setGuest(e.target.value)}
+                      className="w-full bg-transparent text-sm text-neutral-900 focus:outline-none"
+                      style={{ fontSize: 16 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Book button */}
+                <button
+                  onClick={handleReservation}
+                  className="w-full mt-4 py-3.5 bg-neutral-900 text-white text-sm font-semibold tracking-wide hover:bg-neutral-800 active:scale-[0.99] transition-all duration-200"
+                >
+                  Reserve
+                </button>
+                <p className="text-center text-xs text-neutral-400 mt-3">You won't be charged yet</p>
+
+                {/* Price breakdown hint */}
+                {checkIn && checkout && (
+                  <div className="mt-4 pt-4 border-t border-neutral-200">
+                    <div className="flex justify-between text-sm text-neutral-600">
+                      <span>{priceDisplay} × 1 night</span>
+                      <span>{priceDisplay}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold text-neutral-900 mt-2 pt-2 border-t border-neutral-200">
+                      <span>Total</span>
+                      <span>{priceDisplay}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <Footer />
     </div>
   )
 }

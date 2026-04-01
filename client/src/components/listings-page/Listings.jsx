@@ -217,7 +217,7 @@ const Listings = () => {
 
       {/* ── Properties Grid ──────────────────────────────── */}
       <main className="flex-grow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
           {loadingProperties && properties.length === 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {Array(6).fill(0).map((_, i) => (
