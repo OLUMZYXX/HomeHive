@@ -118,7 +118,7 @@ const api = {
   auth: {
     login: (credentials: { email: string; password: string }) =>
       axiosInstance.post('/auth/login', credentials).then((r) => r.data),
-    register: (data: { firstName: string; lastName: string; email: string; password: string }) =>
+    register: (data: { email: string; password: string; name?: string; firstName?: string; lastName?: string }) =>
       axiosInstance.post('/auth/register', data).then((r) => r.data),
     logout: () =>
       axiosInstance.post('/auth/logout').then((r) => r.data),

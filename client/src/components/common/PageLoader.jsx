@@ -12,6 +12,8 @@ const PageLoader = ({ children, duration = 3000 }) => {
     // Pages to exclude from loading
     const excludedPaths = [
       '/login',
+      '/signin',
+      '/signup',
       '/create-account',
       '/host-login',
       '/host-create-account',

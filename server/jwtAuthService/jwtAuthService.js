@@ -123,7 +123,7 @@ export class JWTAuthService {
         exp: decoded.exp,
       }
     } catch (error) {
-      console.error('Error getting user from token:', error)
+      // Expected errors (expired/invalid) are silent — no console noise
       return null
     }
   }

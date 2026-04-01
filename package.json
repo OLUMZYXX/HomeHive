@@ -12,7 +12,7 @@
     "mobile": "cd mobile && npx expo start",
     "mobile:android": "cd mobile && npx expo start --android",
     "mobile:ios": "cd mobile && npx expo start --ios",
-    "prepare": "husky"
+    "prepare": "node -e \"if (!process.env.CI) { require('child_process').execSync('husky', {stdio:'inherit'}) }\""
   },
   "workspaces": [
     "client",

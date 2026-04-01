@@ -156,18 +156,20 @@ export function APIProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         const data = await api.auth.login({ email, password });
-        if (data.accessToken) {
-          await TokenStore.setTokens(data.accessToken, data.refreshToken);
+        const accessToken = data.tokens?.accessToken;
+        const refreshToken = data.tokens?.refreshToken;
+        if (accessToken) {
+          await TokenStore.setTokens(accessToken, refreshToken ?? '');
           await TokenStore.setUser(data.user);
           dispatch({ type: 'SET_USER', payload: data.user });
           return true;
         }
-        dispatch({ type: 'SET_ERROR', payload: 'Login failed' });
+        dispatch({ type: 'SET_ERROR', payload: data.message || 'Login failed' });
         return false;
       } catch (err: any) {
         dispatch({
           type: 'SET_ERROR',
-          payload: err?.response?.data?.message || 'Login failed',
+          payload: err?.userMessage || err?.response?.data?.message || 'Login failed',
         });
         return false;
       }
@@ -180,18 +182,20 @@ export function APIProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'SET_LOADING', payload: true });
       try {
         const data = await api.auth.register({ name, email, password });
-        if (data.accessToken) {
-          await TokenStore.setTokens(data.accessToken, data.refreshToken);
+        const accessToken = data.tokens?.accessToken;
+        const refreshToken = data.tokens?.refreshToken;
+        if (accessToken) {
+          await TokenStore.setTokens(accessToken, refreshToken ?? '');
           await TokenStore.setUser(data.user);
           dispatch({ type: 'SET_USER', payload: data.user });
           return true;
         }
-        dispatch({ type: 'SET_ERROR', payload: 'Registration failed' });
+        dispatch({ type: 'SET_ERROR', payload: data.message || 'Registration failed' });
         return false;
       } catch (err: any) {
         dispatch({
           type: 'SET_ERROR',
-          payload: err?.response?.data?.message || 'Registration failed',
+          payload: err?.userMessage || err?.response?.data?.message || 'Registration failed',
         });
         return false;
       }

@@ -54,7 +54,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/signin"
           element={
-            <PageWrapper variant={getPageVariant(location.pathname)}>
+            <PageWrapper variant={getPageVariant(location.pathname)} showLoader={false}>
               <Login />
             </PageWrapper>
           }
@@ -62,7 +62,7 @@ const AnimatedRoutes = () => {
         <Route
           path="/signup"
           element={
-            <PageWrapper variant={getPageVariant(location.pathname)}>
+            <PageWrapper variant={getPageVariant(location.pathname)} showLoader={false}>
               <Createacct />
             </PageWrapper>
           }

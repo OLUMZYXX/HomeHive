@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaArrowLeft, FaEye, FaEyeSlash, FaCheck } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { HiUser, HiMail, HiLockClosed, HiPhone } from "react-icons/hi";
+import { HiArrowLeft, HiArrowRight } from "react-icons/hi";
 import { toast } from "../../utils/toast.jsx";
 import { useAPI } from "../../contexts/APIContext";
 import GoogleAuth from "../../config/googleAuth";
@@ -15,7 +15,6 @@ const Createacct = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,79 +22,58 @@ const Createacct = () => {
   const navigate = useNavigate();
   const { register, googleAuth } = useAPI();
 
-  const isEmailValid = (email) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 
-  const isPhoneValid = (phone) => {
-    return phone.length >= 10 && /^\+?[\d\s-()]+$/.test(phone);
-  };
+  // Password strength: 0-4
+  const strength = (() => {
+    if (!password) return 0;
+    let s = 0;
+    if (password.length >= 6) s++;
+    if (password.length >= 10) s++;
+    if (/[A-Z]/.test(password)) s++;
+    if (/[^a-zA-Z0-9]/.test(password)) s++;
+    return s;
+  })();
+
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][strength];
+  const strengthColor = ["", "bg-red-400", "bg-amber-400", "bg-green-400", "bg-green-500"][strength];
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
-
-    // Reset error
     setError("");
-
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       setError("Please fill in all required fields.");
       return;
     }
-
     if (!isEmailValid(email)) {
       setError("Please enter a valid email address.");
       return;
     }
-
-    if (phone && !isPhoneValid(phone)) {
-      setError("Please enter a valid phone number.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      return;
-    }
-
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
       return;
     }
-
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     setIsLoading(true);
-
     try {
-      const userData = {
+      await register({
         name: `${firstName} ${lastName}`,
         firstName,
         lastName,
         email,
         phone: phone || undefined,
         password,
-      };
-
-      const result = await register(userData);
-
-      toast.success(
-        "Account created successfully! Welcome to HomeHive!",
-        null,
-        { autoClose: 4000 },
-      );
-
-      // Redirect after successful registration
+      });
+      toast.success("Account created! Welcome to HomeHive.");
       const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
       localStorage.removeItem("redirectAfterLogin");
-      setTimeout(() => navigate(redirectPath), 2000);
-    } catch (error) {
-      console.error("Registration error:", error);
-      if (error.response) {
-        console.error("Backend response:", error.response.data);
-      }
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to create account. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage, "Registration Failed", { autoClose: 4000 });
+      setTimeout(() => navigate(redirectPath), 1200);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Failed to create account. Please try again.";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -104,329 +82,293 @@ const Createacct = () => {
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true);
     try {
-      // Initialize and sign in with Google
       await GoogleAuth.initialize();
       const googleUser = await GoogleAuth.signIn();
-
-      // Send to backend for authentication/registration
-      const result = await googleAuth(googleUser.idToken, {
+      await googleAuth(googleUser.idToken, {
         email: googleUser.email,
         name: googleUser.name,
         firstName: googleUser.firstName,
         lastName: googleUser.lastName,
         picture: googleUser.picture,
         googleId: googleUser.id,
-        isHost: false, // Explicitly set for user registration
+        isHost: false,
       });
-
-      toast.success(
-        "Account created successfully with Google! Welcome to HomeHive!",
-        `Welcome ${googleUser.name}!`,
-        { autoClose: 4000 },
-      );
-
-      // Redirect after successful registration
+      toast.success(`Welcome, ${googleUser.name}!`);
       const redirectPath = localStorage.getItem("redirectAfterLogin") || "/";
       localStorage.removeItem("redirectAfterLogin");
-      setTimeout(() => navigate(redirectPath), 2000);
-    } catch (error) {
-      console.error("Google signup error:", error);
-      let errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        "Google sign up failed. Please try again.";
-      if (
-        errorMessage.includes("429") ||
-        errorMessage.toLowerCase().includes("too many requests")
-      ) {
-        errorMessage = "Too many requests. Please wait a moment and try again.";
-      }
-      setError(errorMessage);
-      toast.error(errorMessage, "Google Signup Error", { autoClose: 4000 });
+      setTimeout(() => navigate(redirectPath), 1200);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || "Google sign-up failed. Please try again.");
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
+  const inputClass =
+    "w-full px-4 py-3 border border-neutral-200 hover:border-neutral-400 focus:border-neutral-800 focus:outline-none bg-white text-neutral-800 placeholder-neutral-400 text-sm transition-colors duration-200";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 flex items-center justify-center p-4">
-      {/* Back to Login Button */}
-      <button
-        onClick={() => navigate("/signin")}
-        className="absolute top-6 left-6 flex items-center gap-2 text-primary-700 hover:text-primary-900 bg-white hover:bg-primary-25 px-4 py-3 rounded-xl border border-primary-200 hover:border-primary-300 transition-all duration-300 font-medium shadow-soft hover:shadow-medium"
-      >
-        <FaArrowLeft className="text-sm" />
-        <span>Back to Login</span>
-      </button>
+    <div className="min-h-screen flex">
+      {/* Left — decorative panel (desktop only) */}
+      <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden bg-neutral-900 flex-col justify-between p-12">
+        {/* Dot pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+        {/* Amber left line */}
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-500/60 to-transparent" />
 
-      {/* Main Container */}
-      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px]">
-          {/* Left Side: Image & Branding */}
-          <div className="relative bg-gradient-to-br from-primary-800 to-primary-900 p-8 lg:p-12 flex flex-col justify-center items-center text-white lg:flex sm:hidden">
-            <div className="absolute inset-0 opacity-20">
-              <div className='w-full h-full from-primary-700/50 to-primary-900/50 bg-[url("https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center'></div>
-            </div>
+        {/* Back to home */}
+        <button
+          onClick={() => navigate("/")}
+          className="relative flex items-center gap-2 text-white/60 hover:text-white text-sm font-medium tracking-wider uppercase transition-colors duration-200"
+        >
+          <HiArrowLeft className="text-base" />
+          HomeHive
+        </button>
 
-            <div className="relative z-10 text-center space-y-8">
-              <div>
-                <h1 className="font-NotoSans text-4xl lg:text-5xl font-bold mb-4">
-                  Join
-                  <span className="block text-transparent bg-gradient-to-r from-primary-200 to-white bg-clip-text">
-                    Homehive
-                  </span>
-                </h1>
-                <p className="text-xl text-primary-100 leading-relaxed">
-                  Create your account and discover exceptional accommodations
-                </p>
-              </div>
-
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-                <p className="text-primary-100 italic mb-3">
-                  &ldquo;Simple signup process and amazing accommodations.
-                  Highly recommended!&rdquo;
-                </p>
-                <div className="text-sm text-primary-200">
-                  - Michael R., New Member
-                </div>
-              </div>
-            </div>
+        {/* Brand copy */}
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-px bg-amber-500" />
+            <span className="text-amber-400 text-xs font-semibold tracking-[0.25em] uppercase">
+              Join Us
+            </span>
           </div>
+          <h1 className="font-Cormorant text-4xl font-light text-white leading-tight mb-4">
+            Your perfect stay<br />
+            <span className="italic">starts here</span>
+          </h1>
+          <p className="text-neutral-500 text-sm leading-relaxed">
+            Join thousands of guests discovering Nigeria's finest accommodations on HomeHive.
+          </p>
 
-          {/* Right Side: Create Account Form */}
-          <div className="p-8 lg:p-12 flex flex-col justify-center">
-            <div className="max-w-md mx-auto w-full">
-              {/* Header */}
-              <div className="text-center mb-8">
-                <h2 className="font-NotoSans text-3xl lg:text-4xl font-bold text-primary-900 mb-2">
+          <div className="mt-10 grid grid-cols-2 gap-6">
+            {[
+              { num: "500+", label: "Properties" },
+              { num: "4.9★", label: "Guest Rating" },
+              { num: "10K+", label: "Happy Guests" },
+              { num: "24/7", label: "Support" },
+            ].map(({ num, label }) => (
+              <div key={label}>
+                <div className="font-Cormorant text-2xl font-light text-white">{num}</div>
+                <div className="text-neutral-500 text-xs uppercase tracking-wider">{label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right — form panel */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Mobile back */}
+        <div className="lg:hidden flex items-center justify-between px-6 pt-6">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
+          >
+            <HiArrowLeft />
+            Back
+          </button>
+          <span className="font-Cormorant text-xl font-semibold text-neutral-800">HomeHive</span>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center px-6 py-10 lg:px-16">
+          <div className="w-full max-w-md">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-px bg-amber-500" />
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-amber-600">
                   Create Account
-                </h2>
-                <p className="text-lg text-primary-600">
-                  Get started with your free account
-                </p>
+                </span>
+              </div>
+              <h2 className="font-Cormorant text-4xl font-light text-neutral-900 mb-2">
+                Get <span className="italic">started</span>
+              </h2>
+              <p className="text-neutral-500 text-sm">Create your free account in seconds</p>
+            </div>
+
+            {/* Google first */}
+            <button
+              onClick={handleGoogleSignUp}
+              disabled={isGoogleLoading}
+              className="w-full flex items-center justify-center gap-3 border border-neutral-200 hover:border-neutral-400 bg-white text-neutral-700 text-sm font-medium py-3.5 transition-colors duration-200 disabled:opacity-50 mb-6"
+            >
+              <FcGoogle className="text-lg" />
+              {isGoogleLoading ? "Creating account…" : "Continue with Google"}
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px bg-neutral-200" />
+              <span className="text-xs text-neutral-400 font-medium">or fill in your details</span>
+              <div className="flex-1 h-px bg-neutral-200" />
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              {/* Name row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className={inputClass}
+                    autoComplete="given-name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                    Last Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className={inputClass}
+                    autoComplete="family-name"
+                  />
+                </div>
               </div>
 
-              <form className="space-y-6" onSubmit={handleCreateAccount}>
-                {/* Name Inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-neutral-700">
-                      First Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiUser className="h-5 w-5 text-neutral-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="First name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-neutral-700">
-                      Last Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiUser className="h-5 w-5 text-neutral-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Last name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50"
-                      />
-                    </div>
-                  </div>
-                </div>
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputClass}
+                  autoComplete="email"
+                />
+              </div>
 
-                {/* Email Input */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-neutral-700">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <HiMail className="h-5 w-5 text-neutral-400" />
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50"
-                    />
-                  </div>
-                </div>
+              {/* Phone (optional) */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Phone <span className="text-neutral-400 normal-case font-normal">(optional)</span>
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+234 800 000 0000"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className={inputClass}
+                  autoComplete="tel"
+                />
+              </div>
 
-                {/* Phone Input (Optional) */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-neutral-700">
-                    Phone Number (Optional)
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <HiPhone className="h-5 w-5 text-neutral-400" />
-                    </div>
-                    <input
-                      type="tel"
-                      placeholder="Enter your phone number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50"
-                    />
-                  </div>
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="At least 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${inputClass} pr-11`}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors"
+                  >
+                    {showPassword ? <FaEyeSlash className="text-sm" /> : <FaEye className="text-sm" />}
+                  </button>
                 </div>
-
-                {/* Password Inputs */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-neutral-700">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiLockClosed className="h-5 w-5 text-neutral-400" />
-                      </div>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Create password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-10 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50"
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <FaEyeSlash className="h-5 w-5 text-neutral-400 hover:text-neutral-600 transition-colors duration-300" />
-                        ) : (
-                          <FaEye className="h-5 w-5 text-neutral-400 hover:text-neutral-600 transition-colors duration-300" />
-                        )}
-                      </button>
+                {/* Strength indicator */}
+                {password && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex gap-1 flex-1">
+                      {[1, 2, 3, 4].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                            strength >= level ? strengthColor : "bg-neutral-200"
+                          }`}
+                        />
+                      ))}
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-neutral-700">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiLockClosed className="h-5 w-5 text-neutral-400" />
-                      </div>
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full pl-10 pr-10 py-3 border border-neutral-300 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-neutral-800 placeholder-neutral-400 bg-neutral-25 hover:bg-neutral-50"
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <FaEyeSlash className="h-5 w-5 text-neutral-400 hover:text-neutral-600 transition-colors duration-300" />
-                        ) : (
-                          <FaEye className="h-5 w-5 text-neutral-400 hover:text-neutral-600 transition-colors duration-300" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Error Message */}
-                {error && (
-                  <div className="bg-error-50 border border-error-200 rounded-xl p-4">
-                    <p className="text-error-700 font-medium text-sm">
-                      {error}
-                    </p>
+                    <span className="text-xs text-neutral-400 w-10">{strengthLabel}</span>
                   </div>
                 )}
-
-                {/* Create Account Button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-105 disabled:scale-100 flex items-center justify-center gap-3"
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Creating Account...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FaCheck className="text-sm" />
-                      <span>Create My Account</span>
-                    </>
-                  )}
-                </button>
-              </form>
-
-              {/* Divider */}
-              <div className="relative my-8">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-primary-200"></div>
-                </div>
-                <div className="relative flex justify-center">
-                  <span className="px-4 bg-white text-primary-500 font-medium">
-                    Or continue with
-                  </span>
-                </div>
               </div>
 
-              {/* Google Sign Up Button */}
+              {/* Confirm password */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Confirm Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Repeat your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={inputClass}
+                  autoComplete="new-password"
+                />
+              </div>
+
+              {/* Error */}
+              {error && (
+                <p className="text-red-600 text-xs font-medium border-l-2 border-red-400 pl-3">
+                  {error}
+                </p>
+              )}
+
+              {/* Submit */}
               <button
-                onClick={handleGoogleSignUp}
-                disabled={isGoogleLoading}
-                className="w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium"
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-white text-sm font-medium tracking-[0.15em] uppercase py-4 flex items-center justify-center gap-2 transition-colors duration-200 mt-2"
               >
-                <FcGoogle className="w-6 h-6" />
-                <span>
-                  {isGoogleLoading
-                    ? "Creating Account..."
-                    : "Continue with Google"}
-                </span>
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Create Account
+                    <HiArrowRight className="text-base" />
+                  </>
+                )}
               </button>
+            </form>
 
-              {/* Already have an account link */}
-              <div className="text-center mt-8 pt-6 border-t border-primary-100">
-                <p className="text-primary-600">
-                  Already have an account?{" "}
-                  <button
-                    onClick={() => navigate("/signin")}
-                    className="text-primary-800 hover:text-primary-900 font-semibold transition-colors duration-300 underline decoration-2 underline-offset-2"
-                  >
-                    Sign In
-                  </button>
-                </p>
-              </div>
+            {/* Sign in link */}
+            <p className="text-center text-sm text-neutral-500 mt-6">
+              Already have an account?{" "}
+              <button
+                onClick={() => navigate("/signin")}
+                className="text-neutral-900 font-semibold hover:text-amber-600 transition-colors duration-200"
+              >
+                Sign in
+              </button>
+            </p>
 
-              {/* Terms Footer */}
-              <div className="text-center mt-4">
-                <p className="text-primary-500 text-sm leading-relaxed">
-                  By creating an account, you agree to our{" "}
-                  <button className="text-primary-700 hover:text-primary-900 font-medium transition-colors duration-300 underline decoration-1 underline-offset-2">
-                    Terms of Service
-                  </button>{" "}
-                  and{" "}
-                  <button className="text-primary-700 hover:text-primary-900 font-medium transition-colors duration-300 underline decoration-1 underline-offset-2">
-                    Privacy Policy
-                  </button>
-                </p>
-              </div>
-            </div>
+            {/* Terms */}
+            <p className="text-center text-xs text-neutral-400 mt-4 leading-relaxed">
+              By creating an account you agree to our{" "}
+              <span className="underline cursor-pointer hover:text-neutral-600 transition-colors">Terms of Service</span>{" "}
+              and{" "}
+              <span className="underline cursor-pointer hover:text-neutral-600 transition-colors">Privacy Policy</span>
+            </p>
           </div>
         </div>
       </div>
