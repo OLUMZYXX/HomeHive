@@ -72,7 +72,7 @@ const About = () => (
 
             {/* Text */}
             <div>
-              <h3 className="font-NotoSans text-base font-semibold text-neutral-800 mb-2">
+              <h3 className="font-Cormorant text-xl font-semibold text-neutral-800 mb-2 leading-snug">
                 {feature.title}
               </h3>
               <p className="text-neutral-400 text-sm leading-relaxed">

@@ -157,7 +157,7 @@ const Featured = () => {
                     </div>
                   </div>
 
-                  <h3 className="font-NotoSans text-base font-semibold text-neutral-800 group-hover:text-neutral-600 transition-colors duration-200 line-clamp-1">
+                  <h3 className="font-Cormorant text-xl font-semibold text-neutral-800 group-hover:text-neutral-600 transition-colors duration-200 line-clamp-1 leading-snug">
                     {property.title}
                   </h3>
 

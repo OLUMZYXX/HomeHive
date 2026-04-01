@@ -80,7 +80,7 @@ const StoryModal = ({ onClose }) => {
     <div className="relative">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-primary-900">Our Story</h2>
+        <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900">Our Story</h2>
         <button
           onClick={onClose}
           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -133,7 +133,7 @@ const StoryModal = ({ onClose }) => {
         {/* Story Content */}
         <div className="p-8">
           <div className="max-w-2xl">
-            <h3 className="text-3xl font-bold text-primary-900 mb-4">
+            <h3 className="font-Cormorant text-4xl font-semibold text-neutral-900 mb-4 leading-tight">
               {currentStory.title}
             </h3>
             <p className="text-lg text-gray-600 mb-6 leading-relaxed">

@@ -574,7 +574,7 @@ const MyBookings = () => {
         <main className="flex-grow flex items-center justify-center">
           <div className="text-center">
             <FaHome className="text-primary-400 text-6xl mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-primary-800 mb-2">
+            <h2 className="font-Cormorant text-4xl font-semibold text-neutral-900 mb-2">
               Please Login
             </h2>
             <p className="text-primary-600 mb-6">
@@ -627,11 +627,8 @@ const MyBookings = () => {
                     <HiArrowLeft className="group-hover:-translate-x-1 transition-transform duration-300" />
                     Back to Listings
                   </button>
-                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
-                    My{" "}
-                    <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-700 bg-clip-text">
-                      Bookings
-                    </span>
+                  <h1 className="font-Cormorant text-4xl lg:text-5xl font-semibold text-neutral-900 leading-tight mb-2">
+                    My <em className="not-italic text-amber-500">Bookings</em>
                   </h1>
                   <p className="text-base text-gray-600">
                     Manage your reservations and track your upcoming stays
