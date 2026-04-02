@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   title: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes.xl,
     color: Colors.text,
   },
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
   },
   guestIcon: { fontSize: 64, marginBottom: 20 },
   guestTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes['2xl'],
     color: Colors.text,
     marginBottom: 10,

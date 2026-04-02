@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   pageTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes.xl,
     color: Colors.text,
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
   emptyTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes.xl,
     color: Colors.text,
     marginBottom: 8,

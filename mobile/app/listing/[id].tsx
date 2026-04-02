@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,8 +11,9 @@ import {
   Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../constants/Colors';
 import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
@@ -55,6 +56,7 @@ function getAmenityIcon(amenity: string) {
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { isAuthenticated, favorites, toggleFavorite } = useAPI();
 
   const [property, setProperty] = useState<Property | null>(null);
@@ -64,6 +66,9 @@ export default function PropertyDetailScreen() {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [booking, setBooking] = useState(false);
+
+  const galleryRef = useRef<ScrollView>(null);
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const isFav = id ? favorites.includes(id) : false;
 
@@ -77,6 +82,21 @@ export default function PropertyDetailScreen() {
       })
       .catch(() => setLoading(false));
   }, [id]);
+
+  // Auto-scroll images
+  useEffect(() => {
+    if (!property || property.images.length <= 1) return;
+    autoScrollRef.current = setInterval(() => {
+      setImageIndex((prev) => {
+        const next = (prev + 1) % property.images.length;
+        galleryRef.current?.scrollTo({ x: next * width, animated: true });
+        return next;
+      });
+    }, 3500);
+    return () => {
+      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    };
+  }, [property]);
 
   const handleBook = useCallback(async () => {
     if (!isAuthenticated) {
@@ -132,16 +152,34 @@ export default function PropertyDetailScreen() {
 
   return (
     <View style={styles.container}>
+      {/* Hide the Expo Router default header */}
+      <Stack.Screen options={{ headerShown: false }} />
+
       <ScrollView showsVerticalScrollIndicator={false} style={styles.scroll}>
         {/* ── Image Gallery ──────────────────────────────── */}
         <View style={styles.gallery}>
           <ScrollView
+            ref={galleryRef}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
+            onScrollBeginDrag={() => {
+              // Pause auto-scroll while user is swiping
+              if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+            }}
             onMomentumScrollEnd={(e) => {
               const idx = Math.round(e.nativeEvent.contentOffset.x / width);
               setImageIndex(idx);
+              // Resume auto-scroll after manual swipe
+              if (property && property.images.length > 1) {
+                autoScrollRef.current = setInterval(() => {
+                  setImageIndex((prev) => {
+                    const next = (prev + 1) % property.images.length;
+                    galleryRef.current?.scrollTo({ x: next * width, animated: true });
+                    return next;
+                  });
+                }, 3500);
+              }
             }}
           >
             {property.images.map((img, i) => (
@@ -153,6 +191,15 @@ export default function PropertyDetailScreen() {
               />
             ))}
           </ScrollView>
+
+          {/* Floating back button */}
+          <TouchableOpacity
+            style={[styles.backBtn, { top: insets.top + 8 }]}
+            onPress={() => router.back()}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="arrow-back" size={20} color={Colors.white} />
+          </TouchableOpacity>
 
           {/* Dots */}
           {property.images.length > 1 && (
@@ -169,7 +216,7 @@ export default function PropertyDetailScreen() {
           {/* Favorite */}
           {isAuthenticated && (
             <TouchableOpacity
-              style={styles.favBtn}
+              style={[styles.favBtn, { top: insets.top + 8 }]}
               onPress={() => toggleFavorite(property._id)}
             >
               <Text style={[styles.heart, isFav && styles.heartActive]}>
@@ -408,9 +455,18 @@ const styles = StyleSheet.create({
     width: 18,
     backgroundColor: Colors.white,
   },
+  backBtn: {
+    position: 'absolute',
+    left: 16,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    borderRadius: 20,
+    width: 38,
+    height: 38,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   favBtn: {
     position: 'absolute',
-    top: 16,
     right: 16,
     backgroundColor: 'rgba(255,255,255,0.9)',
     borderRadius: 20,
@@ -454,11 +510,11 @@ const styles = StyleSheet.create({
   },
 
   propertyTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes['2xl'],
     color: Colors.text,
     marginBottom: 8,
-    lineHeight: 30,
+    lineHeight: 34,
   },
 
   ratingRow: {
@@ -529,7 +585,7 @@ const styles = StyleSheet.create({
 
   // Content
   sectionTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes.lg,
     color: Colors.text,
     marginBottom: 12,

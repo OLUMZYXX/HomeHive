@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes['2xl'],
     color: Colors.text,
     marginBottom: 4,

@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Colors.border,
   },
   title: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes.xl,
     color: Colors.text,
   },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
   },
   guestAvatarText: { fontSize: 40 },
   guestTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes['2xl'],
     color: Colors.text,
     marginBottom: 8,

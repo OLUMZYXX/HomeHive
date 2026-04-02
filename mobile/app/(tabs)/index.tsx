@@ -310,10 +310,10 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   heroTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes['3xl'],
     color: Colors.white,
-    lineHeight: 40,
+    lineHeight: 44,
     marginBottom: 16,
   },
   heroStats: {
@@ -390,7 +390,7 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
   },
   sectionTitle: {
-    fontFamily: Fonts.outfitBold,
+    fontFamily: Fonts.pacifico,
     fontSize: FontSizes.xl,
     color: Colors.text,
   },
