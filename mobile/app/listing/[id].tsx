@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -6,20 +6,21 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-} from 'react-native';
-import { Image } from 'expo-image';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../constants/Colors';
-import { Fonts, FontSizes } from '../../constants/Typography';
-import { useAPI } from '../../contexts/APIContext';
-import Button from '../../components/Button';
-import DatePickerModal from '../../components/DatePickerModal';
-import { useToast } from '../../components/Toast';
-import api from '../../services/api';
+  Linking,
+} from "react-native";
+import { Image } from "expo-image";
+import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { Colors } from "../../constants/Colors";
+import { Fonts, FontSizes } from "../../constants/Typography";
+import { useAPI } from "../../contexts/APIContext";
+import Button from "../../components/Button";
+import DatePickerModal from "../../components/DatePickerModal";
+import { useToast } from "../../components/Toast";
+import api from "../../services/api";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 interface Property {
   _id: string;
@@ -39,9 +40,18 @@ interface Property {
 }
 
 const AMENITY_ICONS: Record<string, string> = {
-  wifi: '📶', pool: '🏊', gym: '💪', parking: '🚗',
-  kitchen: '🍳', ac: '❄️', tv: '📺', balcony: '🌅',
-  beach: '🏖', pet: '🐾', breakfast: '🍳', laundry: '👕',
+  wifi: "📶",
+  pool: "🏊",
+  gym: "💪",
+  parking: "🚗",
+  kitchen: "🍳",
+  ac: "❄️",
+  tv: "📺",
+  balcony: "🌅",
+  beach: "🏖",
+  pet: "🐾",
+  breakfast: "🍳",
+  laundry: "👕",
 };
 
 function getAmenityIcon(amenity: string) {
@@ -49,7 +59,7 @@ function getAmenityIcon(amenity: string) {
   for (const [k, icon] of Object.entries(AMENITY_ICONS)) {
     if (key.includes(k)) return icon;
   }
-  return '✓';
+  return "✓";
 }
 
 export default function PropertyDetailScreen() {
@@ -62,14 +72,14 @@ export default function PropertyDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [imageIndex, setImageIndex] = useState(0);
   const [guests, setGuests] = useState(1);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
   const [booking, setBooking] = useState(false);
-  const [showCheckIn, setShowCheckIn]   = useState(false);
+  const [showCheckIn, setShowCheckIn] = useState(false);
   const [showCheckOut, setShowCheckOut] = useState(false);
 
   const toast = useToast();
-  const galleryRef   = useRef<ScrollView>(null);
+  const galleryRef = useRef<ScrollView>(null);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imageIndexRef = useRef(0); // tracks current index without closure issues
 
@@ -108,13 +118,14 @@ export default function PropertyDetailScreen() {
 
   const handleBook = useCallback(async () => {
     if (!isAuthenticated) {
-      router.push('/auth/signin');
+      router.push("/auth/signin");
       return;
     }
     if (!checkIn || !checkOut) {
-      toast.warning('Please select check-in and check-out dates.');
+      toast.warning("Please select check-in and check-out dates.");
       return;
     }
+    if (!property) return;
     setBooking(true);
     try {
       const nights = Math.max(
@@ -124,21 +135,47 @@ export default function PropertyDetailScreen() {
             (1000 * 60 * 60 * 24),
         ),
       );
-      await api.bookings.create({
+      const totalAmount = nights * property.price;
+
+      // Step 1 — create the booking
+      const bookingRes = await api.bookings.create({
         propertyId: id,
         checkIn,
         checkOut,
         guests,
-        totalAmount: nights * property.price,
+        totalAmount,
       });
-      toast.success('Booking submitted! View it in My Bookings.');
-      setTimeout(() => router.push('/(tabs)/bookings'), 1200);
+      const bookingId =
+        bookingRes.bookingId || bookingRes._id || bookingRes.booking?._id;
+
+      // Step 2 — initialise Flutterwave payment
+      try {
+        const paymentRes = await api.payments.createIntent({
+          amount: totalAmount,
+          bookingId,
+        });
+        if (paymentRes.paymentLink) {
+          toast.success("Redirecting to payment...");
+          await Linking.openURL(paymentRes.paymentLink);
+        } else {
+          toast.success("Booking created! Complete payment in My Bookings.");
+        }
+      } catch {
+        // Payment init failed — booking still created, user can pay later
+        toast.success(
+          "Booking created! Payment can be completed in My Bookings.",
+        );
+      }
+
+      setTimeout(() => router.push("/(tabs)/bookings"), 800);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message || 'Booking failed. Please try again.');
+      toast.error(
+        err?.response?.data?.message || "Booking failed. Please try again.",
+      );
     } finally {
       setBooking(false);
     }
-  }, [id, isAuthenticated, checkIn, checkOut, guests, router]);
+  }, [id, isAuthenticated, checkIn, checkOut, guests, property, router]);
 
   if (loading || !property) {
     return (
@@ -225,7 +262,7 @@ export default function PropertyDetailScreen() {
               onPress={() => toggleFavorite(property._id)}
             >
               <Text style={[styles.heart, isFav && styles.heartActive]}>
-                {isFav ? '♥' : '♡'}
+                {isFav ? "♥" : "♡"}
               </Text>
             </TouchableOpacity>
           )}
@@ -254,7 +291,7 @@ export default function PropertyDetailScreen() {
           <View style={styles.ratingRow}>
             <Text style={styles.star}>★</Text>
             <Text style={styles.ratingValue}>
-              {property.rating?.toFixed(1) || '4.8'}
+              {property.rating?.toFixed(1) || "4.8"}
             </Text>
             <Text style={styles.reviewCount}>
               ({property.reviewCount || 0} reviews)
@@ -284,7 +321,7 @@ export default function PropertyDetailScreen() {
             <View style={styles.hostRow}>
               <View style={styles.hostAvatar}>
                 <Text style={styles.hostAvatarText}>
-                  {property.host.name?.charAt(0).toUpperCase() || '?'}
+                  {property.host.name?.charAt(0).toUpperCase() || "?"}
                 </Text>
               </View>
               <View>
@@ -342,8 +379,10 @@ export default function PropertyDetailScreen() {
                 activeOpacity={0.75}
               >
                 <Text style={styles.dateLabel}>Check-in</Text>
-                <Text style={[styles.dateValue, !checkIn && styles.datePlaceholder]}>
-                  {checkIn || 'Select date'}
+                <Text
+                  style={[styles.dateValue, !checkIn && styles.datePlaceholder]}
+                >
+                  {checkIn || "Select date"}
                 </Text>
               </TouchableOpacity>
               <Text style={styles.dateSep}>→</Text>
@@ -353,8 +392,13 @@ export default function PropertyDetailScreen() {
                 activeOpacity={0.75}
               >
                 <Text style={styles.dateLabel}>Check-out</Text>
-                <Text style={[styles.dateValue, !checkOut && styles.datePlaceholder]}>
-                  {checkOut || 'Select date'}
+                <Text
+                  style={[
+                    styles.dateValue,
+                    !checkOut && styles.datePlaceholder,
+                  ]}
+                >
+                  {checkOut || "Select date"}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -386,7 +430,8 @@ export default function PropertyDetailScreen() {
               <View style={styles.priceBreakdown}>
                 <View style={styles.priceBreakdownRow}>
                   <Text style={styles.breakdownLabel}>
-                    ₦{property.price.toLocaleString()} × {nights} {nights === 1 ? 'night' : 'nights'}
+                    ₦{property.price.toLocaleString()} × {nights}{" "}
+                    {nights === 1 ? "night" : "nights"}
                   </Text>
                   <Text style={styles.breakdownValue}>
                     ₦{totalPrice.toLocaleString()}
@@ -402,7 +447,7 @@ export default function PropertyDetailScreen() {
             )}
 
             <Button
-              title={isAuthenticated ? 'Reserve Now' : 'Sign in to Book'}
+              title={isAuthenticated ? "Book Now" : "Sign in to Book"}
               onPress={handleBook}
               loading={booking}
               size="lg"
@@ -415,7 +460,10 @@ export default function PropertyDetailScreen() {
             visible={showCheckIn}
             value={checkIn}
             title="Check-in Date"
-            onConfirm={(d) => { setCheckIn(d); if (checkOut && checkOut <= d) setCheckOut(''); }}
+            onConfirm={(d) => {
+              setCheckIn(d);
+              if (checkOut && checkOut <= d) setCheckOut("");
+            }}
             onClose={() => setShowCheckIn(false)}
           />
           <DatePickerModal
@@ -428,6 +476,33 @@ export default function PropertyDetailScreen() {
           />
         </View>
       </ScrollView>
+
+      {/* ── Sticky Book Now footer ──────────────────────────── */}
+      <View style={[styles.stickyBar, { paddingBottom: insets.bottom + 12 }]}>
+        <View style={styles.stickyPriceBox}>
+          <Text style={styles.stickyPrice}>
+            ₦{property.price.toLocaleString()}
+          </Text>
+          <Text style={styles.stickyNight}>/ night</Text>
+          {nights > 0 && (
+            <Text style={styles.stickyTotal}>
+              ₦{totalPrice.toLocaleString()} total
+            </Text>
+          )}
+        </View>
+        <Button
+          title={
+            booking
+              ? "Processing..."
+              : nights > 0
+                ? `Book Now · ₦${totalPrice.toLocaleString()}`
+                : "Book Now"
+          }
+          onPress={handleBook}
+          loading={booking}
+          style={styles.stickyBtn}
+        />
+      </View>
     </View>
   );
 }
@@ -443,12 +518,52 @@ function SpecItem({ icon, value }: { icon: string; value: string }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.white },
-  scroll: { flex: 1 },
+  scroll: { flex: 1, marginBottom: 0 },
+
+  // Sticky bottom bar
+  stickyBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    backgroundColor: Colors.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 12,
+    gap: 12,
+  },
+  stickyPriceBox: {
+    flex: 0,
+    minWidth: 90,
+  },
+  stickyPrice: {
+    fontFamily: Fonts.notoSansBold,
+    fontSize: FontSizes.base,
+    color: Colors.text,
+  },
+  stickyNight: {
+    fontFamily: Fonts.notoSans,
+    fontSize: FontSizes.xs,
+    color: Colors.textMuted,
+  },
+  stickyTotal: {
+    fontFamily: Fonts.notoSansSemiBold,
+    fontSize: FontSizes.xs,
+    color: Colors.primary[700],
+    marginTop: 2,
+  },
+  stickyBtn: {
+    flex: 1,
+  },
 
   loadingContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: Colors.white,
   },
   loadingText: {
@@ -457,51 +572,51 @@ const styles = StyleSheet.create({
   },
 
   // Gallery
-  gallery: { position: 'relative' },
+  gallery: { position: "relative" },
   dots: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 12,
-    alignSelf: 'center',
-    flexDirection: 'row',
+    alignSelf: "center",
+    flexDirection: "row",
     gap: 6,
   },
   dot: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.5)',
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   dotActive: {
     width: 18,
     backgroundColor: Colors.white,
   },
   backBtn: {
-    position: 'absolute',
+    position: "absolute",
     left: 16,
-    backgroundColor: 'rgba(0,0,0,0.45)',
+    backgroundColor: "rgba(0,0,0,0.45)",
     borderRadius: 20,
     width: 38,
     height: 38,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   favBtn: {
-    position: 'absolute',
+    position: "absolute",
     right: 16,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    backgroundColor: "rgba(255,255,255,0.9)",
     borderRadius: 20,
     width: 40,
     height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   heart: { fontSize: 22, color: Colors.neutral[400] },
   heartActive: { color: Colors.red[500] },
   counter: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 12,
     right: 16,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: "rgba(0,0,0,0.5)",
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 3,
@@ -516,7 +631,7 @@ const styles = StyleSheet.create({
   body: { padding: 20, paddingBottom: 40 },
 
   categoryBadge: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     backgroundColor: Colors.primary[100],
     borderRadius: 8,
     paddingHorizontal: 10,
@@ -531,17 +646,17 @@ const styles = StyleSheet.create({
 
   propertyTitle: {
     fontFamily: Fonts.pacifico,
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     color: Colors.text,
     marginBottom: 8,
     lineHeight: 34,
   },
 
   ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
     marginBottom: 14,
   },
   star: { color: Colors.star, fontSize: FontSizes.base },
@@ -562,8 +677,8 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
 
-  specs: { flexDirection: 'row', gap: 16, marginBottom: 16 },
-  specItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  specs: { flexDirection: "row", gap: 16, marginBottom: 16 },
+  specItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   specIcon: { fontSize: 16 },
   specValue: {
     fontFamily: Fonts.notoSans,
@@ -578,14 +693,14 @@ const styles = StyleSheet.create({
   },
 
   // Host
-  hostRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  hostRow: { flexDirection: "row", alignItems: "center", gap: 12 },
   hostAvatar: {
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: Colors.primary[800],
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   hostAvatarText: {
     fontFamily: Fonts.notoSansBold,
@@ -619,13 +734,13 @@ const styles = StyleSheet.create({
 
   // Amenities
   amenitiesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
   amenityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -651,12 +766,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   priceRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
+    flexDirection: "row",
+    alignItems: "baseline",
   },
   priceAmount: {
     fontFamily: Fonts.outfitBold,
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes["2xl"],
     color: Colors.text,
   },
   perNight: {
@@ -665,8 +780,8 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   dateInput: {
@@ -698,9 +813,9 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
   },
   guestRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: Colors.white,
     borderRadius: 10,
     borderWidth: 1,
@@ -713,8 +828,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   guestCounter: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 14,
   },
   counterBtn: {
@@ -723,8 +838,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   counterBtnText: {
     fontFamily: Fonts.notoSansBold,
@@ -736,7 +851,7 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.base,
     color: Colors.text,
     minWidth: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   // Price breakdown
@@ -749,8 +864,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   priceBreakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   breakdownLabel: {
     fontFamily: Fonts.notoSans,

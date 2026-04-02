@@ -1,5 +1,5 @@
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // ─── Base URL resolution ───────────────────────────────────────────────────────
 // Priority: EXPO_PUBLIC_API_URL env var → production Render URL
@@ -8,12 +8,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //   iOS simulator    : EXPO_PUBLIC_API_URL=http://localhost:3001/api
 //   Physical device  : EXPO_PUBLIC_API_URL=http://<local-ip>:3001/api
 const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ||
-  'https://homehive-twx2.onrender.com/api';
+  process.env.EXPO_PUBLIC_API_URL || "https://homehive-twx2.onrender.com/api";
 
-const TOKEN_KEY = '@homehive_access_token';
-const REFRESH_TOKEN_KEY = '@homehive_refresh_token';
-const USER_KEY = '@homehive_user';
+const TOKEN_KEY = "@homehive_access_token";
+const REFRESH_TOKEN_KEY = "@homehive_refresh_token";
+const USER_KEY = "@homehive_user";
 
 // ─── Token store (AsyncStorage) ───────────────────────────────────────────────
 export const TokenStore = {
@@ -45,7 +44,7 @@ export const TokenStore = {
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
 });
 
 // Request — attach token
@@ -64,7 +63,8 @@ axiosInstance.interceptors.response.use(
     // No network connection
     if (!error.response) {
       error.isNetworkError = true;
-      error.userMessage = 'No connection. Please check your internet and try again.';
+      error.userMessage =
+        "No connection. Please check your internet and try again.";
       return Promise.reject(error);
     }
 
@@ -72,15 +72,17 @@ axiosInstance.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !original._retry &&
-      (error.response?.data?.message?.includes('expired') ||
-        error.response?.data?.message?.includes('Invalid token'))
+      (error.response?.data?.message?.includes("expired") ||
+        error.response?.data?.message?.includes("Invalid token"))
     ) {
       original._retry = true;
       try {
         const refreshToken = await TokenStore.getRefreshToken();
-        if (!refreshToken) throw new Error('No refresh token');
+        if (!refreshToken) throw new Error("No refresh token");
 
-        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
+        const res = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        });
         if (res.data?.accessToken) {
           await TokenStore.setTokens(
             res.data.accessToken,
@@ -89,7 +91,7 @@ axiosInstance.interceptors.response.use(
           original.headers.Authorization = `Bearer ${res.data.accessToken}`;
           return axiosInstance(original);
         }
-        throw new Error('Refresh failed');
+        throw new Error("Refresh failed");
       } catch {
         await TokenStore.clearTokens();
         return Promise.reject(error);
@@ -100,7 +102,7 @@ axiosInstance.interceptors.response.use(
     error.userMessage =
       error.response?.data?.message ||
       error.message ||
-      'Something went wrong. Please try again.';
+      "Something went wrong. Please try again.";
 
     return Promise.reject(error);
   },
@@ -112,61 +114,80 @@ const api = {
   /** Check if server is reachable */
   health: {
     ping: () =>
-      axiosInstance.get('/health', { timeout: 8000 }).then((r) => r.data),
+      axiosInstance.get("/health", { timeout: 8000 }).then((r) => r.data),
   },
 
   auth: {
     login: (credentials: { email: string; password: string }) =>
-      axiosInstance.post('/auth/login', credentials).then((r) => r.data),
-    register: (data: { email: string; password: string; name?: string; firstName?: string; lastName?: string }) =>
-      axiosInstance.post('/auth/register', data).then((r) => r.data),
-    logout: () =>
-      axiosInstance.post('/auth/logout').then((r) => r.data),
-    getProfile: () =>
-      axiosInstance.get('/auth/profile').then((r) => r.data),
+      axiosInstance.post("/auth/login", credentials).then((r) => r.data),
+    register: (data: {
+      email: string;
+      password: string;
+      name?: string;
+      firstName?: string;
+      lastName?: string;
+    }) => axiosInstance.post("/auth/register", data).then((r) => r.data),
+    logout: () => axiosInstance.post("/auth/logout").then((r) => r.data),
+    getProfile: () => axiosInstance.get("/auth/profile").then((r) => r.data),
     updateProfile: (data: object) =>
-      axiosInstance.put('/auth/profile', data).then((r) => r.data),
+      axiosInstance.put("/auth/profile", data).then((r) => r.data),
     changePassword: (data: { currentPassword: string; newPassword: string }) =>
-      axiosInstance.put('/auth/change-password', data).then((r) => r.data),
+      axiosInstance.put("/auth/change-password", data).then((r) => r.data),
   },
 
   properties: {
     getAll: (params?: object) =>
-      axiosInstance.get('/properties', { params }).then((r) => {
+      axiosInstance.get("/properties", { params }).then((r) => {
         const d = r.data;
-        return { properties: d.properties || d.data || [], total: d.total || 0 };
+        return {
+          properties: d.properties || d.data || [],
+          total: d.total || 0,
+        };
       }),
     getById: (id: string) =>
       axiosInstance.get(`/properties/${id}`).then((r) => r.data),
     getFeatured: (limit = 6) =>
-      axiosInstance.get(`/properties/featured?limit=${limit}`).then((r) => r.data),
+      axiosInstance
+        .get(`/properties/featured?limit=${limit}`)
+        .then((r) => r.data),
     getTopRated: (limit = 3) =>
-      axiosInstance.get(`/properties/top-rated?limit=${limit}`).then((r) => r.data),
+      axiosInstance
+        .get(`/properties/top-rated?limit=${limit}`)
+        .then((r) => r.data),
     search: (criteria: object) =>
-      axiosInstance.post('/properties/search', criteria).then((r) => {
+      axiosInstance.post("/properties/search", criteria).then((r) => {
         const d = r.data;
         return d.properties || d.data || [];
       }),
     getPremiumImages: () =>
-      axiosInstance.get('/premium/featured-images').then((r) => r.data).catch(() => ({ images: [] })),
+      axiosInstance
+        .get("/premium/featured-images")
+        .then((r) => r.data)
+        .catch(() => ({ images: [] })),
   },
 
   bookings: {
-    getMyBookings: () =>
-      axiosInstance.get('/bookings').then((r) => r.data),
+    getMyBookings: () => axiosInstance.get("/bookings").then((r) => r.data),
     getById: (id: string) =>
       axiosInstance.get(`/bookings/${id}`).then((r) => r.data),
     create: (data: object) =>
-      axiosInstance.post('/bookings', data).then((r) => r.data),
-    checkAvailability: (data: { propertyId: string; checkIn: string; checkOut: string }) =>
-      axiosInstance.post('/bookings/check-availability', data).then((r) => r.data),
+      axiosInstance.post("/bookings", data).then((r) => r.data),
+    checkAvailability: (data: {
+      propertyId: string;
+      checkIn: string;
+      checkOut: string;
+    }) =>
+      axiosInstance
+        .post("/bookings/check-availability", data)
+        .then((r) => r.data),
     cancel: (id: string) =>
-      axiosInstance.put(`/bookings/${id}/status`, { status: 'cancelled' }).then((r) => r.data),
+      axiosInstance
+        .put(`/bookings/${id}/status`, { status: "cancelled" })
+        .then((r) => r.data),
   },
 
   favorites: {
-    get: () =>
-      axiosInstance.get('/favorites').then((r) => r.data),
+    get: () => axiosInstance.get("/favorites").then((r) => r.data),
     add: (propertyId: string) =>
       axiosInstance.post(`/favorites/${propertyId}`).then((r) => r.data),
     remove: (propertyId: string) =>
@@ -177,7 +198,12 @@ const api = {
     getAll: (limit = 12) =>
       axiosInstance.get(`/testimonials?limit=${limit}`).then((r) => r.data),
     create: (data: object) =>
-      axiosInstance.post('/testimonials', data).then((r) => r.data),
+      axiosInstance.post("/testimonials", data).then((r) => r.data),
+  },
+
+  payments: {
+    createIntent: (data: { amount: number; bookingId: string }) =>
+      axiosInstance.post("/payments/create-intent", data).then((r) => r.data),
   },
 };
 
