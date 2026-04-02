@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
+  Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,6 +15,8 @@ import { Colors } from "../../constants/Colors";
 import { Fonts, FontSizes } from "../../constants/Typography";
 import { useAPI } from "../../contexts/APIContext";
 import Button from "../../components/Button";
+import { useToast } from "../../components/Toast";
+import api from "../../services/api";
 
 const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> =
   {
@@ -55,8 +58,33 @@ function resolveImage(raw: string | { data: string } | undefined): string {
 
 export default function BookingsScreen() {
   const router = useRouter();
+  const toast = useToast();
   const { isAuthenticated, bookings, fetchBookings, isLoading } = useAPI();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [payingId, setPayingId] = useState<string | null>(null);
+
+  const handlePay = async (bookingId: string, totalAmount: number) => {
+    setPayingId(bookingId);
+    try {
+      const res = await api.payments.createIntent({ amount: totalAmount, bookingId });
+      if (res.paymentLink) {
+        await Linking.openURL(res.paymentLink);
+      } else {
+        router.push({
+          pathname: "/checkout",
+          params: { bookingId, totalAmount: String(totalAmount) },
+        });
+      }
+    } catch {
+      // Fallback to checkout screen so user sees a proper payment page
+      router.push({
+        pathname: "/checkout",
+        params: { bookingId, totalAmount: String(totalAmount) },
+      });
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated) fetchBookings();
@@ -206,6 +234,16 @@ export default function BookingsScreen() {
                       ₦{(booking.totalAmount ?? 0).toLocaleString()}
                     </Text>
                   </View>
+
+                  {booking.status === "pending" && (
+                    <Button
+                      title={payingId === booking._id ? "Loading..." : "Pay Now"}
+                      loading={payingId === booking._id}
+                      onPress={() => handlePay(booking._id, booking.totalAmount ?? 0)}
+                      size="sm"
+                      style={styles.payBtn}
+                    />
+                  )}
                 </View>
               </TouchableOpacity>
             );
@@ -377,5 +415,9 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.notoSansBold,
     fontSize: FontSizes.sm,
     color: Colors.text,
+  },
+  payBtn: {
+    marginTop: 10,
+    alignSelf: "stretch",
   },
 });

@@ -4,12 +4,14 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Platform,
+  Dimensions,
 } from "react-native";
 import { BlurView } from "expo-blur";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+
+const SCREEN_WIDTH = Dimensions.get("window").width;
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -64,7 +66,7 @@ function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
               {focused ? (
                 <View style={styles.activePill}>
                   <Ionicons name={tab.icon} size={17} color="#0d0d1a" />
-                  <Text style={styles.activeLabel}>{tab.label}</Text>
+                  <Text style={styles.activeLabel} numberOfLines={1}>{tab.label}</Text>
                 </View>
               ) : (
                 <Ionicons
@@ -131,16 +133,18 @@ const styles = StyleSheet.create({
   activePill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 7,
+    gap: 5,
     backgroundColor: "#ffffff",
     borderRadius: 50,
-    paddingHorizontal: 16,
+    paddingHorizontal: SCREEN_WIDTH < 380 ? 10 : 14,
     paddingVertical: 9,
+    maxWidth: SCREEN_WIDTH * 0.32,
   },
   activeLabel: {
     color: "#0d0d1a",
-    fontSize: 13,
+    fontSize: SCREEN_WIDTH < 380 ? 11 : 13,
     fontWeight: "700",
     letterSpacing: 0.1,
+    flexShrink: 1,
   },
 });

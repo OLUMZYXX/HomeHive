@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Linking,
 } from "react-native";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
@@ -74,7 +73,6 @@ export default function PropertyDetailScreen() {
   const [guests, setGuests] = useState(1);
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
-  const [booking, setBooking] = useState(false);
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [showCheckOut, setShowCheckOut] = useState(false);
 
@@ -116,7 +114,7 @@ export default function PropertyDetailScreen() {
     };
   }, [property, startAutoScroll]);
 
-  const handleBook = useCallback(async () => {
+  const handleBook = useCallback(() => {
     if (!isAuthenticated) {
       router.push("/auth/signin");
       return;
@@ -126,55 +124,30 @@ export default function PropertyDetailScreen() {
       return;
     }
     if (!property) return;
-    setBooking(true);
-    try {
-      const nights = Math.max(
-        0,
-        Math.round(
-          (new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
-            (1000 * 60 * 60 * 24),
-        ),
-      );
-      const totalAmount = nights * property.price;
 
-      // Step 1 — create the booking
-      const bookingRes = await api.bookings.create({
+    const nightCount = Math.max(
+      0,
+      Math.round(
+        (new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
+
+    router.push({
+      pathname: "/checkout",
+      params: {
         propertyId: id,
+        propertyTitle: property.title,
+        propertyImage: property.images?.[0] || "",
+        propertyLocation: property.location,
         checkIn,
         checkOut,
-        guests,
-        totalAmount,
-      });
-      const bookingId =
-        bookingRes.bookingId || bookingRes._id || bookingRes.booking?._id;
-
-      // Step 2 — initialise Flutterwave payment
-      try {
-        const paymentRes = await api.payments.createIntent({
-          amount: totalAmount,
-          bookingId,
-        });
-        if (paymentRes.paymentLink) {
-          toast.success("Redirecting to payment...");
-          await Linking.openURL(paymentRes.paymentLink);
-        } else {
-          toast.success("Booking created! Complete payment in My Bookings.");
-        }
-      } catch {
-        // Payment init failed — booking still created, user can pay later
-        toast.success(
-          "Booking created! Payment can be completed in My Bookings.",
-        );
-      }
-
-      setTimeout(() => router.push("/(tabs)/bookings"), 800);
-    } catch (err: any) {
-      toast.error(
-        err?.response?.data?.message || "Booking failed. Please try again.",
-      );
-    } finally {
-      setBooking(false);
-    }
+        guests: String(guests),
+        pricePerNight: String(property.price),
+        nights: String(nightCount),
+        totalAmount: String(nightCount * property.price),
+      },
+    });
   }, [id, isAuthenticated, checkIn, checkOut, guests, property, router]);
 
   if (loading || !property) {
@@ -446,13 +419,6 @@ export default function PropertyDetailScreen() {
               </View>
             )}
 
-            <Button
-              title={isAuthenticated ? "Book Now" : "Sign in to Book"}
-              onPress={handleBook}
-              loading={booking}
-              size="lg"
-              style={{ marginTop: 12 }}
-            />
           </View>
 
           {/* Date picker modals */}
@@ -492,14 +458,11 @@ export default function PropertyDetailScreen() {
         </View>
         <Button
           title={
-            booking
-              ? "Processing..."
-              : nights > 0
-                ? `Book Now · ₦${totalPrice.toLocaleString()}`
-                : "Book Now"
+            nights > 0
+              ? `Book Now · ₦${totalPrice.toLocaleString()}`
+              : "Book Now"
           }
           onPress={handleBook}
-          loading={booking}
           style={styles.stickyBtn}
         />
       </View>
