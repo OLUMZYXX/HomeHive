@@ -23,6 +23,7 @@ import {
 } from '@expo-google-fonts/poppins';
 import { Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import { APIProvider } from '../contexts/APIContext';
+import { ToastProvider } from '../components/Toast';
 import { Colors } from '../constants/Colors';
 
 SplashScreen.preventAutoHideAsync();
@@ -52,39 +53,33 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <APIProvider>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="listing/[id]"
-            options={{
-              headerShown: true,
-              headerTitle: '',
-              headerTransparent: true,
-              headerTintColor: Colors.white,
-            }}
-          />
-          <Stack.Screen
-            name="auth/signin"
-            options={{
-              headerShown: true,
-              headerTitle: 'Sign In',
-              headerTintColor: Colors.text,
-              headerStyle: { backgroundColor: Colors.white },
-              presentation: 'modal',
-            }}
-          />
-          <Stack.Screen
-            name="auth/signup"
-            options={{
-              headerShown: true,
-              headerTitle: 'Create Account',
-              headerTintColor: Colors.text,
-              headerStyle: { backgroundColor: Colors.white },
-              presentation: 'modal',
-            }}
-          />
-        </Stack>
+        <ToastProvider>
+          <StatusBar style="dark" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="listing/[id]" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="auth/signin"
+              options={{
+                headerShown: true,
+                headerTitle: 'Sign In',
+                headerTintColor: Colors.text,
+                headerStyle: { backgroundColor: Colors.white },
+                presentation: 'modal',
+              }}
+            />
+            <Stack.Screen
+              name="auth/signup"
+              options={{
+                headerShown: true,
+                headerTitle: 'Create Account',
+                headerTintColor: Colors.text,
+                headerStyle: { backgroundColor: Colors.white },
+                presentation: 'modal',
+              }}
+            />
+          </Stack>
+        </ToastProvider>
       </APIProvider>
     </GestureHandlerRootView>
   );

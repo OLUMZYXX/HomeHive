@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
@@ -17,6 +16,7 @@ import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
 import Button from '../../components/Button';
 import DatePickerModal from '../../components/DatePickerModal';
+import { useToast } from '../../components/Toast';
 import api from '../../services/api';
 
 const { width } = Dimensions.get('window');
@@ -68,6 +68,7 @@ export default function PropertyDetailScreen() {
   const [showCheckIn, setShowCheckIn]   = useState(false);
   const [showCheckOut, setShowCheckOut] = useState(false);
 
+  const toast = useToast();
   const galleryRef   = useRef<ScrollView>(null);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imageIndexRef = useRef(0); // tracks current index without closure issues
@@ -111,26 +112,29 @@ export default function PropertyDetailScreen() {
       return;
     }
     if (!checkIn || !checkOut) {
-      Alert.alert('Booking', 'Please enter check-in and check-out dates.');
+      toast.warning('Please select check-in and check-out dates.');
       return;
     }
     setBooking(true);
     try {
+      const nights = Math.max(
+        0,
+        Math.round(
+          (new Date(checkOut).getTime() - new Date(checkIn).getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
+      );
       await api.bookings.create({
         propertyId: id,
         checkIn,
         checkOut,
         guests,
+        totalAmount: nights * property.price,
       });
-      Alert.alert('Success 🎉', 'Your booking request has been submitted!', [
-        { text: 'View Bookings', onPress: () => router.push('/(tabs)/bookings') },
-        { text: 'OK' },
-      ]);
+      toast.success('Booking submitted! View it in My Bookings.');
+      setTimeout(() => router.push('/(tabs)/bookings'), 1200);
     } catch (err: any) {
-      Alert.alert(
-        'Booking Failed',
-        err?.response?.data?.message || 'Something went wrong. Try again.',
-      );
+      toast.error(err?.response?.data?.message || 'Booking failed. Please try again.');
     } finally {
       setBooking(false);
     }

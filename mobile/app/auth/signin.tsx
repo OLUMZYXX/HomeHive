@@ -15,10 +15,12 @@ import { Colors } from '../../constants/Colors';
 import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
 import Button from '../../components/Button';
+import { useToast } from '../../components/Toast';
 
 export default function SignInScreen() {
   const router = useRouter();
   const { login, isLoading } = useAPI();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,9 +40,10 @@ export default function SignInScreen() {
     if (!validate()) return;
     const success = await login(email.trim().toLowerCase(), password);
     if (success) {
+      toast.success('Welcome back!');
       router.back();
     } else {
-      Alert.alert('Sign In Failed', 'Invalid email or password. Please try again.');
+      toast.error('Invalid email or password. Please try again.');
     }
   };
 

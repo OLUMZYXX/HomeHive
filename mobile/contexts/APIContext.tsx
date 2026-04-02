@@ -36,12 +36,16 @@ interface Property {
 
 interface Booking {
   _id: string;
-  property: Property;
+  propertyId: string;
+  propertyTitle: string;
+  propertyLocation: string;
+  propertyImages: Array<string | { data: string }>;
   checkIn: string;
   checkOut: string;
   guests: number;
-  totalPrice: number;
+  totalAmount: number;
   status: 'pending' | 'confirmed' | 'cancelled';
+  currency?: string;
 }
 
 interface State {

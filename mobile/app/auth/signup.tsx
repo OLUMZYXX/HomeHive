@@ -8,17 +8,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
 import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
 import Button from '../../components/Button';
+import { useToast } from '../../components/Toast';
 
 export default function SignUpScreen() {
   const router = useRouter();
   const { register, isLoading } = useAPI();
+  const toast = useToast();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,11 +53,10 @@ export default function SignUpScreen() {
       password,
     );
     if (success) {
-      Alert.alert('Welcome to HomeHive! 🎉', 'Your account has been created.', [
-        { text: 'Let\'s Go!', onPress: () => router.back() },
-      ]);
+      toast.success('Welcome to HomeHive! Your account has been created.');
+      router.back();
     } else {
-      Alert.alert('Registration Failed', 'This email may already be in use. Try signing in instead.');
+      toast.error('This email may already be in use. Try signing in instead.');
     }
   };
 
