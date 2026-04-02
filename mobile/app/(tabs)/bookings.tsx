@@ -6,8 +6,8 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Colors } from '../../constants/Colors';
@@ -15,18 +15,28 @@ import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
 import Button from '../../components/Button';
 
-const STATUS_COLORS = {
-  pending: { bg: Colors.amber[50], text: Colors.amber[700] },
-  confirmed: { bg: Colors.green[50], text: Colors.green[700] },
-  cancelled: { bg: Colors.red[50], text: Colors.red[600] },
+const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
+  pending:   { bg: Colors.amber[50],  text: Colors.amber[700],  dot: Colors.amber[500] },
+  confirmed: { bg: Colors.green[50],  text: Colors.green[700],  dot: Colors.green[500] },
+  cancelled: { bg: Colors.red[50],    text: Colors.red[600],    dot: Colors.red[400] },
 };
 
+const PLACEHOLDER = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70';
+
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString('en-NG', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
+}
+
+/** Resolve image URI from raw API value (string URL or base64 object) */
+function resolveImage(raw: string | { data: string } | undefined): string {
+  if (!raw) return PLACEHOLDER;
+  if (typeof raw === 'string') return raw || PLACEHOLDER;
+  if (raw.data) return raw.data;
+  return PLACEHOLDER;
 }
 
 export default function BookingsScreen() {
@@ -102,65 +112,54 @@ export default function BookingsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={Colors.primary[800]}
+              tintColor={Colors.neutral[900]}
             />
           }
           renderItem={({ item: booking }) => {
-            const statusStyle =
-              STATUS_COLORS[booking.status] || STATUS_COLORS.pending;
+            const statusStyle = STATUS_COLORS[booking.status] ?? STATUS_COLORS.pending;
+            const imageUri = resolveImage(booking.propertyImages?.[0]);
+
             return (
               <TouchableOpacity
                 style={styles.card}
-                onPress={() =>
-                  router.push(`/listing/${booking.property?._id}`)
-                }
+                onPress={() => booking.propertyId && router.push(`/listing/${booking.propertyId}`)}
                 activeOpacity={0.9}
               >
                 {/* Property image */}
-                {booking.property?.images?.[0] && (
-                  <Image
-                    source={{ uri: booking.property.images[0] }}
-                    style={styles.cardImage}
-                    resizeMode="cover"
-                  />
-                )}
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.cardImage}
+                  contentFit="cover"
+                  transition={400}
+                />
+
+                {/* Status badge overlaid on image */}
+                <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+                  <View style={[styles.statusDot, { backgroundColor: statusStyle.dot }]} />
+                  <Text style={[styles.statusText, { color: statusStyle.text }]}>
+                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                  </Text>
+                </View>
 
                 <View style={styles.cardBody}>
-                  {/* Status badge */}
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: statusStyle.bg },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.statusText, { color: statusStyle.text }]}
-                    >
-                      {booking.status.charAt(0).toUpperCase() +
-                        booking.status.slice(1)}
-                    </Text>
-                  </View>
-
                   <Text style={styles.propertyName} numberOfLines={1}>
-                    {booking.property?.title || 'Property'}
+                    {booking.propertyTitle || 'Property'}
                   </Text>
-                  <Text style={styles.location} numberOfLines={1}>
-                    📍 {booking.property?.location}
-                  </Text>
+                  {!!booking.propertyLocation && (
+                    <Text style={styles.location} numberOfLines={1}>
+                      📍 {booking.propertyLocation}
+                    </Text>
+                  )}
 
                   <View style={styles.datesRow}>
                     <View style={styles.dateBlock}>
                       <Text style={styles.dateLabel}>Check-in</Text>
-                      <Text style={styles.dateValue}>
-                        {formatDate(booking.checkIn)}
-                      </Text>
+                      <Text style={styles.dateValue}>{formatDate(booking.checkIn)}</Text>
                     </View>
-                    <Text style={styles.dateSep}>→</Text>
+                    <View style={styles.dateSepLine} />
                     <View style={styles.dateBlock}>
                       <Text style={styles.dateLabel}>Check-out</Text>
-                      <Text style={styles.dateValue}>
-                        {formatDate(booking.checkOut)}
-                      </Text>
+                      <Text style={styles.dateValue}>{formatDate(booking.checkOut)}</Text>
                     </View>
                   </View>
 
@@ -169,7 +168,7 @@ export default function BookingsScreen() {
                       👥 {booking.guests} guest{booking.guests !== 1 ? 's' : ''}
                     </Text>
                     <Text style={styles.totalPrice}>
-                      ₦{booking.totalPrice?.toLocaleString()}
+                      ₦{(booking.totalAmount ?? 0).toLocaleString()}
                     </Text>
                   </View>
                 </View>
@@ -197,16 +196,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: Fonts.pacifico,
-    fontSize: FontSizes.xl,
+    fontSize: FontSizes.lg,
     color: Colors.text,
   },
   count: {
     fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     color: Colors.textSecondary,
   },
 
-  // Guest (logged out)
+  // Guest / logged-out
   guestContainer: {
     flex: 1,
     alignItems: 'center',
@@ -216,17 +215,17 @@ const styles = StyleSheet.create({
   guestIcon: { fontSize: 64, marginBottom: 20 },
   guestTitle: {
     fontFamily: Fonts.pacifico,
-    fontSize: FontSizes['2xl'],
+    fontSize: FontSizes.xl,
     color: Colors.text,
     marginBottom: 10,
     textAlign: 'center',
   },
   guestSubtitle: {
     fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.base,
+    fontSize: FontSizes.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 20,
   },
 
   // Empty state
@@ -238,103 +237,110 @@ const styles = StyleSheet.create({
   },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
   emptyTitle: {
-    fontFamily: Fonts.outfitBold,
-    fontSize: FontSizes.xl,
+    fontFamily: Fonts.pacifico,
+    fontSize: FontSizes.lg,
     color: Colors.text,
     marginBottom: 8,
   },
   emptyText: {
     fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.base,
+    fontSize: FontSizes.sm,
     color: Colors.textSecondary,
     textAlign: 'center',
   },
 
   // List
-  list: { padding: 16, paddingBottom: 110, gap: 16 },
+  list: { padding: 16, paddingBottom: 110, gap: 14 },
 
-  // Booking card
+  // Card
   card: {
     backgroundColor: Colors.white,
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: Colors.black,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
   cardImage: {
     width: '100%',
-    height: 140,
+    height: 160,
   },
-  cardBody: { padding: 14, gap: 6 },
-
   statusBadge: {
-    alignSelf: 'flex-start',
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 5,
     borderRadius: 20,
-    marginBottom: 4,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   statusText: {
     fontFamily: Fonts.notoSansSemiBold,
     fontSize: FontSizes.xs,
   },
-
+  cardBody: { padding: 14, gap: 5 },
   propertyName: {
     fontFamily: Fonts.notoSansSemiBold,
-    fontSize: FontSizes.base,
+    fontSize: FontSizes.sm,
     color: Colors.text,
   },
   location: {
     fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     color: Colors.textSecondary,
   },
-
   datesRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
-    gap: 8,
+    flexWrap: 'wrap',
+    marginTop: 10,
+    gap: 10,
   },
   dateBlock: { flex: 1 },
+  dateSepLine: {
+    width: 1,
+    height: 28,
+    backgroundColor: Colors.border,
+  },
   dateLabel: {
     fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.xs,
+    fontSize: 11,
     color: Colors.textMuted,
+    marginBottom: 2,
   },
   dateValue: {
     fontFamily: Fonts.notoSansSemiBold,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     color: Colors.text,
   },
-  dateSep: {
-    fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.lg,
-    color: Colors.textMuted,
-  },
-
   cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 10,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
   guests: {
     fontFamily: Fonts.notoSans,
-    fontSize: FontSizes.sm,
+    fontSize: FontSizes.xs,
     color: Colors.textSecondary,
   },
   totalPrice: {
     fontFamily: Fonts.notoSansBold,
-    fontSize: FontSizes.base,
+    fontSize: FontSizes.sm,
     color: Colors.text,
   },
 });

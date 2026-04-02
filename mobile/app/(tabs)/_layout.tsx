@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -29,7 +30,7 @@ function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
       ]}
       pointerEvents="box-none"
     >
-      <View style={styles.pill}>
+      <BlurView intensity={75} tint="dark" style={styles.pill}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
           const tab = TABS[index];
@@ -53,7 +54,7 @@ function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
             </TouchableOpacity>
           );
         })}
-      </View>
+      </BlurView>
     </View>
   );
 }
@@ -85,16 +86,19 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#13131f',
+    backgroundColor: 'rgba(10, 10, 22, 0.5)',
     borderRadius: 50,
     paddingVertical: 8,
     paddingHorizontal: 10,
     gap: 4,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     // iOS shadow
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 20,
+    shadowOpacity: 0.4,
+    shadowRadius: 24,
   },
   tabBtn: {
     flex: 1,
