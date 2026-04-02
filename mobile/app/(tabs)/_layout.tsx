@@ -1,11 +1,17 @@
-import { Tabs } from 'expo-router';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
-import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Tabs } from "expo-router";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+} from "react-native";
+import { BlurView } from "expo-blur";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
-type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
+type IoniconsName = React.ComponentProps<typeof Ionicons>["name"];
 
 const TABS: {
   name: string;
@@ -13,10 +19,25 @@ const TABS: {
   icon: IoniconsName;
   iconOutline: IoniconsName;
 }[] = [
-  { name: 'index',    label: 'Home',     icon: 'home',            iconOutline: 'home-outline'     },
-  { name: 'listings', label: 'Search',   icon: 'search',          iconOutline: 'search-outline'   },
-  { name: 'bookings', label: 'Bookings', icon: 'calendar',        iconOutline: 'calendar-outline' },
-  { name: 'profile',  label: 'Profile',  icon: 'person-circle',   iconOutline: 'person-circle-outline' },
+  { name: "index", label: "Home", icon: "home", iconOutline: "home-outline" },
+  {
+    name: "listings",
+    label: "Search",
+    icon: "search",
+    iconOutline: "search-outline",
+  },
+  {
+    name: "bookings",
+    label: "Bookings",
+    icon: "calendar",
+    iconOutline: "calendar-outline",
+  },
+  {
+    name: "profile",
+    label: "Profile",
+    icon: "person-circle",
+    iconOutline: "person-circle-outline",
+  },
 ];
 
 function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
@@ -24,10 +45,7 @@ function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View
-      style={[
-        styles.wrapper,
-        { bottom: insets.bottom + 16 },
-      ]}
+      style={[styles.wrapper, { bottom: insets.bottom + 16 }]}
       pointerEvents="box-none"
     >
       <BlurView intensity={75} tint="dark" style={styles.pill}>
@@ -49,7 +67,11 @@ function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
                   <Text style={styles.activeLabel}>{tab.label}</Text>
                 </View>
               ) : (
-                <Ionicons name={tab.iconOutline} size={20} color="rgba(255,255,255,0.45)" />
+                <Ionicons
+                  name={tab.iconOutline}
+                  size={20}
+                  color="rgba(255,255,255,0.45)"
+                />
               )}
             </TouchableOpacity>
           );
@@ -65,60 +87,60 @@ export default function TabLayout() {
       tabBar={(props) => <FloatingTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tabs.Screen name="index"    options={{ title: 'Home'     }} />
-      <Tabs.Screen name="listings" options={{ title: 'Search'   }} />
-      <Tabs.Screen name="bookings" options={{ title: 'Bookings' }} />
-      <Tabs.Screen name="profile"  options={{ title: 'Profile'  }} />
+      <Tabs.Screen name="index" options={{ title: "Home" }} />
+      <Tabs.Screen name="listings" options={{ title: "Search" }} />
+      <Tabs.Screen name="bookings" options={{ title: "Bookings" }} />
+      <Tabs.Screen name="profile" options={{ title: "Profile" }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: 'absolute',
+    position: "absolute",
     left: 20,
     right: 20,
-    alignItems: 'center',
+    alignItems: "center",
     // lift above any bottom content
     zIndex: 100,
     elevation: 20,
   },
   pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(10, 10, 22, 0.5)',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(10, 10, 22, 0.5)",
     borderRadius: 50,
     paddingVertical: 8,
     paddingHorizontal: 10,
     gap: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: "rgba(255,255,255,0.08)",
     // iOS shadow
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 24,
   },
   tabBtn: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 44,
   },
   activePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 7,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     borderRadius: 50,
     paddingHorizontal: 16,
     paddingVertical: 9,
   },
   activeLabel: {
-    color: '#0d0d1a',
+    color: "#0d0d1a",
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "700",
     letterSpacing: 0.1,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -6,35 +6,49 @@ import {
   FlatList,
   TouchableOpacity,
   RefreshControl,
-} from 'react-native';
-import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { Colors } from '../../constants/Colors';
-import { Fonts, FontSizes } from '../../constants/Typography';
-import { useAPI } from '../../contexts/APIContext';
-import Button from '../../components/Button';
+} from "react-native";
+import { Image } from "expo-image";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { Colors } from "../../constants/Colors";
+import { Fonts, FontSizes } from "../../constants/Typography";
+import { useAPI } from "../../contexts/APIContext";
+import Button from "../../components/Button";
 
-const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  pending:   { bg: Colors.amber[50],  text: Colors.amber[700],  dot: Colors.amber[500] },
-  confirmed: { bg: Colors.green[50],  text: Colors.green[700],  dot: Colors.green[500] },
-  cancelled: { bg: Colors.red[50],    text: Colors.red[600],    dot: Colors.red[400] },
-};
+const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> =
+  {
+    pending: {
+      bg: Colors.amber[50],
+      text: Colors.amber[700],
+      dot: Colors.amber[500],
+    },
+    confirmed: {
+      bg: Colors.green[50],
+      text: Colors.green[700],
+      dot: Colors.green[500],
+    },
+    cancelled: {
+      bg: Colors.red[50],
+      text: Colors.red[600],
+      dot: Colors.red[400],
+    },
+  };
 
-const PLACEHOLDER = 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70';
+const PLACEHOLDER =
+  "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70";
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-NG', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+  return new Date(dateStr).toLocaleDateString("en-NG", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
   });
 }
 
 /** Resolve image URI from raw API value (string URL or base64 object) */
 function resolveImage(raw: string | { data: string } | undefined): string {
   if (!raw) return PLACEHOLDER;
-  if (typeof raw === 'string') return raw || PLACEHOLDER;
+  if (typeof raw === "string") return raw || PLACEHOLDER;
   if (raw.data) return raw.data;
   return PLACEHOLDER;
 }
@@ -56,7 +70,7 @@ export default function BookingsScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView style={styles.safe} edges={['top']}>
+      <SafeAreaView style={styles.safe} edges={["top"]}>
         <View style={styles.header}>
           <Text style={styles.title}>My Bookings</Text>
         </View>
@@ -68,12 +82,12 @@ export default function BookingsScreen() {
           </Text>
           <Button
             title="Sign In"
-            onPress={() => router.push('/auth/signin')}
+            onPress={() => router.push("/auth/signin")}
             style={{ marginTop: 20, width: 200 }}
           />
           <Button
             title="Create Account"
-            onPress={() => router.push('/auth/signup')}
+            onPress={() => router.push("/auth/signup")}
             variant="outline"
             style={{ marginTop: 10, width: 200 }}
           />
@@ -83,7 +97,7 @@ export default function BookingsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.title}>My Bookings</Text>
         <Text style={styles.count}>{bookings.length} total</Text>
@@ -98,7 +112,7 @@ export default function BookingsScreen() {
           </Text>
           <Button
             title="Explore Properties"
-            onPress={() => router.push('/(tabs)/listings')}
+            onPress={() => router.push("/(tabs)/listings")}
             style={{ marginTop: 20 }}
           />
         </View>
@@ -116,13 +130,17 @@ export default function BookingsScreen() {
             />
           }
           renderItem={({ item: booking }) => {
-            const statusStyle = STATUS_COLORS[booking.status] ?? STATUS_COLORS.pending;
+            const statusStyle =
+              STATUS_COLORS[booking.status] ?? STATUS_COLORS.pending;
             const imageUri = resolveImage(booking.propertyImages?.[0]);
 
             return (
               <TouchableOpacity
                 style={styles.card}
-                onPress={() => booking.propertyId && router.push(`/listing/${booking.propertyId}`)}
+                onPress={() =>
+                  booking.propertyId &&
+                  router.push(`/listing/${booking.propertyId}`)
+                }
                 activeOpacity={0.9}
               >
                 {/* Property image */}
@@ -134,16 +152,29 @@ export default function BookingsScreen() {
                 />
 
                 {/* Status badge overlaid on image */}
-                <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
-                  <View style={[styles.statusDot, { backgroundColor: statusStyle.dot }]} />
-                  <Text style={[styles.statusText, { color: statusStyle.text }]}>
-                    {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                <View
+                  style={[
+                    styles.statusBadge,
+                    { backgroundColor: statusStyle.bg },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.statusDot,
+                      { backgroundColor: statusStyle.dot },
+                    ]}
+                  />
+                  <Text
+                    style={[styles.statusText, { color: statusStyle.text }]}
+                  >
+                    {booking.status.charAt(0).toUpperCase() +
+                      booking.status.slice(1)}
                   </Text>
                 </View>
 
                 <View style={styles.cardBody}>
                   <Text style={styles.propertyName} numberOfLines={1}>
-                    {booking.propertyTitle || 'Property'}
+                    {booking.propertyTitle || "Property"}
                   </Text>
                   {!!booking.propertyLocation && (
                     <Text style={styles.location} numberOfLines={1}>
@@ -154,18 +185,22 @@ export default function BookingsScreen() {
                   <View style={styles.datesRow}>
                     <View style={styles.dateBlock}>
                       <Text style={styles.dateLabel}>Check-in</Text>
-                      <Text style={styles.dateValue}>{formatDate(booking.checkIn)}</Text>
+                      <Text style={styles.dateValue}>
+                        {formatDate(booking.checkIn)}
+                      </Text>
                     </View>
                     <View style={styles.dateSepLine} />
                     <View style={styles.dateBlock}>
                       <Text style={styles.dateLabel}>Check-out</Text>
-                      <Text style={styles.dateValue}>{formatDate(booking.checkOut)}</Text>
+                      <Text style={styles.dateValue}>
+                        {formatDate(booking.checkOut)}
+                      </Text>
                     </View>
                   </View>
 
                   <View style={styles.cardFooter}>
                     <Text style={styles.guests}>
-                      👥 {booking.guests} guest{booking.guests !== 1 ? 's' : ''}
+                      👥 {booking.guests} guest{booking.guests !== 1 ? "s" : ""}
                     </Text>
                     <Text style={styles.totalPrice}>
                       ₦{(booking.totalAmount ?? 0).toLocaleString()}
@@ -185,9 +220,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
 
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
     backgroundColor: Colors.white,
@@ -208,8 +243,8 @@ const styles = StyleSheet.create({
   // Guest / logged-out
   guestContainer: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 32,
   },
   guestIcon: { fontSize: 64, marginBottom: 20 },
@@ -218,21 +253,21 @@ const styles = StyleSheet.create({
     fontSize: FontSizes.xl,
     color: Colors.text,
     marginBottom: 10,
-    textAlign: 'center',
+    textAlign: "center",
   },
   guestSubtitle: {
     fontFamily: Fonts.notoSans,
     fontSize: FontSizes.sm,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 20,
   },
 
   // Empty state
   empty: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 32,
   },
   emptyIcon: { fontSize: 64, marginBottom: 16 },
@@ -246,7 +281,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.notoSans,
     fontSize: FontSizes.sm,
     color: Colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
 
   // List
@@ -256,25 +291,25 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.white,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: Colors.border,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 10,
     elevation: 3,
   },
   cardImage: {
-    width: '100%',
+    width: "100%",
     height: 160,
   },
   statusBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 12,
     left: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -301,9 +336,9 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
   },
   datesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "wrap",
     marginTop: 10,
     gap: 10,
   },
@@ -325,9 +360,9 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   cardFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 10,
     paddingTop: 10,
     borderTopWidth: 1,
