@@ -22,6 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import Navbar from "../Navbar/Navbar";
 import Footer from "../Footer/Footer";
+import { PageLoader } from "../common/Loader";
 import {
   ScrollReveal,
   StaggerContainer,
@@ -53,7 +54,7 @@ const CancelBookingModal = ({ isOpen, onClose, onConfirm, bookingTitle }) => {
                 <FaExclamationTriangle className="text-red-500 text-3xl" />
               </div>
 
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-3">
                 Cancel Booking?
               </h3>
 
@@ -242,7 +243,7 @@ const BookingCard = ({ booking, onViewProperty, onCancelBooking, index }) => {
 
           {/* Property Info on Image */}
           <div className="absolute bottom-4 left-4 right-4 z-10">
-            <h3 className="text-xl font-bold text-white mb-2 line-clamp-1">
+            <h3 className="font-Cormorant text-2xl font-semibold text-white mb-2 line-clamp-1">
               {booking.propertyTitle ||
                 `Booking #${booking._id?.substring(0, 8) || booking.id?.substring(0, 8) || "N/A"}`}
             </h3>
@@ -684,17 +685,8 @@ const MyBookings = () => {
                 animate={{ opacity: 1 }}
                 className="flex items-center justify-center py-20"
               >
-                <div className="text-center bg-white rounded-3xl p-12 shadow-xl border border-gray-100">
-                  <div className="relative w-20 h-20 mx-auto mb-6">
-                    <div className="absolute inset-0 rounded-full border-4 border-primary-200"></div>
-                    <div className="absolute inset-0 rounded-full border-4 border-primary-600 border-t-transparent animate-spin"></div>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Loading Your Bookings
-                  </h3>
-                  <p className="text-gray-500">
-                    Please wait while we fetch your reservations...
-                  </p>
+                <div className="text-center py-8">
+                  <PageLoader label="Loading your bookings" />
                 </div>
               </motion.div>
             )}
@@ -708,7 +700,7 @@ const MyBookings = () => {
                       <FaTimesCircle className="text-red-500 text-xl" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-bold text-red-800 mb-2">
+                      <h3 className="font-Cormorant text-2xl font-semibold text-red-800 mb-2">
                         Unable to Load Bookings
                       </h3>
                       <p className="text-red-600 mb-4">{error}</p>
@@ -736,7 +728,7 @@ const MyBookings = () => {
                       <div className="w-24 h-24 bg-gradient-to-br from-primary-100 to-primary-200 rounded-full flex items-center justify-center mx-auto mb-6">
                         <FaCalendarAlt className="text-primary-500 text-4xl" />
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-3">
                         No Bookings Yet
                       </h3>
                       <p className="text-gray-500 text-lg mb-8 leading-relaxed">
@@ -767,7 +759,7 @@ const MyBookings = () => {
                       <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
                         <FaFilter className="text-gray-400 text-2xl" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-3">
+                      <h3 className="font-Cormorant text-2xl font-semibold text-neutral-900 mb-3">
                         No {filter !== "all" ? filter : ""} bookings found
                       </h3>
                       <p className="text-gray-500 mb-6">

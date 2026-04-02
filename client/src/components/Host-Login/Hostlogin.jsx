@@ -6,6 +6,7 @@ import { HiMail, HiLockClosed } from "react-icons/hi";
 import { HiHome } from "react-icons/hi2";
 import { navigateToHome } from "../../utils/navigation";
 import useScrollToTop from "../../hooks/useScrollToTop";
+import { ButtonLoader } from "../common/Loader";
 import { toast } from "sonner";
 import { useAPI } from "../../contexts/APIContext";
 import GoogleAuth from "../../config/googleAuth";
@@ -333,7 +334,7 @@ const Hostlogin = () => {
                 >
                   {isLoading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <ButtonLoader />
                       <span>Signing In...</span>
                     </>
                   ) : (
@@ -365,7 +366,7 @@ const Hostlogin = () => {
                 >
                   {isGoogleLoading ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+                      <ButtonLoader dark />
                       <span>Connecting...</span>
                     </>
                   ) : (

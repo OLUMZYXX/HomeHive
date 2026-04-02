@@ -13,7 +13,7 @@ const PaymentSuccess = ({ booking }) => {
         <span className='text-white text-3xl'>✓</span>
       </div>
 
-      <h2 className='text-2xl font-bold text-green-600 mb-4'>
+      <h2 className='font-Cormorant text-4xl font-semibold text-green-700 mb-4'>
         Payment Successful!
       </h2>
 

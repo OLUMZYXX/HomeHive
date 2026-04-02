@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { FaMapMarkerAlt, FaSearch } from "react-icons/fa";
+import { InlineLoader } from "./Loader";
 
 const MapboxAddressAutocomplete = ({
   value,
@@ -125,7 +126,7 @@ const MapboxAddressAutocomplete = ({
         />
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           {isLoading ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary-500"></div>
+            <InlineLoader color="#737373" />
           ) : (
             <FaSearch className="text-primary-400" />
           )}

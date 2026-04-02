@@ -10,6 +10,7 @@ import {
 import { HiSparkles } from 'react-icons/hi'
 import { useAPI } from '../../contexts/APIContext'
 import { toast } from '../../utils/toast.jsx'
+import { PageLoader, ButtonLoader } from '../common/Loader'
 
 const PremiumUpgrade = () => {
   const { upgradeToPremium, getPremiumStatus, user } = useAPI()
@@ -123,12 +124,7 @@ const PremiumUpgrade = () => {
   if (statusLoading) {
     return (
       <div className='bg-white rounded-2xl shadow-lg p-6 flex items-center justify-center'>
-        <div className='flex items-center space-x-3'>
-          <FaSpinner className='animate-spin text-primary-600 text-xl' />
-          <span className='text-primary-600 font-medium'>
-            Checking premium status...
-          </span>
-        </div>
+        <PageLoader label="Checking status" />
       </div>
     )
   }
@@ -320,7 +316,7 @@ const PremiumUpgrade = () => {
                 >
                   {loading ? (
                     <>
-                      <FaSpinner className='animate-spin' />
+                      <ButtonLoader />
                       <span>Processing...</span>
                     </>
                   ) : (

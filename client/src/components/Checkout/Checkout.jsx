@@ -14,6 +14,7 @@ import { IoIosArrowBack } from "react-icons/io";
 import { RiArrowDropDownLine, RiSecurePaymentLine } from "react-icons/ri";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { ButtonLoader } from "../common/Loader";
 import image from "../../assets/Apt2.webp";
 import { useNavigate, useLocation } from "react-router-dom";
 import useScrollToTop from "../../hooks/useScrollToTop";
@@ -362,8 +363,8 @@ const Checkout = () => {
             >
               <IoIosArrowBack className="text-lg sm:text-2xl text-primary-700" />
             </button>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent">
-              Complete Your Booking
+            <h1 className="font-Cormorant text-3xl sm:text-4xl lg:text-5xl font-semibold text-neutral-900 leading-tight">
+              Complete Your <em className="not-italic text-amber-500">Booking</em>
             </h1>
           </div>
         </div>
@@ -376,7 +377,7 @@ const Checkout = () => {
             <div className="bg-white/80 backdrop-blur-sm rounded-xl lg:rounded-2xl shadow-soft p-4 sm:p-6 lg:p-8 border border-primary-200">
               <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
                 <FaCalendarAlt className="text-lg sm:text-xl lg:text-2xl text-primary-600" />
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-primary-800">
+                <h2 className="font-Cormorant text-2xl lg:text-3xl font-semibold text-neutral-900">
                   Your Trip Details
                 </h2>
               </div>
@@ -534,7 +535,7 @@ const Checkout = () => {
                     />
                   </svg>
                 </div>
-                <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-primary-800">
+                <h2 className="font-Cormorant text-2xl lg:text-3xl font-semibold text-neutral-900">
                   Your Accommodation
                 </h2>
               </div>
@@ -549,7 +550,7 @@ const Checkout = () => {
                 </div>
                 <div className="flex-1 space-y-3">
                   <div>
-                    <h3 className="text-xl font-bold text-primary-800 mb-1">
+                    <h3 className="font-Cormorant text-2xl font-semibold text-neutral-900 mb-1 leading-snug">
                       {home.name || "Accommodation"}
                     </h3>
                     <p className="text-primary-600 font-medium">
@@ -599,7 +600,7 @@ const Checkout = () => {
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft p-8 border border-primary-200">
               <div className="flex items-center gap-3 mb-6">
                 <RiSecurePaymentLine className="text-2xl text-primary-600" />
-                <h2 className="text-2xl font-bold text-primary-800">
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900">
                   Choose Payment Method
                 </h2>
               </div>
@@ -684,7 +685,7 @@ const Checkout = () => {
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-soft p-8 border border-primary-200">
               <div className="flex items-center gap-3 mb-6">
                 <FaCreditCard className="text-2xl text-primary-600" />
-                <h2 className="text-2xl font-bold text-primary-800">
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900">
                   Select Payment Provider
                 </h2>
               </div>
@@ -866,7 +867,7 @@ const Checkout = () => {
               >
                 {isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <ButtonLoader />
                     Processing...
                   </>
                 ) : (
@@ -888,7 +889,7 @@ const Checkout = () => {
               <div className="mb-6 lg:hidden">
                 <div className="flex items-center gap-3 mb-4">
                   <FaCalendarAlt className="text-lg text-primary-600" />
-                  <h3 className="text-lg font-bold text-primary-800">
+                  <h3 className="font-Cormorant text-xl font-semibold text-neutral-900">
                     Trip Dates
                   </h3>
                 </div>
@@ -927,7 +928,7 @@ const Checkout = () => {
                   className="rounded-2xl w-full h-48 object-cover shadow-medium mb-4 hover:shadow-strong transition-all duration-300"
                 />
                 <div className="space-y-2">
-                  <h3 className="text-xl font-bold text-primary-800">
+                  <h3 className="font-Cormorant text-2xl font-semibold text-neutral-900">
                     {home.name || "Accommodation"}
                   </h3>
                   <p className="text-primary-600 font-medium">
@@ -981,7 +982,7 @@ const Checkout = () => {
 
               {/* Enhanced Price Breakdown - Last */}
               <div className="space-y-4 mb-6">
-                <h3 className="text-xl font-bold text-primary-800">
+                <h3 className="font-Cormorant text-2xl font-semibold text-neutral-900">
                   Price Details
                 </h3>
 
@@ -1083,7 +1084,7 @@ const Checkout = () => {
         {/* Additional Security Section - Hidden on mobile */}
         <div className="hidden md:block bg-white/70 backdrop-blur-sm rounded-2xl shadow-soft p-8 border border-primary-200 mb-8">
           <div className="text-center">
-            <h3 className="text-2xl font-bold text-primary-800 mb-4">
+            <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-4">
               Secure & Protected Booking
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

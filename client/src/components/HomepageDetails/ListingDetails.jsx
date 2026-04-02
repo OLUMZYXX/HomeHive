@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Navbar from '../Navbar/Navbar'
+import { PageLoader } from '../common/Loader'
 import livingroom from '../../assets/livning room.jpg'
 import bedroom from '../../assets/bedroom.jpg'
 import dining from '../../assets/dining.jpg'
@@ -240,10 +241,7 @@ const ListingDetails = () => {
       <div className="min-h-screen bg-white pt-20 flex flex-col">
         <Navbar />
         <div className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <div className="w-8 h-8 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm text-neutral-500">Loading property…</p>
-          </div>
+          <PageLoader label="Loading property" />
         </div>
       </div>
     )
@@ -275,33 +273,41 @@ const ListingDetails = () => {
       <Navbar />
 
       <main className="flex-grow">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* ── Back + Title ─────────────────────────────────── */}
-          <div className="mb-6">
+          <div className="mb-8">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-200 mb-4 group"
+              className="flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900 transition-colors duration-200 mb-6 group"
             >
               <IoIosArrowBack className="group-hover:-translate-x-0.5 transition-transform duration-200" />
               Back to listings
             </button>
 
+            {/* Amber accent + label */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-px bg-amber-500" />
+              <span className="text-xs font-semibold tracking-[0.2em] text-amber-600 uppercase">
+                {prop.category || prop.propertyType || 'Property'}
+              </span>
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
-                <h1 className="font-Cormorant text-4xl sm:text-5xl font-semibold text-neutral-900 leading-tight mb-2">
+                <h1 className="font-Cormorant text-4xl sm:text-5xl lg:text-6xl font-semibold text-neutral-900 leading-tight mb-3">
                   {prop.title || prop.name}
                 </h1>
                 <div className="flex flex-wrap items-center gap-3">
                   <StarRow rating={prop.rating || prop.averageRating} reviewCount={prop.reviewCount || prop.totalReviews} />
                   <span className="text-neutral-300">·</span>
-                  <span className="text-sm text-neutral-600 underline cursor-pointer hover:text-neutral-900">
+                  <span className="text-sm text-neutral-600 hover:text-neutral-900 cursor-pointer transition-colors">
                     {prop.location || prop.city}
                   </span>
                   {prop.badge && (
                     <>
                       <span className="text-neutral-300">·</span>
-                      <span className="text-xs font-semibold text-amber-600 uppercase tracking-wide">{prop.badge}</span>
+                      <span className="text-xs font-semibold text-amber-600 uppercase tracking-widest border border-amber-300 px-2 py-0.5">{prop.badge}</span>
                     </>
                   )}
                 </div>
@@ -447,59 +453,71 @@ const ListingDetails = () => {
 
               {/* Property meta */}
               <div className="pb-8 border-b border-neutral-200">
-                <p className="text-neutral-600 text-base mb-1">
-                  {prop.text || [
+                <div className="flex flex-wrap gap-4 text-sm text-neutral-600">
+                  {(prop.text || [
                     prop.bedrooms && `${prop.bedrooms} bed${prop.bedrooms > 1 ? 's' : ''}`,
                     prop.bathrooms && `${prop.bathrooms} bath${prop.bathrooms > 1 ? 's' : ''}`,
                     prop.propertyType || prop.category,
-                  ].filter(Boolean).join(' · ')}
-                </p>
-                {prop.category && (
-                  <span className="inline-block text-xs font-semibold uppercase tracking-widest text-amber-600 border border-amber-300 px-2 py-0.5 mt-1">
-                    {prop.category}
-                  </span>
-                )}
+                  ].filter(Boolean).join(' · '))}
+                </div>
               </div>
 
               {/* Feature highlights */}
-              <div className="space-y-5 pb-8 border-b border-neutral-200">
-                <div className="flex items-start gap-4">
-                  <IoHomeOutline className="text-2xl text-neutral-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-neutral-900">
-                      {prop.category
-                        ? prop.category.charAt(0).toUpperCase() + prop.category.slice(1)
-                        : 'Entire home'}
-                    </p>
-                    <p className="text-sm text-neutral-500 mt-0.5">You'll have the place to yourself</p>
+              <div className="pb-8 border-b border-neutral-200">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 border border-neutral-200 flex items-center justify-center flex-shrink-0">
+                      <IoHomeOutline className="text-lg text-neutral-700" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-neutral-900 text-sm">
+                        {prop.category
+                          ? prop.category.charAt(0).toUpperCase() + prop.category.slice(1)
+                          : 'Entire home'}
+                      </p>
+                      <p className="text-xs text-neutral-500 mt-0.5">You'll have the place to yourself</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <WiStars className="text-2xl text-neutral-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-neutral-900">Enhanced Clean</p>
-                    <p className="text-sm text-neutral-500 mt-0.5">This host committed to enhanced cleaning process</p>
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 border border-neutral-200 flex items-center justify-center flex-shrink-0">
+                      <WiStars className="text-lg text-neutral-700" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-neutral-900 text-sm">Enhanced Clean</p>
+                      <p className="text-xs text-neutral-500 mt-0.5">Host committed to enhanced cleaning</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <CiMoneyCheck1 className="text-2xl text-neutral-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-neutral-900">Self check-in</p>
-                    <p className="text-sm text-neutral-500 mt-0.5">Check yourself in with the keypad</p>
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 border border-neutral-200 flex items-center justify-center flex-shrink-0">
+                      <CiMoneyCheck1 className="text-lg text-neutral-700" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-neutral-900 text-sm">Self check-in</p>
+                      <p className="text-xs text-neutral-500 mt-0.5">Check yourself in with the keypad</p>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <MdOutlineCalendarToday className="text-xl text-neutral-400 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-neutral-900">Free cancellation before Feb 25</p>
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 border border-neutral-200 flex items-center justify-center flex-shrink-0">
+                      <MdOutlineCalendarToday className="text-lg text-neutral-700" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-neutral-900 text-sm">Free cancellation</p>
+                      <p className="text-xs text-neutral-500 mt-0.5">Cancel before Feb 25 for a full refund</p>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Description */}
               <div className="pb-8 border-b border-neutral-200">
-                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-4">About this place</h2>
-                <p className="text-neutral-600 leading-relaxed">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-px bg-amber-500" />
+                  <span className="text-xs font-semibold tracking-[0.2em] text-amber-600 uppercase">About</span>
+                </div>
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-4">
+                  About this <em className="not-italic text-amber-500">place</em>
+                </h2>
+                <p className="text-neutral-600 leading-relaxed text-[15px]">
                   {prop.description || prop.about ||
                     `Experience this beautiful ${prop.propertyType || 'property'} in ${prop.city || prop.location || 'a prime location'}. This space offers comfortable accommodation with premium amenities for your stay.`}
                 </p>
@@ -507,31 +525,45 @@ const ListingDetails = () => {
 
               {/* Where you'll sleep */}
               <div className="pb-8 border-b border-neutral-200">
-                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">Where you'll sleep</h2>
-                <div className="border border-neutral-200 p-5 max-w-xs">
-                  <img src={bedroom} alt="Bedroom" className="w-full h-40 object-cover mb-4" loading="lazy" />
-                  <p className="font-semibold text-neutral-900">Bedroom</p>
-                  <p className="text-sm text-neutral-500 mt-0.5">1 queen size bed</p>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-px bg-amber-500" />
+                  <span className="text-xs font-semibold tracking-[0.2em] text-amber-600 uppercase">Rooms</span>
+                </div>
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
+                  Where you'll <em className="not-italic text-amber-500">sleep</em>
+                </h2>
+                <div className="border border-neutral-200 overflow-hidden max-w-xs hover:border-neutral-400 transition-colors duration-200">
+                  <img src={bedroom} alt="Bedroom" className="w-full h-40 object-cover" loading="lazy" />
+                  <div className="p-4">
+                    <p className="font-semibold text-neutral-900 text-sm">Bedroom</p>
+                    <p className="text-xs text-neutral-500 mt-0.5">1 queen size bed</p>
+                  </div>
                 </div>
               </div>
 
               {/* Amenities */}
               <div className="pb-8 border-b border-neutral-200">
-                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">What this place offers</h2>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-px bg-amber-500" />
+                  <span className="text-xs font-semibold tracking-[0.2em] text-amber-600 uppercase">Amenities</span>
+                </div>
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
+                  What this place <em className="not-italic text-amber-500">offers</em>
+                </h2>
                 {prop.amenities && prop.amenities.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {prop.amenities.map((a, i) => (
-                      <div key={i} className="flex items-center gap-3 text-neutral-700 text-sm">
-                        <div className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0" />
+                      <div key={i} className="flex items-center gap-3 p-3 border border-neutral-100 text-neutral-700 text-sm hover:border-neutral-300 transition-colors duration-200">
+                        <div className="w-1.5 h-1.5 bg-amber-500 flex-shrink-0" />
                         {a}
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {STATIC_AMENITIES.map(({ icon: Icon, label }) => (
-                      <div key={label} className="flex items-center gap-3 p-3 border border-neutral-200 text-sm text-neutral-700 hover:border-neutral-400 transition-colors duration-200">
-                        <Icon className="text-neutral-400 flex-shrink-0" />
+                      <div key={label} className="flex items-center gap-3 p-3 border border-neutral-200 text-sm text-neutral-700 hover:border-neutral-900 transition-colors duration-200">
+                        <Icon className="text-neutral-500 flex-shrink-0" />
                         {label}
                       </div>
                     ))}
@@ -541,7 +573,13 @@ const ListingDetails = () => {
 
               {/* Map */}
               <div className="pb-8">
-                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">Where you'll be</h2>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-6 h-px bg-amber-500" />
+                  <span className="text-xs font-semibold tracking-[0.2em] text-amber-600 uppercase">Location</span>
+                </div>
+                <h2 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
+                  Where you'll <em className="not-italic text-amber-500">be</em>
+                </h2>
                 <div className="overflow-hidden border border-neutral-200 mb-4" style={{ height: 300 }}>
                   <MapboxMap
                     center={[prop.locationLng || 3.3792, prop.locationLat || 6.5244]}
@@ -553,15 +591,15 @@ const ListingDetails = () => {
                     style={{ height: '300px' }}
                   />
                 </div>
-                <p className="font-semibold text-neutral-900 mb-1">{prop.location}</p>
+                <p className="font-semibold text-neutral-900 mb-1 text-sm">{prop.location}</p>
                 <p className="text-sm text-neutral-500 leading-relaxed">
                   Explore the vibrant area of {prop.location}. Enjoy local attractions, restaurants, and great transport links nearby.
                 </p>
               </div>
 
               {/* Report */}
-              <div className="pb-4">
-                <button className="flex items-center gap-2 text-sm text-neutral-500 underline hover:text-neutral-900 transition-colors duration-200">
+              <div className="pt-2 pb-4">
+                <button className="flex items-center gap-2 text-xs text-neutral-400 hover:text-neutral-700 transition-colors duration-200 border-b border-dashed border-neutral-300 pb-0.5 w-fit">
                   <FaRegFlag className="text-xs" /> Report this listing
                 </button>
               </div>
@@ -569,19 +607,21 @@ const ListingDetails = () => {
 
             {/* ── Right: Booking Card ──────────────────────── */}
             <div className="lg:col-span-1 mt-10 lg:mt-0">
-              <div className="border border-neutral-200 p-6 lg:sticky lg:top-28 shadow-sm">
-                {/* Price */}
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="font-Cormorant text-4xl font-semibold text-neutral-900">{priceDisplay}</span>
-                  <span className="text-sm text-neutral-500">/night</span>
+              <div className="border border-neutral-200 lg:sticky lg:top-28">
+                {/* Card header */}
+                <div className="border-b border-neutral-200 px-6 pt-6 pb-5">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span className="font-Cormorant text-4xl font-semibold text-neutral-900">{priceDisplay}</span>
+                    <span className="text-sm text-neutral-500">/ night</span>
+                  </div>
+                  <StarRow rating={prop.rating || prop.averageRating} reviewCount={prop.reviewCount || prop.totalReviews} />
                 </div>
-                <StarRow rating={prop.rating || prop.averageRating} reviewCount={prop.reviewCount || prop.totalReviews} />
 
-                <div className="mt-5 space-y-3">
+                <div className="px-6 py-5 space-y-3">
                   {/* Date grid */}
                   <div className="grid grid-cols-2 border border-neutral-300">
                     <div className="p-3 border-r border-neutral-300">
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">Check-in</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1.5">Check-in</label>
                       <input
                         type="date"
                         value={checkIn}
@@ -592,7 +632,7 @@ const ListingDetails = () => {
                       />
                     </div>
                     <div className="p-3">
-                      <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">Check-out</label>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1.5">Check-out</label>
                       <input
                         type="date"
                         value={checkout}
@@ -606,7 +646,7 @@ const ListingDetails = () => {
 
                   {/* Guests */}
                   <div className="border border-neutral-300 p-3">
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1">Guests</label>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-neutral-500 mb-1.5">Guests</label>
                     <input
                       type="number"
                       min="1"
@@ -617,30 +657,50 @@ const ListingDetails = () => {
                       style={{ fontSize: 16 }}
                     />
                   </div>
+
+                  {/* Book button */}
+                  <button
+                    onClick={handleReservation}
+                    className="w-full py-4 bg-neutral-900 text-white text-sm font-semibold tracking-[0.1em] uppercase hover:bg-neutral-800 active:scale-[0.99] transition-all duration-200"
+                  >
+                    Reserve
+                  </button>
+                  <p className="text-center text-xs text-neutral-400">You won't be charged yet</p>
+
+                  {/* Price breakdown hint */}
+                  {checkIn && checkout && (
+                    <div className="pt-3 border-t border-neutral-200">
+                      <div className="flex justify-between text-sm text-neutral-600 mb-2">
+                        <span>{priceDisplay} × 1 night</span>
+                        <span>{priceDisplay}</span>
+                      </div>
+                      <div className="flex justify-between text-sm font-semibold text-neutral-900 pt-2 border-t border-neutral-200">
+                        <span>Total</span>
+                        <span>{priceDisplay}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Book button */}
-                <button
-                  onClick={handleReservation}
-                  className="w-full mt-4 py-3.5 bg-neutral-900 text-white text-sm font-semibold tracking-wide hover:bg-neutral-800 active:scale-[0.99] transition-all duration-200"
-                >
-                  Reserve
-                </button>
-                <p className="text-center text-xs text-neutral-400 mt-3">You won't be charged yet</p>
+                {/* Card footer */}
+                <div className="border-t border-neutral-100 px-6 py-4 bg-neutral-50">
+                  <p className="text-xs text-neutral-500 text-center">
+                    Free cancellation available · No hidden fees
+                  </p>
+                </div>
+              </div>
 
-                {/* Price breakdown hint */}
-                {checkIn && checkout && (
-                  <div className="mt-4 pt-4 border-t border-neutral-200">
-                    <div className="flex justify-between text-sm text-neutral-600">
-                      <span>{priceDisplay} × 1 night</span>
-                      <span>{priceDisplay}</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-semibold text-neutral-900 mt-2 pt-2 border-t border-neutral-200">
-                      <span>Total</span>
-                      <span>{priceDisplay}</span>
-                    </div>
+              {/* Host info teaser */}
+              <div className="mt-4 border border-neutral-200 p-5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-neutral-900 flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm font-semibold">H</span>
                   </div>
-                )}
+                  <div>
+                    <p className="text-xs font-semibold text-neutral-900 uppercase tracking-wider">Hosted by</p>
+                    <p className="text-sm text-neutral-600 mt-0.5">{prop.host?.name || prop.hostName || 'HomeHive Host'}</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

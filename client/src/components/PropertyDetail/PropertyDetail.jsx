@@ -561,7 +561,7 @@ const PropertyDetail = () => {
             <div className="w-20 h-20 bg-error-100 rounded-full flex items-center justify-center mx-auto mb-6">
               <FaTimes className="text-error-600 text-3xl" />
             </div>
-            <h2 className="text-2xl font-bold text-error-800 mb-3">
+            <h2 className="font-Cormorant text-3xl font-semibold text-red-800 mb-3">
               Property Not Found
             </h2>
             <p className="text-error-600 mb-6 leading-relaxed">
@@ -632,7 +632,7 @@ const PropertyDetail = () => {
                     {property.location?.state || property.address?.state}
                   </span>
                 </div>
-                <h1 className="text-3xl lg:text-4xl font-bold text-primary-900 mb-3 leading-tight">
+                <h1 className="font-Cormorant text-4xl lg:text-5xl font-semibold text-neutral-900 mb-3 leading-tight">
                   {property.title}
                 </h1>
                 <div className="flex items-center gap-6 flex-wrap">
@@ -737,7 +737,7 @@ const PropertyDetail = () => {
             {/* Property Details */}
             <div className="bg-white rounded-2xl p-6 shadow-soft border border-primary-100 space-y-6">
               <div>
-                <h3 className="text-2xl font-bold text-primary-900 mb-4">
+                <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-4">
                   About this place
                 </h3>
                 <p className="text-primary-700 leading-relaxed text-base">
@@ -748,7 +748,7 @@ const PropertyDetail = () => {
               {/* Amenities */}
               {property.amenities?.length > 0 && (
                 <div>
-                  <h3 className="text-2xl font-bold text-primary-900 mb-6">
+                  <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
                     What this place offers
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -774,7 +774,7 @@ const PropertyDetail = () => {
 
               {/* Property Features */}
               <div>
-                <h3 className="text-2xl font-bold text-primary-900 mb-6">
+                <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
                   Property Features
                 </h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -830,7 +830,7 @@ const PropertyDetail = () => {
 
               {/* Location & Map */}
               <div className="bg-white rounded-2xl p-6 shadow-soft border border-primary-100">
-                <h3 className="text-2xl font-bold text-primary-900 mb-6">
+                <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
                   Location
                 </h3>
                 <div className="space-y-4">

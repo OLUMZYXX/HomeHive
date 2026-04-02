@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAPI } from "../../contexts/APIContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
 import { FaSearch, FaHeart } from "react-icons/fa";
+import { InlineLoader } from "../common/Loader";
 import Footer from "../Footer/Footer";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import { PropertyCardSkeleton } from "../common/SkeletonLoaders";
@@ -323,8 +324,8 @@ const Listings = () => {
           )}
 
           {loadingProperties && properties.length > 0 && (
-            <div className="text-center mt-12">
-              <div className="inline-block w-5 h-5 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin" />
+            <div className="flex justify-center mt-12">
+              <InlineLoader />
             </div>
           )}
         </div>

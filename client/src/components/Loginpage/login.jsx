@@ -6,6 +6,7 @@ import loginImg from "../../assets/login.jpg";
 import { toast } from "../../utils/toast.jsx";
 import { navigateToHome } from "../../utils/navigation";
 import useScrollToTop from "../../hooks/useScrollToTop";
+import { ButtonLoader } from "../common/Loader";
 import { useAPI } from "../../contexts/APIContext";
 import { FcGoogle } from "react-icons/fc";
 import GoogleAuth from "../../config/googleAuth";
@@ -223,7 +224,7 @@ const Login = () => {
                 className="w-full bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-white text-sm font-medium tracking-[0.15em] uppercase py-4 flex items-center justify-center gap-2 transition-colors duration-200"
               >
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <ButtonLoader />
                 ) : (
                   <>
                     Sign In

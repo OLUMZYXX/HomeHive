@@ -3,6 +3,7 @@ import { useFlutterwave, closePaymentModal } from "flutterwave-react-v3";
 import { toast } from "sonner";
 import { FaLock } from "react-icons/fa";
 import axiosInstance from "../../config/axios";
+import { ButtonLoader } from "../common/Loader";
 
 const FlutterwaveCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
   const [processing, setProcessing] = useState(false);
@@ -189,7 +190,7 @@ const FlutterwaveCheckoutForm = ({ bookingData, onPaymentSuccess }) => {
         >
           {processing ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              <ButtonLoader />
               Processing Payment...
             </>
           ) : (

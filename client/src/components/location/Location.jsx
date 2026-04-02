@@ -5,6 +5,7 @@ import { FaLocationDot } from "react-icons/fa6";
 import { AiFillPropertySafety } from "react-icons/ai";
 import { HiChevronDown } from "react-icons/hi";
 import { toast } from "sonner";
+import { ButtonLoader } from "../common/Loader";
 import { useAPI } from "../../contexts/APIContext";
 
 const Location = () => {
@@ -234,7 +235,7 @@ const Location = () => {
             >
               {isSearching || loading ? (
                 <>
-                  <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <ButtonLoader />
                   Searching…
                 </>
               ) : (

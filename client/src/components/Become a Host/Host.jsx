@@ -483,12 +483,10 @@ const Host = () => {
             {/* Left Content */}
             <div className="text-center lg:text-left space-y-8">
               <div>
-                <h1 className="font-NotoSans text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6">
+                <h1 className="font-Cormorant text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-semibold leading-[1.05] mb-6">
                   List your
-                  <span className="block text-transparent bg-gradient-to-r from-primary-200 to-white bg-clip-text">
-                    Property
-                  </span>
-                  on Homehive
+                  <span className="block text-amber-300">Property</span>
+                  on HomeHive
                 </h1>
                 <p className="text-xl lg:text-2xl text-primary-100 leading-relaxed">
                   Whether hosting is your side hustle or your main business,
@@ -568,11 +566,8 @@ const Host = () => {
                 Host Protection
               </span>
             </div>
-            <h2 className="font-NotoSans text-4xl sm:text-5xl lg:text-6xl font-bold text-primary-800 mb-6">
-              List with
-              <span className="text-transparent bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text ml-3">
-                Peace of Mind
-              </span>
+            <h2 className="font-Cormorant text-5xl sm:text-6xl font-semibold text-neutral-900 leading-tight mb-6">
+              List with <em className="not-italic text-amber-500">Peace of Mind</em>
             </h2>
           </div>
 
@@ -614,8 +609,8 @@ const Host = () => {
       <section className="py-16 lg:py-24 bg-gradient-to-br from-neutral-100 to-primary-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 md:max-w-screen-md xl:max-w-screen-xl">
           <div className="text-center mb-16">
-            <h2 className="font-NotoSans text-4xl sm:text-5xl font-bold text-primary-800 mb-6">
-              Get Noticed from Day One
+            <h2 className="font-Cormorant text-5xl font-semibold text-neutral-900 mb-6">
+              Get Noticed from <em className="not-italic text-amber-500">Day One</em>
             </h2>
           </div>
 
@@ -662,8 +657,8 @@ const Host = () => {
                 Host Stories
               </span>
             </div>
-            <h2 className="font-NotoSans text-4xl sm:text-5xl font-bold text-primary-800 mb-6">
-              Real Stories from Homehive Hosts
+            <h2 className="font-Cormorant text-5xl font-semibold text-neutral-900 mb-6">
+              Real Stories from <em className="not-italic text-amber-500">HomeHive Hosts</em>
             </h2>
           </div>
 
@@ -712,8 +707,8 @@ const Host = () => {
       <section className="py-16 lg:py-24 bg-gradient-to-br from-neutral-100 to-primary-100">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 md:max-w-screen-md xl:max-w-screen-xl">
           <div className="text-center mb-16">
-            <h2 className="font-NotoSans text-4xl sm:text-5xl font-bold text-primary-800 mb-6">
-              Your Questions Answered
+            <h2 className="font-Cormorant text-5xl font-semibold text-neutral-900 mb-6">
+              Your Questions <em className="not-italic text-amber-500">Answered</em>
             </h2>
           </div>
 
@@ -774,11 +769,9 @@ const Host = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 md:max-w-screen-md xl:max-w-screen-xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div className="text-center lg:text-left">
-              <h2 className="font-NotoSans text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              <h2 className="font-Cormorant text-5xl sm:text-6xl font-semibold leading-[1.05] mb-6">
                 List your property and start
-                <span className="block text-transparent bg-gradient-to-r from-primary-200 to-white bg-clip-text">
-                  hosting with ease
-                </span>
+                <span className="block text-amber-300">hosting with ease</span>
               </h2>
             </div>
 

@@ -15,6 +15,7 @@ import {
   FaClock,
 } from 'react-icons/fa'
 import { toast } from 'sonner'
+import { PageLoader } from '../common/Loader'
 
 const BookingConfirmation = () => {
   const location = useLocation()
@@ -87,13 +88,8 @@ const BookingConfirmation = () => {
 
   if (loading) {
     return (
-      <div className='min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-neutral-25'>
-        <div className='text-center'>
-          <div className='animate-spin rounded-full h-16 w-16 border-4 border-primary-200 border-t-primary-600 mx-auto mb-4'></div>
-          <p className='text-primary-700 font-medium'>
-            Loading booking details...
-          </p>
-        </div>
+      <div className='min-h-screen flex items-center justify-center bg-white'>
+        <PageLoader label="Loading booking" />
       </div>
     )
   }
@@ -104,7 +100,7 @@ const BookingConfirmation = () => {
         <div className='text-center max-w-md mx-auto px-4'>
           <div className='bg-neutral-25 rounded-3xl shadow-strong p-8 border border-neutral-200'>
             <div className='text-error-600 text-6xl mb-4'>❌</div>
-            <h2 className='text-2xl font-bold text-error-700 mb-4'>
+            <h2 className='font-Cormorant text-3xl font-semibold text-red-700 mb-4'>
               Booking Not Found
             </h2>
             <p className='text-error-600 mb-6'>
@@ -130,8 +126,8 @@ const BookingConfirmation = () => {
           <div className='mb-8 animate-scaleIn'>
             <FaCheckCircle className='text-8xl mx-auto mb-6 animate-popup' />
           </div>
-          <h1 className='text-4xl lg:text-6xl font-bold mb-6 animate-slideUp'>
-            Booking Confirmed! 🎉
+          <h1 className='font-Cormorant text-5xl lg:text-7xl font-semibold mb-6 animate-slideUp leading-tight'>
+            Booking <em className="not-italic text-amber-400">Confirmed!</em> 🎉
           </h1>
           <p className='text-xl lg:text-2xl text-success-100 mb-8 animate-fadeIn'>
             Your reservation has been successfully submitted
@@ -176,7 +172,7 @@ const BookingConfirmation = () => {
           <div className='lg:col-span-2 space-y-8'>
             {/* Property Information */}
             <div className='bg-neutral-25 rounded-3xl p-8 shadow-soft border border-neutral-150'>
-              <h2 className='text-3xl font-bold text-neutral-800 mb-6'>
+              <h2 className='font-Cormorant text-4xl font-semibold text-neutral-900 mb-6'>
                 Your Booking
               </h2>
               <div className='flex gap-6'>
@@ -188,7 +184,7 @@ const BookingConfirmation = () => {
                   className='w-40 h-40 rounded-2xl object-cover shadow-medium'
                 />
                 <div className='flex-1'>
-                  <h3 className='text-2xl font-bold text-neutral-800 mb-3'>
+                  <h3 className='font-Cormorant text-3xl font-semibold text-neutral-900 mb-3 leading-snug'>
                     {bookingDetails.propertyTitle}
                   </h3>
                   <div className='flex items-center gap-3 text-neutral-600 mb-4'>
@@ -209,7 +205,7 @@ const BookingConfirmation = () => {
 
             {/* Booking Timeline */}
             <div className='bg-neutral-25 rounded-3xl p-8 shadow-soft border border-neutral-150'>
-              <h3 className='text-2xl font-bold text-neutral-800 mb-6'>
+              <h3 className='font-Cormorant text-3xl font-semibold text-neutral-900 mb-6'>
                 Booking Timeline
               </h3>
               <div className='space-y-6'>
@@ -264,7 +260,7 @@ const BookingConfirmation = () => {
 
             {/* Next Steps */}
             <div className='bg-gradient-to-br from-info-50 to-info-100 rounded-3xl p-8 border border-info-200'>
-              <h3 className='text-2xl font-bold text-info-700 mb-6'>
+              <h3 className='font-Cormorant text-3xl font-semibold text-neutral-900 mb-6'>
                 What's Next?
               </h3>
               <div className='space-y-4 text-info-700'>
@@ -303,7 +299,7 @@ const BookingConfirmation = () => {
           {/* Right Column - Booking Summary */}
           <div className='lg:col-span-1'>
             <div className='bg-neutral-25 rounded-3xl p-8 shadow-strong border border-neutral-150 sticky top-8'>
-              <h3 className='text-2xl font-bold text-neutral-800 mb-6'>
+              <h3 className='font-Cormorant text-3xl font-semibold text-neutral-900 mb-6'>
                 Booking Summary
               </h3>
 

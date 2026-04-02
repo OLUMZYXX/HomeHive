@@ -4,6 +4,7 @@ import heroimg from "../../assets/heroimg.png";
 import { useNavigate } from "react-router-dom";
 import { HiArrowRight, HiRefresh } from "react-icons/hi";
 import { useAPI } from "../../contexts/APIContext";
+import { InlineLoader } from "../common/Loader";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ const Hero = () => {
       {/* Loading shimmer */}
       {isLoading && (
         <div className="absolute inset-0 bg-neutral-900 flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-white/20 border-t-white/80 rounded-full animate-spin" />
+          <InlineLoader color="rgba(255,255,255,0.7)" />
         </div>
       )}
 

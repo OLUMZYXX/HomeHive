@@ -6,6 +6,7 @@ import { HiArrowLeft, HiArrowRight } from "react-icons/hi";
 import { toast } from "../../utils/toast.jsx";
 import { useAPI } from "../../contexts/APIContext";
 import GoogleAuth from "../../config/googleAuth";
+import { ButtonLoader } from "../common/Loader";
 
 const Createacct = () => {
   const [firstName, setFirstName] = useState("");
@@ -341,7 +342,7 @@ const Createacct = () => {
                 className="w-full bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-white text-sm font-medium tracking-[0.15em] uppercase py-4 flex items-center justify-center gap-2 transition-colors duration-200 mt-2"
               >
                 {isLoading ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <ButtonLoader />
                 ) : (
                   <>
                     Create Account

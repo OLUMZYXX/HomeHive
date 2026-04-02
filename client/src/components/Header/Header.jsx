@@ -12,6 +12,7 @@ import {
 } from "react-icons/hi";
 import { useAPI } from "../../contexts/APIContext";
 import { toast } from "../../utils/toast";
+import { PageLoader } from "../common/Loader";
 
 // Story Modal Component
 const StoryModal = ({ onClose }) => {
@@ -486,7 +487,7 @@ const Header = () => {
             {/* Loading State */}
             {headerImages.loading && (
               <div className="h-[480px] flex items-center justify-center bg-neutral-50">
-                <div className="animate-spin w-8 h-8 border-4 border-neutral-300 border-t-neutral-700 rounded-full" />
+                <PageLoader />
               </div>
             )}
 
