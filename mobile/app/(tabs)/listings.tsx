@@ -204,7 +204,14 @@ export default function ListingsScreen() {
               <Text style={styles.emptyIcon}>🔍</Text>
               <Text style={styles.emptyTitle}>No Properties Found</Text>
               <Text style={styles.emptyText}>
-                No {category ? CATEGORIES.find(c => c.value === category)?.label.replace(/^\S+\s/, '') : ''} properties available right now.
+                No{" "}
+                {category
+                  ? CATEGORIES.find((c) => c.value === category)?.label.replace(
+                      /^\S+\s/,
+                      "",
+                    )
+                  : ""}{" "}
+                properties available right now.
                 {"\n"}Try a different category or check back later.
               </Text>
             </View>
@@ -342,8 +349,8 @@ const styles = StyleSheet.create({
 
   empty: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingHorizontal: 32,
     paddingVertical: 60,
   },

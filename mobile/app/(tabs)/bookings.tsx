@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { Fonts, FontSizes } from "../../constants/Typography";
 import { useAPI } from "../../contexts/APIContext";
@@ -25,9 +25,19 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> =
       text: Colors.amber[700],
       dot: Colors.amber[500],
     },
+    payment_pending: {
+      bg: Colors.blue[50],
+      text: Colors.blue[700],
+      dot: Colors.blue[500],
+    },
     confirmed: {
       bg: Colors.green[50],
       text: Colors.green[700],
+      dot: Colors.green[500],
+    },
+    completed: {
+      bg: Colors.green[50],
+      text: Colors.green[600],
       dot: Colors.green[500],
     },
     cancelled: {
@@ -36,6 +46,14 @@ const STATUS_COLORS: Record<string, { bg: string; text: string; dot: string }> =
       dot: Colors.red[400],
     },
   };
+
+const STATUS_LABEL: Record<string, string> = {
+  pending: "Pending",
+  payment_pending: "Awaiting Payment",
+  confirmed: "Paid",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
 
 const PLACEHOLDER =
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=600&q=70";
@@ -89,6 +107,13 @@ export default function BookingsScreen() {
   useEffect(() => {
     if (isAuthenticated) fetchBookings();
   }, [isAuthenticated]);
+
+  // Re-fetch every time this tab comes into focus (catches payment status updates)
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) fetchBookings();
+    }, [isAuthenticated])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -195,8 +220,7 @@ export default function BookingsScreen() {
                   <Text
                     style={[styles.statusText, { color: statusStyle.text }]}
                   >
-                    {booking.status.charAt(0).toUpperCase() +
-                      booking.status.slice(1)}
+                    {STATUS_LABEL[booking.status] ?? booking.status}
                   </Text>
                 </View>
 
@@ -235,7 +259,7 @@ export default function BookingsScreen() {
                     </Text>
                   </View>
 
-                  {booking.status === "pending" && (
+                  {(booking.status === "pending" || booking.status === "payment_pending") && (
                     <Button
                       title={payingId === booking._id ? "Loading..." : "Pay Now"}
                       loading={payingId === booking._id}

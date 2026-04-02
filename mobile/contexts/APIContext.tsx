@@ -44,7 +44,7 @@ interface Booking {
   checkOut: string;
   guests: number;
   totalAmount: number;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'payment_pending' | 'confirmed' | 'cancelled' | 'completed';
   currency?: string;
 }
 
