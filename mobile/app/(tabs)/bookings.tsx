@@ -169,7 +169,7 @@ export default function BookingsScreen() {
                       👥 {booking.guests} guest{booking.guests !== 1 ? 's' : ''}
                     </Text>
                     <Text style={styles.totalPrice}>
-                      ${booking.totalPrice?.toLocaleString()}
+                      ₦{booking.totalPrice?.toLocaleString()}
                     </Text>
                   </View>
                 </View>

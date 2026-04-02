@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
-  TextInput,
-  Platform,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
@@ -18,6 +16,7 @@ import { Colors } from '../../constants/Colors';
 import { Fonts, FontSizes } from '../../constants/Typography';
 import { useAPI } from '../../contexts/APIContext';
 import Button from '../../components/Button';
+import DatePickerModal from '../../components/DatePickerModal';
 import api from '../../services/api';
 
 const { width } = Dimensions.get('window');
@@ -66,9 +65,12 @@ export default function PropertyDetailScreen() {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [booking, setBooking] = useState(false);
+  const [showCheckIn, setShowCheckIn]   = useState(false);
+  const [showCheckOut, setShowCheckOut] = useState(false);
 
-  const galleryRef = useRef<ScrollView>(null);
+  const galleryRef   = useRef<ScrollView>(null);
   const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const imageIndexRef = useRef(0); // tracks current index without closure issues
 
   const isFav = id ? favorites.includes(id) : false;
 
@@ -83,20 +85,25 @@ export default function PropertyDetailScreen() {
       .catch(() => setLoading(false));
   }, [id]);
 
-  // Auto-scroll images
+  // Auto-scroll images — uses a ref so scrollTo is never called inside a state updater
+  const startAutoScroll = useCallback((imageCount: number) => {
+    if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    if (imageCount <= 1) return;
+    autoScrollRef.current = setInterval(() => {
+      const next = (imageIndexRef.current + 1) % imageCount;
+      imageIndexRef.current = next;
+      setImageIndex(next);
+      galleryRef.current?.scrollTo({ x: next * width, animated: true });
+    }, 3500);
+  }, []);
+
   useEffect(() => {
     if (!property || property.images.length <= 1) return;
-    autoScrollRef.current = setInterval(() => {
-      setImageIndex((prev) => {
-        const next = (prev + 1) % property.images.length;
-        galleryRef.current?.scrollTo({ x: next * width, animated: true });
-        return next;
-      });
-    }, 3500);
+    startAutoScroll(property.images.length);
     return () => {
       if (autoScrollRef.current) clearInterval(autoScrollRef.current);
     };
-  }, [property]);
+  }, [property, startAutoScroll]);
 
   const handleBook = useCallback(async () => {
     if (!isAuthenticated) {
@@ -131,9 +138,12 @@ export default function PropertyDetailScreen() {
 
   if (loading || !property) {
     return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading...</Text>
-      </View>
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </>
     );
   }
 
@@ -164,22 +174,13 @@ export default function PropertyDetailScreen() {
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             onScrollBeginDrag={() => {
-              // Pause auto-scroll while user is swiping
               if (autoScrollRef.current) clearInterval(autoScrollRef.current);
             }}
             onMomentumScrollEnd={(e) => {
               const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+              imageIndexRef.current = idx;
               setImageIndex(idx);
-              // Resume auto-scroll after manual swipe
-              if (property && property.images.length > 1) {
-                autoScrollRef.current = setInterval(() => {
-                  setImageIndex((prev) => {
-                    const next = (prev + 1) % property.images.length;
-                    galleryRef.current?.scrollTo({ x: next * width, animated: true });
-                    return next;
-                  });
-                }, 3500);
-              }
+              startAutoScroll(property.images.length);
             }}
           >
             {property.images.map((img, i) => (
@@ -324,34 +325,34 @@ export default function PropertyDetailScreen() {
           <View style={styles.bookingWidget}>
             <View style={styles.priceRow}>
               <Text style={styles.priceAmount}>
-                ${property.price.toLocaleString()}
+                ₦{property.price.toLocaleString()}
               </Text>
               <Text style={styles.perNight}> / night</Text>
             </View>
 
-            {/* Date inputs */}
+            {/* Date pickers */}
             <View style={styles.dateRow}>
-              <View style={[styles.dateInput, { flex: 1 }]}>
+              <TouchableOpacity
+                style={[styles.dateInput, { flex: 1 }]}
+                onPress={() => setShowCheckIn(true)}
+                activeOpacity={0.75}
+              >
                 <Text style={styles.dateLabel}>Check-in</Text>
-                <TextInput
-                  style={styles.dateValue}
-                  value={checkIn}
-                  onChangeText={setCheckIn}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={Colors.textMuted}
-                />
-              </View>
+                <Text style={[styles.dateValue, !checkIn && styles.datePlaceholder]}>
+                  {checkIn || 'Select date'}
+                </Text>
+              </TouchableOpacity>
               <Text style={styles.dateSep}>→</Text>
-              <View style={[styles.dateInput, { flex: 1 }]}>
+              <TouchableOpacity
+                style={[styles.dateInput, { flex: 1 }]}
+                onPress={() => setShowCheckOut(true)}
+                activeOpacity={0.75}
+              >
                 <Text style={styles.dateLabel}>Check-out</Text>
-                <TextInput
-                  style={styles.dateValue}
-                  value={checkOut}
-                  onChangeText={setCheckOut}
-                  placeholder="YYYY-MM-DD"
-                  placeholderTextColor={Colors.textMuted}
-                />
-              </View>
+                <Text style={[styles.dateValue, !checkOut && styles.datePlaceholder]}>
+                  {checkOut || 'Select date'}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Guests */}
@@ -368,9 +369,7 @@ export default function PropertyDetailScreen() {
                 <TouchableOpacity
                   style={styles.counterBtn}
                   onPress={() =>
-                    setGuests((g) =>
-                      Math.min(property.guests || 10, g + 1),
-                    )
+                    setGuests((g) => Math.min(property.guests || 10, g + 1))
                   }
                 >
                   <Text style={styles.counterBtnText}>+</Text>
@@ -383,16 +382,16 @@ export default function PropertyDetailScreen() {
               <View style={styles.priceBreakdown}>
                 <View style={styles.priceBreakdownRow}>
                   <Text style={styles.breakdownLabel}>
-                    ${property.price} × {nights} nights
+                    ₦{property.price.toLocaleString()} × {nights} {nights === 1 ? 'night' : 'nights'}
                   </Text>
                   <Text style={styles.breakdownValue}>
-                    ${totalPrice.toLocaleString()}
+                    ₦{totalPrice.toLocaleString()}
                   </Text>
                 </View>
                 <View style={[styles.priceBreakdownRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>Total</Text>
                   <Text style={styles.totalValue}>
-                    ${totalPrice.toLocaleString()}
+                    ₦{totalPrice.toLocaleString()}
                   </Text>
                 </View>
               </View>
@@ -406,6 +405,23 @@ export default function PropertyDetailScreen() {
               style={{ marginTop: 12 }}
             />
           </View>
+
+          {/* Date picker modals */}
+          <DatePickerModal
+            visible={showCheckIn}
+            value={checkIn}
+            title="Check-in Date"
+            onConfirm={(d) => { setCheckIn(d); if (checkOut && checkOut <= d) setCheckOut(''); }}
+            onClose={() => setShowCheckIn(false)}
+          />
+          <DatePickerModal
+            visible={showCheckOut}
+            value={checkOut}
+            minDate={checkIn || undefined}
+            title="Check-out Date"
+            onConfirm={setCheckOut}
+            onClose={() => setShowCheckOut(false)}
+          />
         </View>
       </ScrollView>
     </View>
@@ -666,7 +682,11 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.notoSansSemiBold,
     fontSize: FontSizes.sm,
     color: Colors.text,
-    padding: 0,
+    marginTop: 2,
+  },
+  datePlaceholder: {
+    color: Colors.textMuted,
+    fontFamily: Fonts.notoSans,
   },
   dateSep: {
     fontFamily: Fonts.notoSans,
