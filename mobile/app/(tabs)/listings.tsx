@@ -276,19 +276,24 @@ const styles = StyleSheet.create({
 
   chips: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingTop: 12,
+    paddingBottom: 14,
     gap: 8,
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
+    alignItems: 'center',
   },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 50,
     backgroundColor: Colors.neutral[100],
     borderWidth: 1,
     borderColor: Colors.border,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   chipActive: {
     backgroundColor: Colors.neutral[900],
@@ -298,6 +303,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.notoSansSemiBold,
     fontSize: FontSizes.sm,
     color: Colors.textSecondary,
+    lineHeight: 20,
   },
   chipTextActive: { color: Colors.white },
 
