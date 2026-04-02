@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -7,38 +7,38 @@ import {
   TouchableOpacity,
   ScrollView,
   RefreshControl,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../constants/Colors';
-import { Fonts, FontSizes } from '../../constants/Typography';
-import { useAPI } from '../../contexts/APIContext';
-import PropertyCard from '../../components/PropertyCard';
-import SearchBar from '../../components/SearchBar';
-import { PropertyListSkeleton } from '../../components/SkeletonLoader';
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Colors } from "../../constants/Colors";
+import { Fonts, FontSizes } from "../../constants/Typography";
+import { useAPI } from "../../contexts/APIContext";
+import PropertyCard from "../../components/PropertyCard";
+import SearchBar from "../../components/SearchBar";
+import { PropertyListSkeleton } from "../../components/SkeletonLoader";
 
 const CATEGORIES = [
-  { label: 'All', value: '' },
-  { label: '✨ Luxury', value: 'luxury' },
-  { label: '🏢 Apartment', value: 'apartment' },
-  { label: '🛏 Studio', value: 'studio' },
-  { label: '🏡 House', value: 'house' },
-  { label: '🏖 Beach', value: 'beach' },
-  { label: '🏔 Mountain', value: 'mountain' },
+  { label: "All", value: "" },
+  { label: "✨ Luxury", value: "luxury" },
+  { label: "🏢 Apartment", value: "apartment" },
+  { label: "🛏 Studio", value: "studio" },
+  { label: "🏡 House", value: "house" },
+  { label: "🏖 Beach", value: "beach" },
+  { label: "🏔 Mountain", value: "mountain" },
 ];
 
 const SORT_OPTIONS = [
-  { label: 'Recommended', value: '' },
-  { label: 'Price: Low', value: 'price_asc' },
-  { label: 'Price: High', value: 'price_desc' },
-  { label: 'Top Rated', value: 'rating' },
+  { label: "Recommended", value: "" },
+  { label: "Price: Low", value: "price_asc" },
+  { label: "Price: High", value: "price_desc" },
+  { label: "Top Rated", value: "rating" },
 ];
 
 export default function ListingsScreen() {
   const { properties, fetchProperties } = useAPI();
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('');
-  const [sort, setSort] = useState('');
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [sort, setSort] = useState("");
   const [showSort, setShowSort] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -88,7 +88,7 @@ export default function ListingsScreen() {
   });
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       {/* ── Page Header ──────────────────────────────────── */}
       <View style={styles.pageHeader}>
         <Text style={styles.pageTitle}>Explore Properties</Text>
@@ -96,9 +96,13 @@ export default function ListingsScreen() {
           style={styles.sortBtn}
           onPress={() => setShowSort((v) => !v)}
         >
-          <Ionicons name="options-outline" size={16} color={Colors.textSecondary} />
+          <Ionicons
+            name="options-outline"
+            size={16}
+            color={Colors.textSecondary}
+          />
           <Text style={styles.sortLabel}>
-            {SORT_OPTIONS.find((o) => o.value === sort)?.label || 'Sort'}
+            {SORT_OPTIONS.find((o) => o.value === sort)?.label || "Sort"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -109,7 +113,10 @@ export default function ListingsScreen() {
           {SORT_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.value}
-              style={[styles.sortOption, sort === opt.value && styles.sortOptionActive]}
+              style={[
+                styles.sortOption,
+                sort === opt.value && styles.sortOptionActive,
+              ]}
               onPress={() => {
                 setSort(opt.value);
                 setShowSort(false);
@@ -133,7 +140,7 @@ export default function ListingsScreen() {
         <SearchBar
           value={search}
           onChangeText={setSearch}
-          onClear={() => setSearch('')}
+          onClear={() => setSearch("")}
           placeholder="Search cities, properties..."
         />
       </View>
@@ -166,28 +173,23 @@ export default function ListingsScreen() {
       {/* ── Results count ────────────────────────────────── */}
       <View style={styles.resultsRow}>
         <Text style={styles.resultsText}>
-          {loading ? '...' : `${filteredProperties.length} properties found`}
+          {loading ? "..." : `${filteredProperties.length} properties found`}
         </Text>
       </View>
 
       {/* ── Property Grid ────────────────────────────────── */}
       {loading ? (
         <PropertyListSkeleton count={6} />
-      ) : filteredProperties.length === 0 ? (
-        <View style={styles.empty}>
-          <Text style={styles.emptyIcon}>🔍</Text>
-          <Text style={styles.emptyTitle}>No Properties Found</Text>
-          <Text style={styles.emptyText}>
-            Try adjusting your search or filters
-          </Text>
-        </View>
       ) : (
         <FlatList
           data={filteredProperties}
           keyExtractor={(item) => item._id}
           numColumns={2}
           columnWrapperStyle={styles.columnWrapper}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[
+            styles.list,
+            filteredProperties.length === 0 && styles.listEmpty,
+          ]}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
@@ -197,6 +199,16 @@ export default function ListingsScreen() {
             />
           }
           renderItem={({ item }) => <PropertyCard property={item} />}
+          ListEmptyComponent={
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>🔍</Text>
+              <Text style={styles.emptyTitle}>No Properties Found</Text>
+              <Text style={styles.emptyText}>
+                No {category ? CATEGORIES.find(c => c.value === category)?.label.replace(/^\S+\s/, '') : ''} properties available right now.
+                {"\n"}Try a different category or check back later.
+              </Text>
+            </View>
+          }
         />
       )}
     </SafeAreaView>
@@ -207,9 +219,9 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.background },
 
   pageHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 14,
     backgroundColor: Colors.white,
@@ -222,8 +234,8 @@ const styles = StyleSheet.create({
     color: Colors.text,
   },
   sortBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -240,7 +252,7 @@ const styles = StyleSheet.create({
   },
 
   sortDropdown: {
-    position: 'absolute',
+    position: "absolute",
     top: 60,
     right: 16,
     backgroundColor: Colors.white,
@@ -253,7 +265,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   sortOption: {
     paddingHorizontal: 20,
@@ -272,7 +284,11 @@ const styles = StyleSheet.create({
     color: Colors.primary[800],
   },
 
-  searchWrapper: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: Colors.white },
+  searchWrapper: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: Colors.white,
+  },
 
   chips: {
     paddingHorizontal: 16,
@@ -282,7 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
-    alignItems: 'center',
+    alignItems: "center",
   },
   chip: {
     paddingHorizontal: 18,
@@ -292,8 +308,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: Colors.border,
     minHeight: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   chipActive: {
     backgroundColor: Colors.neutral[900],
@@ -322,12 +338,14 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   list: { paddingTop: 8, paddingBottom: 110 },
+  listEmpty: { flexGrow: 1 },
 
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 80,
+    paddingHorizontal: 32,
+    paddingVertical: 60,
   },
   emptyIcon: { fontSize: 56, marginBottom: 16 },
   emptyTitle: {
