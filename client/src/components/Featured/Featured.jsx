@@ -14,22 +14,49 @@ const Featured = () => {
   const [displayedProperties, setDisplayedProperties] = useState([]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const topRatedRes = await propertiesAPI.getTopRatedProperties(3);
-        const fetched = topRatedRes.properties || topRatedRes.data || [];
+    let cancelled = false;
+    setLoading(true);
+
+    propertiesAPI
+      .getTopRatedProperties(3)
+      .then((res) => {
+        if (cancelled) return;
+        const fetched = res.properties || res.data || [];
         setProperties(fetched);
         setDisplayedProperties(fetched);
-        const favRes = await favoritesAPI.getFavorites();
-        setFavorites(favRes.favorites ? favRes.favorites.map((f) => f.propertyId) : []);
-      } catch {
-        setError("Failed to load featured properties.");
-      }
-      setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Failed to load featured properties.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    // Favorites load in parallel and never block the property render
+    favoritesAPI
+      .getFavorites()
+      .then((res) => {
+        if (cancelled) return;
+        setFavorites(res.favorites ? res.favorites.map((f) => f.propertyId) : []);
+      })
+      .catch(() => { /* silent — auth may be missing */ });
+
+    return () => {
+      cancelled = true;
     };
-    fetchData();
   }, []);
+
+  // Resolve image source: API returns `images` array (string URL or {data} object),
+  // not `url`/`image`. Fall back to the bundled placeholder if none.
+  const getPropertyImage = (property) => {
+    const first =
+      Array.isArray(property?.images) && property.images.length > 0
+        ? property.images[0]
+        : null;
+    if (first && typeof first === "object" && first.data) return first.data;
+    if (typeof first === "string" && first.length > 0) return first;
+    return property?.url || property?.image || AptWebP;
+  };
 
   const handleLike = async (propertyId) => {
     try {
@@ -99,22 +126,28 @@ const Featured = () => {
               </button>
             </div>
           ) : (
-            displayedProperties.map((property) => (
+            displayedProperties.map((property, idx) => (
               <article
                 key={property.id || property.propertyId}
                 className="group cursor-pointer"
                 onClick={() => handlePropertyClick(property)}
               >
                 {/* Image */}
-                <div className="relative overflow-hidden mb-4 aspect-[4/3]">
+                <div className="relative overflow-hidden mb-4 aspect-[4/3] bg-neutral-100">
                   <img
-                    src={property.url || property.image || AptWebP}
+                    src={getPropertyImage(property)}
                     alt={property.title}
-                    loading="lazy"
+                    loading={idx === 0 ? "eager" : "lazy"}
                     decoding="async"
+                    fetchPriority={idx === 0 ? "high" : "auto"}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     width={512}
                     height={384}
+                    onError={(e) => {
+                      if (e.currentTarget.src !== AptWebP) {
+                        e.currentTarget.src = AptWebP;
+                      }
+                    }}
                   />
                   {/* Category badge */}
                   <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm text-neutral-800 text-xs font-semibold tracking-wider uppercase px-3 py-1">
