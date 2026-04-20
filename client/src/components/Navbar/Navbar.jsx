@@ -76,6 +76,9 @@ const Navbar = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
   const isHome    = location.pathname === "/";
+  const isHostRoute = /^\/(host|hostlogin|host-signup|host-dashboard)/i.test(location.pathname);
+  const signInPath  = isHostRoute ? "/hostlogin"   : "/signin";
+  const signUpPath  = isHostRoute ? "/host-signup" : "/signup";
 
   // Lock body scroll when drawer is open
   useEffect(() => {
@@ -285,18 +288,18 @@ const Navbar = () => {
                 </>
               ) : (
                 <div className="flex items-center gap-4">
-                  <Link to="/signin">
+                  <Link to={signInPath}>
                     <span className={`text-[11px] font-semibold tracking-[0.15em] uppercase transition-opacity hover:opacity-60 ${textColor}`}>
-                      Login
+                      {isHostRoute ? "Host Login" : "Login"}
                     </span>
                   </Link>
-                  <Link to="/signup">
+                  <Link to={signUpPath}>
                     <span className={`px-5 py-2 text-[11px] font-semibold tracking-[0.15em] uppercase border transition-colors duration-200 ${
                       isTransparent
                         ? "border-white text-white hover:bg-white hover:text-neutral-900"
                         : "border-neutral-900 text-neutral-900 hover:bg-neutral-900 hover:text-white"
                     }`}>
-                      Sign Up
+                      {isHostRoute ? "Host Sign Up" : "Sign Up"}
                     </span>
                   </Link>
                 </div>
@@ -525,14 +528,14 @@ const Navbar = () => {
                 ) : (
                   <motion.div custom={navLinks.length + 2} variants={itemVariants} initial="hidden" animate="visible"
                     className="px-6 space-y-3">
-                    <Link to="/signin" onClick={closeMenu} className="block">
+                    <Link to={signInPath} onClick={closeMenu} className="block">
                       <span className="block w-full py-3.5 text-center text-[11px] font-semibold tracking-[0.15em] uppercase border border-neutral-900 text-neutral-900 hover:bg-neutral-50 transition-colors">
-                        Login
+                        {isHostRoute ? "Host Login" : "Login"}
                       </span>
                     </Link>
-                    <Link to="/signup" onClick={closeMenu} className="block">
+                    <Link to={signUpPath} onClick={closeMenu} className="block">
                       <span className="block w-full py-3.5 text-center text-[11px] font-semibold tracking-[0.15em] uppercase bg-neutral-900 text-white hover:bg-neutral-800 transition-colors">
-                        Sign Up
+                        {isHostRoute ? "Host Sign Up" : "Sign Up"}
                       </span>
                     </Link>
                   </motion.div>

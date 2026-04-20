@@ -1,196 +1,188 @@
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useLocation } from 'react-router-dom'
-import PropTypes from 'prop-types'
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import PropTypes from "prop-types";
+
+const KEYFRAMES = `
+@keyframes hh-slide {
+  0%   { transform: translateX(-110%); }
+  100% { transform: translateX(110%); }
+}
+@keyframes hh-dot {
+  0%, 80%, 100% { transform: scale(0.5); opacity: 0.35; }
+  40%           { transform: scale(1);   opacity: 1;    }
+}
+`;
+
+const ProgressBar = ({ width = 120 }) => (
+  <div
+    className="relative h-px overflow-hidden bg-neutral-200"
+    style={{ width }}
+  >
+    <span
+      className="absolute inset-y-0 w-1/3 bg-amber-500"
+      style={{ animation: "hh-slide 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite" }}
+    />
+  </div>
+);
+
+ProgressBar.propTypes = { width: PropTypes.number };
+
+const Dots = () => (
+  <div className="flex items-center gap-1.5">
+    {[0, 160, 320].map((d) => (
+      <span
+        key={d}
+        className="w-1.5 h-1.5 rounded-full bg-neutral-900"
+        style={{
+          animation: "hh-dot 1.2s ease-in-out infinite",
+          animationDelay: `${d}ms`,
+        }}
+      />
+    ))}
+  </div>
+);
+
+const Wordmark = ({ size = "text-3xl" }) => (
+  <h1
+    className={`font-Cormorant ${size} font-light text-neutral-900 tracking-wide leading-none`}
+  >
+    Home<span className="text-amber-500">Hive</span>
+  </h1>
+);
+
+Wordmark.propTypes = { size: PropTypes.string };
 
 const PageLoader = ({ children, duration = 3000 }) => {
-  const [isLoading, setIsLoading] = useState(true)
-  const [loadingVariant, setLoadingVariant] = useState('full')
-  const location = useLocation()
+  const [isLoading, setIsLoading] = useState(true);
+  const [variant, setVariant] = useState("spinner");
+  const location = useLocation();
 
   useEffect(() => {
-    // Pages to exclude from loading
     const excludedPaths = [
-      '/login',
-      '/signin',
-      '/signup',
-      '/create-account',
-      '/host-login',
-      '/host-create-account',
-    ]
+      "/login",
+      "/signin",
+      "/signup",
+      "/create-account",
+      "/host-login",
+      "/host-create-account",
+    ];
 
-    // Check if current page should be excluded
     if (excludedPaths.includes(location.pathname)) {
-      setIsLoading(false)
-      return
+      setIsLoading(false);
+      return;
     }
 
-    // Determine loading variant based on page and visit status
     const isHomePage =
-      location.pathname === '/' || location.pathname === '/home'
-    const isFirstVisit = !sessionStorage.getItem('hasVisited')
+      location.pathname === "/" || location.pathname === "/home";
+    const isFirstVisit = !sessionStorage.getItem("hasVisited");
 
-    if (isHomePage && (isFirstVisit || performance.navigation.type === 1)) {
-      // Home page on first visit or refresh - show full loading
-      setLoadingVariant('full')
-      sessionStorage.setItem('hasVisited', 'true')
+    if (isHomePage && (isFirstVisit || performance.navigation?.type === 1)) {
+      setVariant("full");
+      sessionStorage.setItem("hasVisited", "true");
     } else {
-      // Other pages or subsequent home visits - show spinner only
-      setLoadingVariant('spinner')
+      setVariant("spinner");
     }
 
-    const timer = setTimeout(() => {
-      setIsLoading(false)
-    }, duration)
+    const timer = setTimeout(() => setIsLoading(false), duration);
+    return () => clearTimeout(timer);
+  }, [duration, location.pathname]);
 
-    return () => clearTimeout(timer)
-  }, [duration, location.pathname])
-
-  const FullLoadingContent = () => (
-    <div className='flex flex-col items-center space-y-8'>
-      {/* HomeHive Logo with Animation */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className='text-center'
-      >
-        <h1 className='text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary-600 via-primary-500 to-secondary-500 bg-clip-text text-transparent'>
+  const FullContent = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
+      className="flex flex-col items-center gap-8"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-px bg-amber-500" />
+        <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
           HomeHive
-        </h1>
-        <p className='text-neutral-600 text-sm md:text-base mt-2 font-medium'>
-          Your perfect stay awaits
-        </p>
-      </motion.div>
-
-      {/* Animated Loading Spinner */}
-      <div className='relative'>
-        {/* Outer Ring */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
-          className='w-16 h-16 border-4 border-primary-100 border-t-primary-500 rounded-full'
-        />
-
-        {/* Inner Pulse */}
-        <motion.div
-          animate={{ scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className='absolute inset-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full opacity-20'
-        />
+        </span>
+        <div className="w-8 h-px bg-amber-500" />
       </div>
 
-      {/* Loading Dots */}
-      <div className='flex space-x-2'>
-        {[0, 1, 2].map((index) => (
-          <motion.div
-            key={index}
-            animate={{
-              y: [0, -10, 0],
-              opacity: [0.5, 1, 0.5],
-            }}
-            transition={{
-              duration: 1.5,
-              repeat: Infinity,
-              delay: index * 0.2,
-              ease: 'easeInOut',
-            }}
-            className='w-2 h-2 bg-primary-500 rounded-full'
-          />
-        ))}
+      <h1 className="font-Cormorant text-5xl sm:text-6xl font-light text-neutral-900 leading-none text-center">
+        Your perfect{" "}
+        <span className="italic">stay</span>
+        <br />
+        <span className="italic text-amber-500">awaits</span>
+      </h1>
+
+      <div className="flex flex-col items-center gap-4 mt-2">
+        <ProgressBar width={160} />
+        <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-neutral-400">
+          Preparing your experience
+        </span>
       </div>
+    </motion.div>
+  );
 
-      {/* Loading Text */}
-      <motion.p
-        animate={{ opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        className='text-neutral-600 text-sm font-medium tracking-wide'
-      >
-        Loading your experience...
-      </motion.p>
-    </div>
-  )
-
-  const SpinnerOnlyContent = () => (
-    <div className='flex items-center justify-center'>
-      {/* Enhanced Visible Spinner with Background */}
-      <div className='relative p-6 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-primary-200/50'>
-        {/* Outer Ring - More visible */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-          className='w-14 h-14 border-4 border-primary-200 border-t-primary-600 rounded-full'
-        />
-
-        {/* Inner Glow - Enhanced */}
-        <motion.div
-          animate={{ scale: [0.6, 1.1, 0.6], opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className='absolute inset-2 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full opacity-20 blur-sm'
-        />
-
-        {/* Center dot for better visibility */}
-        <motion.div
-          animate={{ scale: [0.8, 1.2, 0.8] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-          className='absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-primary-600 rounded-full'
-        />
+  const SpinnerContent = () => (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1, transition: { duration: 0.3 } }}
+      className="flex flex-col items-center gap-5"
+    >
+      <Wordmark size="text-2xl" />
+      <div className="flex items-center gap-4">
+        <Dots />
       </div>
-    </div>
-  )
+    </motion.div>
+  );
 
   return (
     <>
-      <AnimatePresence mode='wait'>
+      <style>{KEYFRAMES}</style>
+      <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div
             initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            exit={{ opacity: 0, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } }}
             className={`fixed inset-0 z-[9999] flex items-center justify-center ${
-              loadingVariant === 'full'
-                ? 'bg-white/95 backdrop-blur-sm'
-                : 'bg-transparent backdrop-blur-md'
+              variant === "full"
+                ? "bg-white"
+                : "bg-white/85 backdrop-blur-md"
             }`}
           >
-            {loadingVariant === 'full' ? (
-              <FullLoadingContent />
-            ) : (
-              <SpinnerOnlyContent />
+            {/* Subtle dot pattern (full variant only) */}
+            {variant === "full" && (
+              <div
+                className="absolute inset-0 opacity-[0.025] pointer-events-none"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle, #171717 1px, transparent 1px)",
+                  backgroundSize: "28px 28px",
+                }}
+              />
             )}
 
-            {/* Background Pattern (only for full loading) */}
-            {loadingVariant === 'full' && (
-              <div className='absolute inset-0 opacity-5'>
-                <div
-                  className='absolute inset-0'
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23475569' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                  }}
-                />
-              </div>
-            )}
+            {/* Amber accent line — left edge */}
+            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-500/40 to-transparent" />
+
+            <div className="relative">
+              {variant === "full" ? <FullContent /> : <SpinnerContent />}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Content - Always visible but blurred during loading */}
       <div
         className={`transition-all duration-500 ${
           isLoading
-            ? 'blur-md opacity-60 pointer-events-none'
-            : 'blur-none opacity-100'
+            ? "blur-sm opacity-50 pointer-events-none"
+            : "blur-none opacity-100"
         }`}
       >
         {children}
       </div>
     </>
-  )
-}
+  );
+};
 
 PageLoader.propTypes = {
   children: PropTypes.node.isRequired,
   duration: PropTypes.number,
-}
+};
 
-export default PageLoader
+export default PageLoader;

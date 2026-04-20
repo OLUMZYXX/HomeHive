@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { FcGoogle } from "react-icons/fc";
-import { HiMail, HiLockClosed, HiPhone } from "react-icons/hi";
-import { HiUser, HiHome, HiBuildingOffice2 } from "react-icons/hi2";
+import { HiArrowLeft, HiArrowRight } from "react-icons/hi";
+
 import { navigateToHome } from "../../utils/navigation";
 import useScrollToTop from "../../hooks/useScrollToTop";
 import { ButtonLoader } from "../common/Loader";
@@ -18,62 +18,76 @@ const Createacct = () => {
   const location = useLocation();
   const { registerHost, googleAuth } = useAPI();
 
-  const handleHomeNavigation = () => {
-    navigateToHome(navigate, location);
-  };
-
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [businessType, setBusinessType] = useState("individual");
-  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState("");
 
-  const isEmailValid = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isPasswordValid = (password) =>
-    password.length >= 8 && /[A-Z]/.test(password) && /[0-9]/.test(password);
+  const handleHomeNavigation = () => navigateToHome(navigate, location);
+  const isEmailValid = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  const strength = (() => {
+    if (!password) return 0;
+    let s = 0;
+    if (password.length >= 8) s++;
+    if (password.length >= 12) s++;
+    if (/[A-Z]/.test(password)) s++;
+    if (/[0-9]/.test(password) && /[^a-zA-Z0-9]/.test(password)) s++;
+    return s;
+  })();
+  const strengthLabel = ["", "Weak", "Fair", "Good", "Strong"][strength];
+  const strengthColor = [
+    "",
+    "bg-red-400",
+    "bg-amber-400",
+    "bg-green-400",
+    "bg-green-500",
+  ][strength];
+
+  const isPasswordValid = (p) =>
+    p.length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p);
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
     setError("");
 
     if (!firstName.trim() || !lastName.trim()) {
-      setError("Please enter your full name");
+      setError("Please enter your full name.");
       return;
     }
-    if (!email.trim() || !isEmailValid(email)) {
-      setError("Please enter a valid email address");
+    if (!isEmailValid(email)) {
+      setError("Please enter a valid email address.");
       return;
     }
     if (!businessName.trim()) {
-      setError("Business name is required");
+      setError("Business name is required.");
       return;
     }
-    if (!password || !isPasswordValid(password)) {
+    if (!isPasswordValid(password)) {
       setError(
-        "Password must be at least 8 characters with uppercase and number",
+        "Password must be at least 8 characters with an uppercase letter and a number.",
       );
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
     if (!agreeTerms) {
-      setError("You must agree to the terms and conditions");
+      setError("You must agree to the terms and conditions.");
       return;
     }
 
     setIsLoading(true);
-
     try {
       const result = await registerHost({
         email: email.trim(),
@@ -85,21 +99,17 @@ const Createacct = () => {
         businessName: businessName.trim(),
         businessType,
       });
-
       if (result.success) {
-        toast.success(
-          "Host account created successfully! Welcome to HomeHive!",
-          { duration: 4000 },
-        );
+        toast.success("Welcome to HomeHive!", { duration: 4000 });
         setTimeout(() => navigate("/host-dashboard"), 1000);
       }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
         "Failed to create account. Please try again.";
-      setError(errorMessage);
-      toast.error(errorMessage, { duration: 3000 });
+      setError(msg);
+      toast.error(msg, { duration: 3000 });
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +120,6 @@ const Createacct = () => {
     try {
       await GoogleAuth.initialize();
       const googleUser = await GoogleAuth.signIn();
-
       const result = await googleAuth(googleUser.idToken, {
         email: googleUser.email,
         name: googleUser.name,
@@ -122,472 +131,397 @@ const Createacct = () => {
         businessType: "individual",
         isHost: true,
       });
-
       if (result.success) {
-        toast.success(
-          "Google account created successfully! Welcome to HomeHive!",
-          { duration: 4000 },
-        );
+        toast.success("Welcome to HomeHive!", { duration: 4000 });
         setTimeout(() => navigate("/host-dashboard"), 1000);
       }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
         "Google sign up failed. Please try again.";
-      toast.error(errorMessage, { duration: 3000 });
-      setError(errorMessage);
+      toast.error(msg, { duration: 3000 });
+      setError(msg);
     } finally {
       setIsGoogleLoading(false);
     }
   };
 
+  const inputClass =
+    "w-full px-4 py-3 border border-neutral-200 hover:border-neutral-400 focus:border-neutral-800 focus:outline-none bg-white text-neutral-800 placeholder-neutral-400 text-sm transition-colors duration-200";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-neutral-50 flex items-center justify-center p-4">
-      {/* Back Button */}
-      <button
-        onClick={() => navigate("/hostlogin")}
-        className="absolute top-6 left-6 flex items-center gap-2 text-primary-700 hover:text-primary-900 transition-colors duration-300 font-medium z-20"
-      >
-        <FaArrowLeft className="text-sm" />
-        <span>Back to Login</span>
-      </button>
+    <div className="min-h-screen flex">
+      {/* Left — dark editorial panel */}
+      <div className="hidden lg:flex lg:w-2/5 relative overflow-hidden bg-neutral-900 flex-col justify-between p-12">
+        {/* Dot pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, white 1px, transparent 1px)",
+            backgroundSize: "24px 24px",
+          }}
+        />
+        {/* Amber left line */}
+        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-500/60 to-transparent" />
 
-      {/* Main Container */}
-      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-strong overflow-hidden border border-primary-100">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[700px]">
-          {/* Left Side: Branding & Benefits */}
-          <div className="relative bg-gradient-to-br from-primary-700 via-primary-800 to-primary-900 p-8 lg:p-12 hidden lg:flex flex-col justify-center text-white">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div className='absolute inset-0 bg-[url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.4"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")]'></div>
-            </div>
+        {/* Back to home */}
+        <button
+          onClick={handleHomeNavigation}
+          className="relative flex items-center gap-2 text-white/60 hover:text-white text-sm font-medium tracking-wider uppercase transition-colors duration-200 self-start"
+        >
+          <HiArrowLeft className="text-base" />
+          HomeHive
+        </button>
 
-            {/* Content */}
-            <div className="relative z-10 space-y-8">
-              {/* Logo */}
-              <div
-                className="flex items-center gap-3 cursor-pointer group"
-                onClick={handleHomeNavigation}
-              >
-                <div className="w-14 h-14 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/20 group-hover:bg-white/20 transition-all duration-300">
-                  <HiHome className="text-white text-2xl" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-NotoSans font-bold text-white">
-                    Homehive
-                  </h1>
-                  <p className="text-primary-200 text-sm font-medium">
-                    Host Portal
-                  </p>
-                </div>
-              </div>
-
-              {/* Hero Text */}
-              <div className="space-y-4">
-                <h2 className="font-NotoSans text-3xl lg:text-4xl font-bold leading-tight">
-                  Start Your Hosting
-                  <span className="block text-transparent bg-gradient-to-r from-primary-200 to-white bg-clip-text">
-                    Journey Today
-                  </span>
-                </h2>
-                <p className="text-lg text-primary-100 leading-relaxed">
-                  Join thousands of hosts earning income by sharing their
-                  properties with travelers worldwide.
-                </p>
-              </div>
-
-              {/* Benefits List */}
-              <div className="space-y-4 pt-4">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
-                    <span className="text-lg">💰</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">
-                      Earn Extra Income
-                    </h3>
-                    <p className="text-sm text-primary-200">
-                      Turn your property into a reliable income stream
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
-                    <span className="text-lg">🛡️</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">
-                      Host Protection
-                    </h3>
-                    <p className="text-sm text-primary-200">
-                      Comprehensive coverage for peace of mind
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
-                    <span className="text-lg">📊</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">
-                      Powerful Tools
-                    </h3>
-                    <p className="text-sm text-primary-200">
-                      Analytics, calendar sync, and smart pricing
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-lg flex items-center justify-center border border-white/10 flex-shrink-0">
-                    <span className="text-lg">🌍</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-white mb-1">
-                      Global Reach
-                    </h3>
-                    <p className="text-sm text-primary-200">
-                      Connect with travelers from around the world
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Testimonial */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 border border-white/20 mt-6">
-                <p className="text-primary-100 italic mb-3">
-                  &ldquo;I started hosting 6 months ago and it&apos;s been
-                  life-changing. The platform makes everything so easy!&rdquo;
-                </p>
-                <div className="text-sm text-primary-200">
-                  - Jennifer K., Superhost since 2024
-                </div>
-              </div>
-            </div>
+        {/* Brand copy */}
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-8 h-px bg-amber-500" />
+            <span className="text-amber-400 text-xs font-semibold tracking-[0.25em] uppercase">
+              Become a Host
+            </span>
           </div>
+          <h1 className="font-Cormorant text-4xl xl:text-5xl font-light text-white leading-tight mb-4">
+            Start your hosting
+            <br />
+            <span className="italic">journey today</span>
+          </h1>
+          <p className="text-neutral-500 text-sm leading-relaxed max-w-xs">
+            Join hundreds of hosts earning income by sharing their properties on
+            HomeHive.
+          </p>
 
-          {/* Right Side: Sign Up Form */}
-          <div className="p-6 lg:p-10 flex flex-col justify-center overflow-y-auto max-h-[90vh] lg:max-h-none">
-            <div className="max-w-md mx-auto w-full space-y-6">
-              {/* Mobile Logo */}
-              <div
-                className="lg:hidden flex items-center justify-center gap-3 cursor-pointer"
-                onClick={handleHomeNavigation}
-              >
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-600 to-primary-800 rounded-xl flex items-center justify-center">
-                  <HiHome className="text-white text-xl" />
+          {/* Benefits list */}
+          <ul className="mt-10 space-y-4">
+            {[
+              "Earn extra income on your schedule",
+              "Comprehensive host protection included",
+              "Access to thousands of verified guests",
+              "Smart pricing & calendar sync tools",
+            ].map((item) => (
+              <li key={item} className="flex items-center gap-3">
+                <div className="w-1.5 h-1.5 bg-amber-500 rounded-full flex-shrink-0" />
+                <span className="text-neutral-300 text-sm">{item}</span>
+              </li>
+            ))}
+          </ul>
+
+          {/* Quote */}
+          <blockquote className="mt-10 border-l-2 border-amber-400/60 pl-4">
+            <p className="text-white/70 text-sm italic leading-relaxed">
+              &ldquo;I started hosting six months ago and it&apos;s been
+              life-changing. The platform makes everything easy.&rdquo;
+            </p>
+            <cite className="text-white/40 text-xs mt-2 block not-italic">
+              — Jennifer K., Superhost since 2024
+            </cite>
+          </blockquote>
+        </div>
+      </div>
+
+      {/* Right — form panel */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Mobile back */}
+        <div className="lg:hidden flex items-center justify-between px-6 pt-6">
+          <button
+            onClick={handleHomeNavigation}
+            className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 text-sm font-medium transition-colors"
+          >
+            <HiArrowLeft />
+            Back
+          </button>
+          <span className="font-Cormorant text-xl font-semibold text-neutral-800">
+            HomeHive
+          </span>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center px-6 py-10 lg:px-16">
+          <div className="w-full max-w-md">
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-px bg-amber-500" />
+                <span className="text-xs font-semibold tracking-[0.2em] uppercase text-amber-600">
+                  Host Sign Up
+                </span>
+              </div>
+              <h2 className="font-Cormorant text-4xl font-light text-neutral-900 mb-2">
+                Create your <span className="italic">host account</span>
+              </h2>
+              <p className="text-neutral-500 text-sm">
+                Free to register — your first booking could be days away
+              </p>
+            </div>
+
+            {/* Google first */}
+            <button
+              onClick={handleGoogleSignUp}
+              disabled={isGoogleLoading}
+              className="w-full flex items-center justify-center gap-3 border border-neutral-200 hover:border-neutral-400 bg-white text-neutral-700 text-sm font-medium py-3.5 transition-colors duration-200 disabled:opacity-50 mb-6"
+            >
+              <FcGoogle className="text-lg" />
+              {isGoogleLoading ? "Creating account…" : "Continue with Google"}
+            </button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px bg-neutral-200" />
+              <span className="text-xs text-neutral-400 font-medium">
+                or fill in your details
+              </span>
+              <div className="flex-1 h-px bg-neutral-200" />
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              {/* Name row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                    First Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className={inputClass}
+                    autoComplete="given-name"
+                  />
                 </div>
                 <div>
-                  <h1 className="text-xl font-NotoSans font-bold text-primary-800">
-                    Homehive
-                  </h1>
-                  <p className="text-primary-500 text-sm">Host Portal</p>
-                </div>
-              </div>
-
-              {/* Header */}
-              <div className="text-center space-y-2">
-                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-full px-4 py-2 mb-2">
-                  <HiUser className="text-primary-600 text-sm" />
-                  <span className="text-sm font-medium text-primary-700">
-                    Host Sign Up
-                  </span>
-                </div>
-                <h2 className="font-NotoSans text-2xl lg:text-3xl font-bold text-primary-900">
-                  Create Account
-                </h2>
-                <p className="text-primary-600">
-                  Join our community and start hosting
-                </p>
-              </div>
-
-              {/* Form */}
-              <form onSubmit={handleCreateAccount} className="space-y-4">
-                {/* Name Fields */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-primary-700">
-                      First Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiUser className="h-5 w-5 text-primary-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="First name"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-primary-700">
-                      Last Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiUser className="h-5 w-5 text-primary-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Last name"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Email Input */}
-                <div className="space-y-1.5">
-                  <label className="block text-sm font-semibold text-primary-700">
-                    Email Address
+                  <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                    Last Name
                   </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <HiMail className="h-5 w-5 text-primary-400" />
-                    </div>
-                    <input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                    />
-                  </div>
-                </div>
-
-                {/* Business Info */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-primary-700">
-                      Business Name
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiBuildingOffice2 className="h-5 w-5 text-primary-400" />
-                      </div>
-                      <input
-                        type="text"
-                        placeholder="Your business"
-                        value={businessName}
-                        onChange={(e) => setBusinessName(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-primary-700">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiPhone className="h-5 w-5 text-primary-400" />
-                      </div>
-                      <input
-                        type="tel"
-                        placeholder="Your phone"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Password Fields */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-primary-700">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiLockClosed className="h-5 w-5 text-primary-400" />
-                      </div>
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Create password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-10 pr-10 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <FaEyeSlash className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
-                        ) : (
-                          <FaEye className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-primary-700">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <HiLockClosed className="h-5 w-5 text-primary-400" />
-                      </div>
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Confirm password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="w-full pl-10 pr-10 py-3 border-2 border-primary-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all duration-300 text-primary-800 placeholder-primary-400 text-sm"
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                      >
-                        {showConfirmPassword ? (
-                          <FaEyeSlash className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
-                        ) : (
-                          <FaEye className="h-4 w-4 text-primary-500 hover:text-primary-700 transition-colors duration-300" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-primary-500">
-                  Password must be 8+ characters with uppercase and number
-                </p>
-
-                {/* Error Message */}
-                {error && (
-                  <div className="bg-error-50 border border-error-200 rounded-xl p-3">
-                    <p className="text-error-700 text-sm">{error}</p>
-                  </div>
-                )}
-
-                {/* Terms Checkbox */}
-                <div className="flex items-start gap-3">
                   <input
-                    type="checkbox"
-                    id="terms"
-                    checked={agreeTerms}
-                    onChange={(e) => setAgreeTerms(e.target.checked)}
-                    className="mt-1 w-4 h-4 text-primary-600 border-primary-300 rounded focus:ring-primary-500"
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className={inputClass}
+                    autoComplete="family-name"
                   />
-                  <label
-                    htmlFor="terms"
-                    className="text-sm text-primary-600 leading-relaxed"
-                  >
-                    I agree to the{" "}
-                    <a
-                      href="/terms"
-                      className="text-primary-800 font-semibold hover:underline"
-                    >
-                      Terms & Conditions
-                    </a>{" "}
-                    and{" "}
-                    <a
-                      href="/privacy"
-                      className="text-primary-800 font-semibold hover:underline"
-                    >
-                      Privacy Policy
-                    </a>
-                  </label>
                 </div>
+              </div>
 
-                {/* Create Account Button */}
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-primary-400 text-white font-semibold py-4 px-6 rounded-xl border border-primary-200 hover:border-primary-300 shadow-medium hover:shadow-strong transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 flex items-center justify-center gap-3 text-base"
-                >
-                  {isLoading ? (
-                    <>
-                      <ButtonLoader />
-                      <span>Creating Account...</span>
-                    </>
-                  ) : (
-                    <>
-                      <HiUser className="text-lg" />
-                      <span>Create Host Account</span>
-                    </>
-                  )}
-                </button>
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputClass}
+                  autoComplete="email"
+                />
+              </div>
 
-                {/* Divider */}
+              {/* Business name + phone */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                    Business Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Your business"
+                    value={businessName}
+                    onChange={(e) => setBusinessName(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                    Phone{" "}
+                    <span className="text-neutral-400 normal-case font-normal">
+                      (optional)
+                    </span>
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="+234 800 000 0000"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={inputClass}
+                    autoComplete="tel"
+                  />
+                </div>
+              </div>
+
+              {/* Business type */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Business Type
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: "individual", label: "Individual" },
+                    { value: "company", label: "Company" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => setBusinessType(opt.value)}
+                      className={`px-4 py-3 border text-sm font-medium tracking-wide transition-colors duration-200 ${
+                        businessType === opt.value
+                          ? "border-neutral-900 bg-neutral-900 text-white"
+                          : "border-neutral-200 hover:border-neutral-400 text-neutral-700 bg-white"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Password
+                </label>
                 <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-primary-200"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-white text-primary-500 font-medium">
-                      Or continue with
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="8+ chars, uppercase, number"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${inputClass} pr-11`}
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-neutral-400 hover:text-neutral-600 transition-colors"
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash className="text-sm" />
+                    ) : (
+                      <FaEye className="text-sm" />
+                    )}
+                  </button>
+                </div>
+                {password && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <div className="flex gap-1 flex-1">
+                      {[1, 2, 3, 4].map((level) => (
+                        <div
+                          key={level}
+                          className={`h-0.5 flex-1 rounded-full transition-colors duration-300 ${
+                            strength >= level ? strengthColor : "bg-neutral-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs text-neutral-400 w-10">
+                      {strengthLabel}
                     </span>
                   </div>
-                </div>
+                )}
+              </div>
 
-                {/* Google Sign Up Button */}
-                <button
-                  type="button"
-                  onClick={handleGoogleSignUp}
-                  disabled={isGoogleLoading}
-                  className="w-full bg-white hover:bg-primary-50 border-2 border-primary-200 hover:border-primary-300 text-primary-800 font-semibold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center gap-3 shadow-soft hover:shadow-medium text-base"
-                >
-                  {isGoogleLoading ? (
-                    <>
-                      <ButtonLoader dark />
-                      <span>Creating Account...</span>
-                    </>
-                  ) : (
-                    <>
-                      <FcGoogle className="w-6 h-6" />
-                      <span>Sign up with Google</span>
-                    </>
-                  )}
-                </button>
-              </form>
+              {/* Confirm password */}
+              <div>
+                <label className="block text-xs font-semibold tracking-wider uppercase text-neutral-500 mb-1.5">
+                  Confirm Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Repeat your password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={inputClass}
+                  autoComplete="new-password"
+                />
+              </div>
 
-              {/* Sign In Link */}
-              <div className="text-center pt-4 border-t border-primary-200">
-                <p className="text-primary-600">
-                  Already have a host account?{" "}
-                  <button
-                    onClick={() => navigate("/hostlogin")}
-                    className="text-primary-800 hover:text-primary-900 font-semibold transition-colors duration-300"
+              {/* Terms */}
+              <label className="flex items-start gap-3 cursor-pointer pt-1">
+                <input
+                  type="checkbox"
+                  checked={agreeTerms}
+                  onChange={(e) => setAgreeTerms(e.target.checked)}
+                  className="mt-1 w-4 h-4 accent-neutral-900 cursor-pointer"
+                />
+                <span className="text-xs text-neutral-500 leading-relaxed">
+                  I agree to the{" "}
+                  <a
+                    href="/terms"
+                    className="text-neutral-900 font-semibold hover:text-amber-600 transition-colors"
                   >
-                    Sign In
-                  </button>
-                </p>
-
-                {/* Footer Links */}
-                <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-primary-500 mt-4 pt-4 border-t border-primary-100">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
                   <a
                     href="/privacy"
-                    className="hover:text-primary-700 transition-colors duration-200"
+                    className="text-neutral-900 font-semibold hover:text-amber-600 transition-colors"
                   >
                     Privacy Policy
                   </a>
-                  <span className="text-primary-300">•</span>
-                  <a
-                    href="/terms"
-                    className="hover:text-primary-700 transition-colors duration-200"
-                  >
-                    Terms of Service
-                  </a>
-                  <span className="text-primary-300">•</span>
-                  <a
-                    href="/partner-help"
-                    className="hover:text-primary-700 transition-colors duration-200"
-                  >
-                    Help Center
-                  </a>
-                </div>
-              </div>
+                </span>
+              </label>
+
+              {/* Error */}
+              {error && (
+                <p className="text-red-600 text-xs font-medium border-l-2 border-red-400 pl-3">
+                  {error}
+                </p>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-white text-sm font-medium tracking-[0.15em] uppercase py-4 flex items-center justify-center gap-2 transition-colors duration-200 mt-2"
+              >
+                {isLoading ? (
+                  <ButtonLoader />
+                ) : (
+                  <>
+                    Create Host Account
+                    <HiArrowRight className="text-base" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Sign in link */}
+            <p className="text-center text-sm text-neutral-500 mt-6">
+              Already have a host account?{" "}
+              <button
+                onClick={() => navigate("/hostlogin")}
+                className="text-neutral-900 font-semibold hover:text-amber-600 transition-colors duration-200"
+              >
+                Sign in
+              </button>
+            </p>
+
+            {/* Footer links */}
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-neutral-400 mt-6 pt-6 border-t border-neutral-100">
+              <a
+                href="/privacy"
+                className="hover:text-neutral-600 transition-colors duration-200"
+              >
+                Privacy
+              </a>
+              <span className="text-neutral-300">·</span>
+              <a
+                href="/terms"
+                className="hover:text-neutral-600 transition-colors duration-200"
+              >
+                Terms
+              </a>
+              <span className="text-neutral-300">·</span>
+              <a
+                href="/partner-help"
+                className="hover:text-neutral-600 transition-colors duration-200"
+              >
+                Help
+              </a>
             </div>
           </div>
         </div>

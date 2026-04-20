@@ -88,7 +88,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative w-full h-screen min-h-[600px] overflow-hidden">
+    <section className="relative w-full h-[60vh] min-h-[420px] sm:h-[70vh] sm:min-h-[500px] lg:h-screen lg:min-h-[600px] overflow-hidden">
       {/* Background Image — prev layer for crossfade */}
       {prevImage && (
         <div
