@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAPI } from "../../contexts/APIContext";
 import { useCurrency } from "../../contexts/CurrencyContext";
@@ -22,20 +22,22 @@ import {
   FaChevronRight,
   FaArrowLeft,
   FaCheck,
-  FaTimes,
   FaExclamationTriangle,
   FaCalendarAlt,
+  FaShieldAlt,
+  FaGamepad,
 } from "react-icons/fa";
+import { HiArrowRight } from "react-icons/hi";
 import { toast } from "sonner";
 import PropTypes from "prop-types";
 import MapboxMap from "../common/MapboxMap";
 import { PropertyDetailSkeleton } from "../common/SkeletonLoaders";
 
-// Date picker component
+// Date picker component — editorial
 const DatePicker = ({ label, value, onChange, min, disabled, error }) => {
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-semibold text-primary-700 mb-2">
+      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-neutral-500 mb-2">
         {label}
       </label>
       <input
@@ -44,16 +46,16 @@ const DatePicker = ({ label, value, onChange, min, disabled, error }) => {
         onChange={(e) => onChange(e.target.value)}
         min={min}
         disabled={disabled}
-        className={`w-full p-3 border-2 rounded-xl transition-all duration-300 focus:outline-none ${
+        className={`w-full px-3 py-3 border bg-white text-neutral-800 text-sm transition-colors duration-200 focus:outline-none ${
           error
-            ? "border-error-300 focus:border-error-500 bg-error-50"
+            ? "border-red-400 focus:border-red-500 bg-red-50"
             : disabled
               ? "border-neutral-200 bg-neutral-100 text-neutral-400"
-              : "border-primary-200 focus:border-primary-500 hover:border-primary-300"
+              : "border-neutral-200 hover:border-neutral-400 focus:border-neutral-800"
         }`}
       />
       {error && (
-        <p className="text-error-500 text-sm mt-1 flex items-center gap-1">
+        <p className="text-red-600 text-xs mt-1.5 flex items-center gap-1.5 font-medium border-l-2 border-red-400 pl-2">
           <FaExclamationTriangle className="text-xs" />
           {error}
         </p>
@@ -87,33 +89,35 @@ const GuestCounter = ({ guests, onGuestsChange, maxGuests = 10 }) => {
 
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-semibold text-primary-700 mb-2">
+      <label className="text-[10px] font-semibold tracking-[0.2em] uppercase text-neutral-500 mb-2">
         Guests
       </label>
-      <div className="flex items-center justify-between p-3 border-2 border-primary-200 rounded-xl">
+      <div className="flex items-center justify-between px-3 py-2.5 border border-neutral-200 bg-white">
         <button
           type="button"
           onClick={decrementGuests}
           disabled={guests <= 1}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+          aria-label="Decrease guests"
+          className={`w-8 h-8 flex items-center justify-center text-base transition-colors duration-200 ${
             guests <= 1
-              ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-              : "bg-primary-200 hover:bg-primary-300 text-primary-700"
+              ? "text-neutral-300 cursor-not-allowed"
+              : "text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
           }`}
         >
-          -
+          −
         </button>
-        <span className="font-semibold text-primary-800">
+        <span className="font-medium text-neutral-800 text-sm">
           {guests} {guests === 1 ? "Guest" : "Guests"}
         </span>
         <button
           type="button"
           onClick={incrementGuests}
           disabled={guests >= maxGuests}
-          className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+          aria-label="Increase guests"
+          className={`w-8 h-8 flex items-center justify-center text-base transition-colors duration-200 ${
             guests >= maxGuests
-              ? "bg-neutral-100 text-neutral-400 cursor-not-allowed"
-              : "bg-primary-200 hover:bg-primary-300 text-primary-700"
+              ? "text-neutral-300 cursor-not-allowed"
+              : "text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100"
           }`}
         >
           +
@@ -440,7 +444,7 @@ const PropertyDetail = () => {
           bookingForm.checkIn,
           bookingForm.checkOut,
         );
-      } catch (availabilityError) {
+      } catch {
         toast.dismiss("availability-check");
         toast.error("Failed to check availability. Please try again.");
         setBookingErrors({
@@ -490,7 +494,7 @@ const PropertyDetail = () => {
       };
 
       // Create pending booking
-      const result = await createBooking(bookingData);
+      await createBooking(bookingData);
 
       toast.success("Booking reserved! You can pay later from My Bookings.", {
         duration: 3000,
@@ -537,17 +541,30 @@ const PropertyDetail = () => {
     }
   };
 
-  // Amenity icons mapping
-  const amenityIcons = {
-    "Wi-Fi": FaWifi,
-    TV: FaTv,
-    Parking: FaCar,
-    Pool: FaSwimmingPool,
-    Kitchen: FaUtensils,
-    AC: FaSnowflake,
-    Gym: FaDumbbell,
-    "Pet-friendly": FaPaw,
+  // Amenity icons mapping — case/format-insensitive
+  const amenityIconMap = {
+    wifi: FaWifi,
+    "wi-fi": FaWifi,
+    tv: FaTv,
+    parking: FaCar,
+    pool: FaSwimmingPool,
+    kitchen: FaUtensils,
+    ac: FaSnowflake,
+    "air conditioning": FaSnowflake,
+    gym: FaDumbbell,
+    pets: FaPaw,
+    "pet-friendly": FaPaw,
+    "pet friendly": FaPaw,
+    security: FaShieldAlt,
+    hottub: FaSwimmingPool,
+    "hot tub": FaSwimmingPool,
+    gaming: FaGamepad,
   };
+  const getAmenityIcon = (a) => amenityIconMap[String(a).toLowerCase().trim()] || FaCheck;
+  const formatAmenity = (a) =>
+    String(a)
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
 
   if (loading) {
     return <PropertyDetailSkeleton />;
@@ -555,29 +572,34 @@ const PropertyDetail = () => {
 
   if (error || !property) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-error-50 to-white">
-        <div className="text-center max-w-lg mx-auto px-6">
-          <div className="bg-white rounded-2xl shadow-strong p-8 border border-error-100">
-            <div className="w-20 h-20 bg-error-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaTimes className="text-error-600 text-3xl" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50 px-6">
+        <div className="text-center max-w-md w-full">
+          <div className="bg-white border border-neutral-200 p-10">
+            <div className="flex items-center gap-3 justify-center mb-5">
+              <div className="w-6 h-px bg-amber-500" />
+              <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                Not Found
+              </span>
+              <div className="w-6 h-px bg-amber-500" />
             </div>
-            <h2 className="font-Cormorant text-3xl font-semibold text-red-800 mb-3">
-              Property Not Found
+            <h2 className="font-Cormorant text-3xl sm:text-4xl font-light text-neutral-900 mb-3 leading-tight">
+              Property <span className="italic">unavailable</span>
             </h2>
-            <p className="text-error-600 mb-6 leading-relaxed">
+            <p className="text-neutral-500 text-sm leading-relaxed mb-8">
               {error ||
                 "We couldn't find the property you're looking for. It may have been removed or the link might be incorrect."}
             </p>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               <button
                 onClick={() => navigate("/listings")}
-                className="w-full bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-medium hover:shadow-strong"
+                className="w-full inline-flex items-center justify-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200"
               >
                 View All Properties
+                <HiArrowRight className="text-base" />
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="w-full bg-neutral-100 hover:bg-neutral-200 text-neutral-700 px-6 py-3 rounded-xl font-medium transition-all duration-300"
+                className="w-full border border-neutral-200 hover:border-neutral-400 text-neutral-700 px-6 py-3.5 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200"
               >
                 Try Again
               </button>
@@ -590,128 +612,165 @@ const PropertyDetail = () => {
 
   const { nights, totalAmount, pricePerNight } = calculateBookingDetails();
 
+  // Base display price — shown in the header even before dates are picked
+  const baseNightlyPrice = (() => {
+    const raw =
+      property.pricePerNight ?? property.price ?? property.nightlyRate ?? 0;
+    const converted = convertFromCurrency(raw, property.currency || "NGN");
+    const num =
+      typeof converted === "string"
+        ? parseFloat(converted.replace(/,/g, ""))
+        : converted;
+    return Number.isFinite(num) ? num : 0;
+  })();
+  const displayPricePerNight =
+    pricePerNight > 0 ? pricePerNight : baseNightlyPrice;
+
+  const cityState = `${property.location?.city || property.address?.city || ""}${
+    (property.location?.state || property.address?.state)
+      ? `, ${property.location?.state || property.address?.state}`
+      : ""
+  }`;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-25 to-white">
-      {/* Enhanced Header */}
-      <div className="bg-white/80 backdrop-blur-md shadow-medium border-b border-primary-200 sticky top-0 z-40">
+    <div className="min-h-screen bg-neutral-50">
+      {/* Editorial Sticky Header */}
+      <div className="bg-white border-b border-neutral-200 sticky top-0 z-40">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <button
               onClick={() => navigate("/listings")}
-              className="flex items-center gap-3 text-primary-600 hover:text-primary-800 transition-all duration-300 font-medium group"
+              className="flex items-center gap-2 text-neutral-600 hover:text-neutral-900 transition-colors duration-200 group"
             >
-              <div className="w-10 h-10 bg-primary-100 group-hover:bg-primary-200 rounded-xl flex items-center justify-center transition-colors duration-300">
-                <FaArrowLeft className="text-sm" />
-              </div>
-              <span>Back to Properties</span>
+              <FaArrowLeft className="text-xs group-hover:-translate-x-0.5 transition-transform duration-200" />
+              <span className="text-xs font-semibold tracking-[0.2em] uppercase">
+                Back to Properties
+              </span>
             </button>
 
-            <div className="flex items-center gap-3">
-              <button className="w-10 h-10 bg-neutral-100 hover:bg-neutral-200 rounded-xl flex items-center justify-center transition-colors duration-300">
+            <div className="flex items-center gap-2">
+              <button
+                aria-label="Share property"
+                className="w-10 h-10 border border-neutral-200 hover:border-neutral-400 flex items-center justify-center transition-colors duration-200"
+              >
                 <FaShare className="text-neutral-600 text-sm" />
               </button>
-              <button className="w-10 h-10 bg-error-100 hover:bg-error-200 rounded-xl flex items-center justify-center transition-colors duration-300">
-                <FaHeart className="text-error-600 text-sm" />
+              <button
+                aria-label="Save to favorites"
+                className="w-10 h-10 border border-neutral-200 hover:border-neutral-400 flex items-center justify-center transition-colors duration-200 group"
+              >
+                <FaHeart className="text-neutral-400 group-hover:text-red-500 text-sm transition-colors duration-200" />
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Property Details */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Property Header */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft border border-primary-100">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 text-primary-600 mb-2">
-                  <FaMapMarkerAlt className="text-sm" />
-                  <span className="text-sm font-medium">
-                    {property.location?.city || property.address?.city},{" "}
-                    {property.location?.state || property.address?.state}
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-10 lg:space-y-12">
+            {/* Property Header — editorial */}
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-6 h-px bg-amber-500" />
+                <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                  {property.propertyType || property.type || "Property"}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-neutral-500 mb-3">
+                <FaMapMarkerAlt className="text-xs flex-shrink-0" />
+                <span className="text-sm">
+                  {property.location?.address ||
+                    property.address?.street ||
+                    cityState ||
+                    "Location available"}
+                </span>
+              </div>
+
+              <h1 className="font-Cormorant text-4xl sm:text-5xl lg:text-6xl font-light text-neutral-900 mb-5 leading-[1.05] tracking-tight">
+                {property.title}
+              </h1>
+
+              <div className="flex items-center gap-x-6 gap-y-2 flex-wrap pb-5 border-b border-neutral-200">
+                <div className="flex items-center gap-1.5">
+                  <FaStar className="text-amber-500 text-sm" />
+                  <span className="font-semibold text-neutral-900 text-sm">
+                    {property.averageRating || "New"}
                   </span>
+                  {property.totalReviews ? (
+                    <span className="text-neutral-500 text-sm">
+                      · {property.totalReviews} reviews
+                    </span>
+                  ) : null}
                 </div>
-                <h1 className="font-Cormorant text-4xl lg:text-5xl font-semibold text-neutral-900 mb-3 leading-tight">
-                  {property.title}
-                </h1>
-                <div className="flex items-center gap-6 flex-wrap">
-                  <div className="flex items-center gap-2">
-                    <FaStar className="text-amber-400 text-sm" />
-                    <span className="font-bold text-primary-900">
-                      {property.averageRating || "New"}
-                    </span>
-                    {property.totalReviews && (
-                      <span className="text-primary-600">
-                        ({property.totalReviews} reviews)
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-primary-700">
-                    <span className="flex items-center gap-1">
-                      <FaUsers className="text-xs" />
-                      {property.maxGuests || property.guests || 4} Guests
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <FaBed className="text-xs" />
-                      {property.bedrooms} Beds
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <FaBath className="text-xs" />
-                      {property.bathrooms} Baths
-                    </span>
-                  </div>
+                <div className="flex items-center gap-x-5 gap-y-2 flex-wrap text-sm text-neutral-600">
+                  <span className="flex items-center gap-1.5">
+                    <FaUsers className="text-xs text-neutral-400" />
+                    {property.maxGuests || property.guests || 4} Guests
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <FaBed className="text-xs text-neutral-400" />
+                    {property.bedrooms} Beds
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <FaBath className="text-xs text-neutral-400" />
+                    {property.bathrooms} Baths
+                  </span>
                 </div>
               </div>
             </div>
 
-            {/* Image Gallery */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft border border-primary-100">
-              <div className="relative rounded-2xl overflow-hidden group">
-                <div className="aspect-w-16 aspect-h-10">
-                  <img
-                    src={
-                      property.images?.[currentImageIndex] ||
-                      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                    }
-                    alt={property.title}
-                    className="w-full h-96 lg:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  {property.images?.length > 1 && (
-                    <>
-                      <button
-                        onClick={prevImage}
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-medium transition-all duration-300 hover:scale-105"
-                      >
-                        <FaChevronLeft className="text-primary-600" />
-                      </button>
-                      <button
-                        onClick={nextImage}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-white/90 hover:bg-white backdrop-blur-sm rounded-full flex items-center justify-center shadow-medium transition-all duration-300 hover:scale-105"
-                      >
-                        <FaChevronRight className="text-primary-600" />
-                      </button>
-                    </>
-                  )}
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
-                    {currentImageIndex + 1} / {property.images?.length || 1}
-                  </div>
+            {/* Image Gallery — full-bleed editorial */}
+            <div>
+              <div className="relative bg-neutral-100 overflow-hidden group aspect-[4/3] sm:aspect-[16/10]">
+                <img
+                  src={
+                    property.images?.[currentImageIndex] ||
+                    "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                  }
+                  alt={property.title}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-[1.02]"
+                  loading="eager"
+                  decoding="async"
+                />
+                {property.images?.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImage}
+                      aria-label="Previous image"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/85 hover:bg-white backdrop-blur-sm flex items-center justify-center transition-colors duration-200"
+                    >
+                      <FaChevronLeft className="text-neutral-700 text-sm" />
+                    </button>
+                    <button
+                      onClick={nextImage}
+                      aria-label="Next image"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/85 hover:bg-white backdrop-blur-sm flex items-center justify-center transition-colors duration-200"
+                    >
+                      <FaChevronRight className="text-neutral-700 text-sm" />
+                    </button>
+                  </>
+                )}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-neutral-900/85 backdrop-blur-sm text-white text-[10px] font-semibold tracking-[0.2em] uppercase px-3 py-1.5">
+                  {currentImageIndex + 1} / {property.images?.length || 1}
                 </div>
               </div>
 
-              {/* Image Thumbnails */}
+              {/* Thumbnails */}
               {property.images?.length > 1 && (
-                <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+                <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
                   {property.images.slice(0, 6).map((image, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all duration-300 ${
+                      aria-label={`View image ${index + 1}`}
+                      className={`flex-shrink-0 w-20 h-20 overflow-hidden transition-opacity duration-200 ${
                         currentImageIndex === index
-                          ? "border-primary-500 scale-105"
-                          : "border-primary-200 hover:border-primary-300"
+                          ? "ring-2 ring-amber-500 ring-offset-2"
+                          : "opacity-60 hover:opacity-100"
                       }`}
                     >
                       <img
@@ -724,8 +783,8 @@ const PropertyDetail = () => {
                     </button>
                   ))}
                   {property.images.length > 6 && (
-                    <div className="flex-shrink-0 w-20 h-20 rounded-xl bg-primary-100 border-2 border-primary-200 flex items-center justify-center">
-                      <span className="text-primary-600 text-xs font-medium">
+                    <div className="flex-shrink-0 w-20 h-20 bg-neutral-900 text-white flex items-center justify-center">
+                      <span className="font-Cormorant text-xl font-light">
                         +{property.images.length - 6}
                       </span>
                     </div>
@@ -734,169 +793,152 @@ const PropertyDetail = () => {
               )}
             </div>
 
-            {/* Property Details */}
-            <div className="bg-white rounded-2xl p-6 shadow-soft border border-primary-100 space-y-6">
-              <div>
-                <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-4">
-                  About this place
-                </h3>
-                <p className="text-primary-700 leading-relaxed text-base">
-                  {property.description}
-                </p>
+            {/* About */}
+            <section>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-6 h-px bg-amber-500" />
+                <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                  Overview
+                </span>
               </div>
+              <h3 className="font-Cormorant text-3xl sm:text-4xl font-light text-neutral-900 mb-4 leading-tight">
+                About this <span className="italic">place</span>
+              </h3>
+              <p className="text-neutral-600 leading-relaxed text-sm sm:text-base">
+                {property.description || "No description available for this property."}
+              </p>
+            </section>
 
-              {/* Amenities */}
-              {property.amenities?.length > 0 && (
+            {/* Amenities */}
+            {property.amenities?.length > 0 && (
+              <section>
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-6 h-px bg-amber-500" />
+                  <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                    Amenities
+                  </span>
+                </div>
+                <h3 className="font-Cormorant text-3xl sm:text-4xl font-light text-neutral-900 mb-6 leading-tight">
+                  What this place <span className="italic">offers</span>
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 border-t border-l border-neutral-200">
+                  {property.amenities.map((amenity, index) => {
+                    const Icon = getAmenityIcon(amenity);
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 px-4 py-4 border-r border-b border-neutral-200 bg-white"
+                      >
+                        <Icon className="text-neutral-700 text-base flex-shrink-0" />
+                        <span className="text-neutral-800 text-sm capitalize">
+                          {formatAmenity(amenity)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
+            {/* Property Features */}
+            <section>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-6 h-px bg-amber-500" />
+                <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                  At a Glance
+                </span>
+              </div>
+              <h3 className="font-Cormorant text-3xl sm:text-4xl font-light text-neutral-900 mb-6 leading-tight">
+                Property <span className="italic">features</span>
+              </h3>
+              <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-neutral-200 border border-neutral-200 bg-white">
+                {[
+                  { icon: FaUsers, value: property.maxGuests || property.guests || "N/A", label: "Guests" },
+                  { icon: FaBed, value: property.bedrooms || "N/A", label: "Bedrooms" },
+                  { icon: FaBath, value: property.bathrooms || "N/A", label: "Bathrooms" },
+                  { icon: FaMapMarkerAlt, value: property.propertyType || property.type || "N/A", label: "Type" },
+                ].map((feat, i) => (
+                  <div key={i} className={`p-5 sm:p-6 ${i >= 2 ? "border-t lg:border-t-0 border-neutral-200" : ""}`}>
+                    <feat.icon className="text-neutral-300 text-lg mb-3" />
+                    <div className="font-Cormorant text-2xl sm:text-3xl font-light text-neutral-900 leading-none capitalize">
+                      {feat.value}
+                    </div>
+                    <div className="text-[10px] font-semibold tracking-[0.2em] uppercase text-amber-600 mt-2">
+                      {feat.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Location */}
+            <section>
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-6 h-px bg-amber-500" />
+                <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                  Where You&apos;ll Be
+                </span>
+              </div>
+              <h3 className="font-Cormorant text-3xl sm:text-4xl font-light text-neutral-900 mb-6 leading-tight">
+                <span className="italic">Location</span>
+              </h3>
+
+              <div className="flex items-start gap-3 mb-5 pb-5 border-b border-neutral-200">
+                <FaMapMarkerAlt className="text-amber-600 text-base mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
-                    What this place offers
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {property.amenities.map((amenity, index) => {
-                      const IconComponent = amenityIcons[amenity] || FaCheck;
-                      return (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 p-4 bg-gradient-to-r from-primary-50 to-primary-25 rounded-xl border border-primary-100 hover:border-primary-200 transition-all duration-300 hover:shadow-soft"
-                        >
-                          <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                            <IconComponent className="text-primary-600 text-lg" />
-                          </div>
-                          <span className="text-primary-800 font-medium text-sm">
-                            {amenity}
-                          </span>
-                        </div>
-                      );
-                    })}
+                  <div className="font-medium text-neutral-900 text-sm">
+                    {property.location?.address ||
+                      property.address?.street ||
+                      "Address not available"}
                   </div>
-                </div>
-              )}
-
-              {/* Property Features */}
-              <div>
-                <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
-                  Property Features
-                </h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 text-center border border-primary-200 hover:shadow-medium transition-all duration-300">
-                    <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FaUsers className="text-white text-xl" />
-                    </div>
-                    <div className="font-bold text-2xl text-primary-900 mb-1">
-                      {property.maxGuests || property.guests || "N/A"}
-                    </div>
-                    <div className="text-sm text-primary-600 font-medium">
-                      Guests
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 text-center border border-primary-200 hover:shadow-medium transition-all duration-300">
-                    <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FaBed className="text-white text-xl" />
-                    </div>
-                    <div className="font-bold text-2xl text-primary-900 mb-1">
-                      {property.bedrooms || "N/A"}
-                    </div>
-                    <div className="text-sm text-primary-600 font-medium">
-                      Bedrooms
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 text-center border border-primary-200 hover:shadow-medium transition-all duration-300">
-                    <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FaBath className="text-white text-xl" />
-                    </div>
-                    <div className="font-bold text-2xl text-primary-900 mb-1">
-                      {property.bathrooms || "N/A"}
-                    </div>
-                    <div className="text-sm text-primary-600 font-medium">
-                      Bathrooms
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-primary-50 to-primary-100 rounded-xl p-6 text-center border border-primary-200 hover:shadow-medium transition-all duration-300">
-                    <div className="w-12 h-12 bg-primary-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FaMapMarkerAlt className="text-white text-xl" />
-                    </div>
-                    <div className="font-bold text-lg text-primary-900 mb-1">
-                      {property.propertyType || property.type || "N/A"}
-                    </div>
-                    <div className="text-sm text-primary-600 font-medium">
-                      Type
-                    </div>
+                  <div className="text-neutral-500 text-sm mt-0.5">
+                    {property.location?.city || property.address?.city},{" "}
+                    {property.location?.state || property.address?.state}{" "}
+                    {property.location?.country || property.address?.country || "Nigeria"}
                   </div>
                 </div>
               </div>
 
-              {/* Location & Map */}
-              <div className="bg-white rounded-2xl p-6 shadow-soft border border-primary-100">
-                <h3 className="font-Cormorant text-3xl font-semibold text-neutral-900 mb-6">
-                  Location
-                </h3>
-                <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <FaMapMarkerAlt className="text-primary-600 text-xl mt-1" />
-                    <div>
-                      <div className="font-semibold text-primary-900">
-                        {property.location?.address ||
-                          property.address?.street ||
-                          "Address not available"}
-                      </div>
-                      <div className="text-primary-600">
-                        {property.location?.city || property.address?.city},{" "}
-                        {property.location?.state || property.address?.state}{" "}
-                        {property.location?.country ||
-                          property.address?.country ||
-                          "Nigeria"}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="w-full h-64 rounded-xl overflow-hidden border border-primary-200">
-                    <MapboxMap
-                      center={[
-                        property.location?.lng ||
-                          property.address?.lng ||
-                          3.3792, // Default to Lagos longitude
-                        property.location?.lat ||
-                          property.address?.lat ||
-                          6.5244, // Default to Lagos latitude
-                      ]}
-                      zoom={14}
-                      markers={[
-                        {
-                          coordinates: [
-                            property.location?.lng ||
-                              property.address?.lng ||
-                              3.3792,
-                            property.location?.lat ||
-                              property.address?.lat ||
-                              6.5244,
-                          ],
-                          popup: `<div><strong>${property.title}</strong><br/>${property.location?.address || property.address?.street || "Property Location"}</div>`,
-                        },
-                      ]}
-                    />
-                  </div>
-                </div>
+              <div className="w-full h-64 sm:h-80 overflow-hidden border border-neutral-200">
+                <MapboxMap
+                  center={[
+                    property.location?.lng || property.address?.lng || 3.3792,
+                    property.location?.lat || property.address?.lat || 6.5244,
+                  ]}
+                  zoom={14}
+                  markers={[
+                    {
+                      coordinates: [
+                        property.location?.lng || property.address?.lng || 3.3792,
+                        property.location?.lat || property.address?.lat || 6.5244,
+                      ],
+                      popup: `<div><strong>${property.title}</strong><br/>${property.location?.address || property.address?.street || "Property Location"}</div>`,
+                    },
+                  ]}
+                />
               </div>
-            </div>
+            </section>
           </div>
 
-          {/* Right Column - Booking Card */}
+          {/* Right Column — Booking Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl p-6 shadow-strong border border-primary-100 sticky top-24">
-              <div className="text-center mb-6">
-                <div className="text-4xl font-black text-primary-900">
-                  {selectedCurrencyData?.symbol || "₦"}
-                  {pricePerNight && pricePerNight > 0
-                    ? Math.round(pricePerNight).toLocaleString()
-                    : "0"}
+            <div className="bg-white border border-neutral-200 sticky top-24">
+              {/* Price header */}
+              <div className="px-6 py-6 border-b border-neutral-200">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-Cormorant text-4xl font-light text-neutral-900 leading-none">
+                    {selectedCurrencyData?.symbol || "₦"}
+                    {displayPricePerNight > 0
+                      ? Math.round(displayPricePerNight).toLocaleString()
+                      : "0"}
+                  </span>
+                  <span className="text-xs font-medium text-neutral-500 tracking-wider uppercase">
+                    /night
+                  </span>
                 </div>
-                <div className="text-primary-600">per night</div>
               </div>
 
-              {/* Booking Form */}
-              <div className="space-y-4">
+              <div className="px-6 py-6 space-y-5">
                 <div className="grid grid-cols-2 gap-3">
                   <DatePicker
                     label="Check-in"
@@ -931,22 +973,22 @@ const PropertyDetail = () => {
 
                 {/* Booking Summary */}
                 {nights > 0 && pricePerNight > 0 && (
-                  <div className="bg-primary-50 p-4 rounded-xl space-y-2">
-                    <div className="flex justify-between text-primary-700">
+                  <div className="border border-neutral-200 px-4 py-3 space-y-2.5">
+                    <div className="flex justify-between text-neutral-600 text-sm">
                       <span>
                         {selectedCurrencyData?.symbol || "₦"}
-                        {Math.round(pricePerNight).toLocaleString()} × {nights}{" "}
-                        nights
+                        {Math.round(pricePerNight).toLocaleString()} × {nights} nights
                       </span>
-                      <span>
+                      <span className="text-neutral-800">
                         {selectedCurrencyData?.symbol || "₦"}
                         {Math.round(nights * pricePerNight).toLocaleString()}
                       </span>
                     </div>
-                    <hr className="border-primary-200" />
-                    <div className="flex justify-between font-bold text-primary-900">
-                      <span>Total</span>
-                      <span>
+                    <div className="border-t border-neutral-200 pt-2.5 flex justify-between items-baseline">
+                      <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-neutral-500">
+                        Total
+                      </span>
+                      <span className="font-Cormorant text-2xl font-light text-neutral-900">
                         {selectedCurrencyData?.symbol || "₦"}
                         {Math.round(totalAmount).toLocaleString()}
                       </span>
@@ -956,78 +998,76 @@ const PropertyDetail = () => {
 
                 {/* Error Message */}
                 {bookingErrors.general && (
-                  <div className="bg-error-50 border border-error-200 text-error-600 p-3 rounded-xl text-sm flex items-center gap-2">
-                    <FaExclamationTriangle className="text-sm" />
-                    {bookingErrors.general}
+                  <div className="border-l-2 border-red-500 bg-red-50 text-red-700 px-3 py-2.5 text-xs flex items-start gap-2">
+                    <FaExclamationTriangle className="text-xs mt-0.5 flex-shrink-0" />
+                    <span>{bookingErrors.general}</span>
                   </div>
                 )}
 
                 {/* Action Buttons */}
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <button
                     onClick={handleCheckAvailability}
                     disabled={availabilityLoading}
-                    className="w-full bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-medium hover:shadow-strong transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full border border-neutral-300 hover:border-neutral-900 text-neutral-800 hover:text-neutral-900 py-3.5 px-6 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {availabilityLoading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Checking...
+                        <div className="w-3.5 h-3.5 border-2 border-neutral-700 border-t-transparent rounded-full animate-spin" />
+                        Checking…
                       </>
                     ) : (
                       <>
-                        <FaCalendarAlt className="text-sm" />
+                        <FaCalendarAlt className="text-xs" />
                         Check Availability
                       </>
                     )}
                   </button>
 
-                  {/* Reserve Now - Direct booking */}
                   <button
                     onClick={handleBooking}
                     disabled={bookingLoading}
-                    className="w-full bg-gradient-to-r from-primary-800 to-primary-900 hover:from-primary-900 hover:to-primary-950 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-medium hover:shadow-strong transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full bg-neutral-200 hover:bg-neutral-300 text-neutral-900 py-3.5 px-6 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {bookingLoading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                        Reserving...
+                        <div className="w-3.5 h-3.5 border-2 border-neutral-900 border-t-transparent rounded-full animate-spin" />
+                        Reserving…
                       </>
                     ) : (
                       <>
-                        <FaCheck className="text-sm" />
+                        <FaCheck className="text-xs" />
                         Reserve Now
                       </>
                     )}
                   </button>
 
-                  {/* Book Now - Go to checkout */}
                   <button
                     onClick={handleBookNow}
-                    className="w-full bg-gradient-to-r from-accent-blue-600 to-accent-blue-700 hover:from-accent-blue-700 hover:to-accent-blue-800 text-white font-semibold py-4 px-6 rounded-xl transition-all duration-300 shadow-medium hover:shadow-strong transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                    className="w-full bg-neutral-900 hover:bg-neutral-800 text-white py-3.5 px-6 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200 flex items-center justify-center gap-2"
                   >
-                    <FaArrowLeft className="text-sm rotate-180" />
                     Book Now
+                    <HiArrowRight className="text-base" />
                   </button>
                 </div>
 
                 {!isAuthenticated && (
-                  <div className="text-center text-sm text-primary-600 bg-primary-50 p-3 rounded-xl">
+                  <p className="text-center text-xs text-neutral-500 pt-2">
                     <button
                       onClick={() => navigate("/signin")}
-                      className="text-accent-blue-600 hover:text-accent-blue-700 font-medium hover:underline"
+                      className="text-neutral-900 font-semibold hover:text-amber-600 transition-colors duration-200"
                     >
                       Login
                     </button>
                     {" or "}
                     <button
                       onClick={() => navigate("/signup")}
-                      className="text-accent-blue-600 hover:text-accent-blue-700 font-medium hover:underline"
+                      className="text-neutral-900 font-semibold hover:text-amber-600 transition-colors duration-200"
                     >
                       Register
                     </button>
                     {" to book this property"}
-                  </div>
+                  </p>
                 )}
               </div>
             </div>
