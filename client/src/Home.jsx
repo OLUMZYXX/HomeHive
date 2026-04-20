@@ -28,27 +28,27 @@ const SectionFallback = () => (
 
 // Review platform trust strip
 const RatingsStrip = () => (
-  <div className="bg-white border-t border-b border-neutral-100 py-5">
+  <div className="bg-white border-t border-b border-neutral-100 py-4 sm:py-5">
     <div className="container mx-auto px-4 sm:px-6 max-w-screen-xl">
-      <div className="flex flex-wrap items-center justify-center gap-10 sm:gap-16">
+      <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-16">
         {[
           { initial: "B", label: "Booking.com", score: "4.9/5", verdict: "Excellent", color: "bg-blue-600" },
           { initial: "G", label: "Google Reviews", score: "5/5", verdict: "Excellent", color: "bg-green-600" },
           { initial: "T", label: "Trustpilot", score: "4.8/5", verdict: "Great", color: "bg-emerald-500" },
         ].map((platform) => (
-          <div key={platform.label} className="flex items-center gap-3">
-            <div className={`w-9 h-9 ${platform.color} rounded text-white text-base font-bold flex items-center justify-center flex-shrink-0`}>
+          <div key={platform.label} className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3 text-center sm:text-left">
+            <div className={`w-8 h-8 sm:w-9 sm:h-9 ${platform.color} rounded text-white text-sm sm:text-base font-bold flex items-center justify-center flex-shrink-0`}>
               {platform.initial}
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-semibold text-neutral-800">{platform.score}</span>
-                <svg className="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+            <div className="min-w-0">
+              <div className="flex items-center justify-center sm:justify-start gap-1 sm:gap-1.5">
+                <span className="text-xs sm:text-sm font-semibold text-neutral-800">{platform.score}</span>
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
-                <span className="text-xs font-medium text-amber-600">{platform.verdict}</span>
+                <span className="hidden sm:inline text-xs font-medium text-amber-600">{platform.verdict}</span>
               </div>
-              <div className="text-xs text-neutral-400">{platform.label}</div>
+              <div className="text-[10px] sm:text-xs text-neutral-400 truncate">{platform.label}</div>
             </div>
           </div>
         ))}

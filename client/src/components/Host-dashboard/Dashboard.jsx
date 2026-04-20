@@ -45,6 +45,7 @@ import {
   HiCog,
   HiOutlineChartBar,
   HiMenu,
+  HiArrowRight,
 } from "react-icons/hi";
 import { IoClose } from "react-icons/io5";
 import {
@@ -422,37 +423,42 @@ const Dashboard = () => {
     navigate(`/listing/${propertyId}`);
   };
 
-  // Render the Host Dashboard Navbar
+  // Render the Host Dashboard Navbar — editorial design
   const renderNavbar = () => (
     <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 border-b ${
         isScrolled
-          ? "bg-white/95 backdrop-blur-md shadow-strong"
-          : "bg-white shadow-soft"
+          ? "bg-white/95 backdrop-blur-md border-neutral-200"
+          : "bg-white border-neutral-100"
       }`}
     >
-      <div className="container mx-auto px-3 sm:px-4 py-4 max-w-[1400px]">
+      {/* Thin amber accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/60 to-transparent" />
+
+      <div className="container mx-auto px-4 sm:px-6 py-4 max-w-[1400px]">
         <div className="flex items-center justify-between">
-          {/* Logo Section */}
-          <div className="flex items-center gap-3">
-            {/* Logo */}
-            <HomeHiveLogo className="w-10 h-10 sm:w-12 sm:h-12 object-contain transition-transform duration-200 hover:scale-105" />
-            <div>
-              <h1 className="font-NotoSans text-lg sm:text-xl lg:text-2xl font-bold text-primary-800">
+          {/* Wordmark + section label */}
+          <div className="flex items-center gap-4">
+            <HomeHiveLogo className="w-9 h-9 sm:w-10 sm:h-10 object-contain" />
+            <div className="flex flex-col leading-none">
+              <span className="font-Cormorant text-xl sm:text-2xl font-light text-neutral-900 tracking-wide">
+                Home<span className="text-amber-500">Hive</span>
+              </span>
+              <span className="hidden sm:inline text-[10px] font-semibold tracking-[0.25em] uppercase text-amber-600 mt-1.5">
                 Host Dashboard
-              </h1>
+              </span>
             </div>
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-2 rounded-lg hover:bg-primary-50 transition-colors duration-200"
+            className="lg:hidden p-2 text-neutral-700 hover:text-neutral-900 transition-colors duration-200"
           >
             {mobileMenuOpen ? (
-              <IoClose className="text-2xl text-primary-700" />
+              <IoClose className="text-2xl" />
             ) : (
-              <HiMenu className="text-2xl text-primary-700" />
+              <HiMenu className="text-2xl" />
             )}
           </button>
 
@@ -460,16 +466,15 @@ const Dashboard = () => {
           <div className="hidden lg:flex items-center gap-4">
             {user && isAuthenticated ? (
               <div className="relative flex items-center gap-3">
-                {/* User Profile Button */}
                 <button
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className="flex items-center gap-3 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded-xl px-4 py-2 transition-all duration-300"
+                  className="flex items-center gap-3 border border-neutral-200 hover:border-neutral-400 bg-white px-4 py-2 transition-colors duration-200"
                 >
                   {user.profilePicture || user.photoURL ? (
                     <img
                       src={user.profilePicture || user.photoURL}
                       alt="Host Profile"
-                      className="w-8 h-8 rounded-full object-cover"
+                      className="w-8 h-8 object-cover"
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
@@ -479,7 +484,7 @@ const Dashboard = () => {
                     />
                   ) : null}
                   <div
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm"
+                    className="w-8 h-8 bg-neutral-900 flex items-center justify-center text-white font-semibold text-sm"
                     style={{
                       display:
                         user.profilePicture || user.photoURL ? "none" : "flex",
@@ -490,38 +495,35 @@ const Dashboard = () => {
                       .toUpperCase()}
                   </div>
                   <div className="text-left">
-                    <div className="text-primary-900 text-sm font-medium">
+                    <div className="text-neutral-900 text-sm font-medium leading-tight">
                       {user.displayName || user.firstName || "Host"}
                     </div>
-                    <div className="text-primary-600 text-xs">
-                      {user.role === "host"
-                        ? "Host Account"
-                        : "Dashboard Access"}
+                    <div className="text-[10px] font-semibold tracking-[0.15em] uppercase text-amber-600 mt-0.5">
+                      {user.role === "host" ? "Host" : "Dashboard"}
                     </div>
                   </div>
-                  <FaChevronDown className="text-primary-600 text-xs" />
+                  <FaChevronDown className="text-neutral-500 text-xs" />
                 </button>
 
-                {/* Profile Dropdown */}
                 <AnimatePresence>
                   {profileMenuOpen && (
                     <motion.div
                       ref={profileMenuRef}
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute top-full right-0 mt-2 w-80 bg-white border border-primary-200 rounded-2xl shadow-strong z-50 overflow-hidden"
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                      className="absolute top-full right-0 mt-2 w-80 bg-white border border-neutral-200 z-50 overflow-hidden"
                     >
-                      {/* User Info Section */}
-                      <div className="px-6 py-4 border-b border-primary-100 bg-gradient-to-r from-primary-50 to-primary-100">
+                      {/* User Info */}
+                      <div className="px-6 py-5 border-b border-neutral-100">
                         <div className="flex items-center gap-4">
                           <div className="relative">
                             {user.profilePicture || user.photoURL ? (
                               <img
                                 src={user.profilePicture || user.photoURL}
                                 alt="Host Profile"
-                                className="w-12 h-12 rounded-2xl object-cover ring-2 ring-white shadow-medium"
+                                className="w-12 h-12 object-cover"
                                 loading="lazy"
                                 decoding="async"
                                 onError={(e) => {
@@ -531,7 +533,7 @@ const Dashboard = () => {
                               />
                             ) : null}
                             <div
-                              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-lg ring-2 ring-white shadow-medium"
+                              className="w-12 h-12 bg-neutral-900 flex items-center justify-center text-white font-semibold text-lg"
                               style={{
                                 display:
                                   user.profilePicture || user.photoURL
@@ -548,20 +550,22 @@ const Dashboard = () => {
                                 .charAt(0)
                                 .toUpperCase()}
                             </div>
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success-500 rounded-full border-2 border-white shadow-sm">
-                              <div className="w-full h-full bg-success-400 rounded-full animate-ping opacity-75"></div>
+                            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-amber-500 border-2 border-white">
+                              <div className="w-full h-full bg-amber-400 animate-ping opacity-75"></div>
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-primary-900 text-lg truncate">
+                            <div className="font-Cormorant text-xl font-light text-neutral-900 truncate leading-tight">
                               {user.displayName || user.firstName || "Host"}
                             </div>
-                            <div className="text-sm text-primary-600 truncate">
+                            <div className="text-xs text-neutral-500 truncate mt-0.5">
                               {user.email}
                             </div>
-                            <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
-                              <div className="w-1.5 h-1.5 bg-primary-500 rounded-full"></div>
-                              Host Active
+                            <div className="inline-flex items-center gap-1.5 mt-2">
+                              <div className="w-1.5 h-1.5 bg-amber-500" />
+                              <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-amber-600">
+                                Host Active
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -574,14 +578,12 @@ const Dashboard = () => {
                             setActiveTab("settings");
                             setProfileMenuOpen(false);
                           }}
-                          className="w-full flex items-center gap-3 px-6 py-3 text-primary-700 hover:bg-primary-50 hover:text-primary-900 transition-colors duration-200"
+                          className="w-full flex items-center gap-3 px-6 py-3 text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900 transition-colors duration-200"
                         >
-                          <div className="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center">
-                            <FaCog className="text-primary-600 text-sm" />
-                          </div>
+                          <FaCog className="text-neutral-500 text-sm" />
                           <div className="flex-1 text-left">
                             <div className="font-medium text-sm">Settings</div>
-                            <div className="text-xs text-primary-500">
+                            <div className="text-xs text-neutral-500">
                               Account preferences
                             </div>
                           </div>
@@ -590,13 +592,11 @@ const Dashboard = () => {
                         <button
                           onClick={handleLogout}
                           disabled={loading}
-                          className={`w-full flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 group ${
+                          className={`w-full flex items-center gap-3 px-6 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 border-t border-neutral-100 ${
                             loading ? "opacity-50 cursor-not-allowed" : ""
                           }`}
                         >
-                          <div className="w-9 h-9 bg-red-100 group-hover:bg-red-200 rounded-xl flex items-center justify-center">
-                            <FaSignOutAlt className="text-red-600 text-sm" />
-                          </div>
+                          <FaSignOutAlt className="text-red-600 text-sm" />
                           <div className="flex-1 text-left">
                             <div className="font-medium text-sm">
                               {loading ? "Logging out..." : "Sign Out"}
@@ -615,13 +615,13 @@ const Dashboard = () => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => navigate("/hostlogin")}
-                  className="text-primary-700 hover:text-primary-900 px-4 py-2 rounded-xl font-medium transition-colors duration-300"
+                  className="text-neutral-700 hover:text-neutral-900 px-4 py-2 text-sm font-medium tracking-wider uppercase transition-colors duration-200"
                 >
                   Host Login
                 </button>
                 <button
                   onClick={() => navigate("/host-signup")}
-                  className="bg-primary-800 text-white px-4 py-2 rounded-xl font-medium hover:bg-primary-900 transition-colors duration-300"
+                  className="bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-2.5 text-xs font-semibold tracking-[0.15em] uppercase transition-colors duration-200"
                 >
                   Create Account
                 </button>
@@ -637,21 +637,20 @@ const Dashboard = () => {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="lg:hidden mt-4 border-t border-primary-200 pt-4"
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="lg:hidden mt-4 border-t border-neutral-200 pt-4 overflow-hidden"
             >
               {user && isAuthenticated ? (
                 <div className="space-y-4">
-                  {/* User Profile - Mobile */}
-                  <div className="flex items-center gap-3 px-4 py-3 bg-primary-50 rounded-lg">
+                  <div className="flex items-center gap-3 px-4 py-3 border border-neutral-200">
                     {user.profilePicture || user.photoURL ? (
                       <img
                         src={user.profilePicture || user.photoURL}
                         alt="Host Profile"
-                        className="w-10 h-10 rounded-full object-cover"
+                        className="w-10 h-10 object-cover"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-semibold text-sm">
+                      <div className="w-10 h-10 bg-neutral-900 flex items-center justify-center text-white font-semibold text-sm">
                         {(
                           user.displayName ||
                           user.firstName ||
@@ -663,53 +662,52 @@ const Dashboard = () => {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-primary-900 truncate">
+                      <div className="font-medium text-neutral-900 truncate">
                         {user.displayName || user.firstName || "Host"}
                       </div>
-                      <div className="text-sm text-primary-600 truncate">
+                      <div className="text-xs text-neutral-500 truncate">
                         {user.email}
                       </div>
                     </div>
                   </div>
 
-                  {/* Mobile Menu Actions */}
-                  <div className="space-y-2">
+                  <div className="space-y-1">
                     <button
                       onClick={() => {
                         setActiveTab("settings");
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-primary-700 hover:bg-primary-50 rounded-lg transition-colors duration-200"
+                      className="w-full flex items-center gap-3 px-4 py-3 text-neutral-700 hover:bg-neutral-50 transition-colors duration-200"
                     >
-                      <FaCog className="text-lg" />
-                      <span className="font-medium">Settings</span>
+                      <FaCog className="text-base" />
+                      <span className="font-medium text-sm">Settings</span>
                     </button>
 
                     <button
                       onClick={handleLogout}
                       disabled={loading}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 ${
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors duration-200 border-t border-neutral-100 ${
                         loading ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                     >
-                      <FaSignOutAlt className="text-lg" />
-                      <span className="font-medium">
+                      <FaSignOutAlt className="text-base" />
+                      <span className="font-medium text-sm">
                         {loading ? "Logging out..." : "Sign Out"}
                       </span>
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <button
                     onClick={() => navigate("/hostlogin")}
-                    className="w-full px-4 py-3 text-primary-700 hover:text-primary-900 border border-primary-300 rounded-xl font-medium transition-all duration-200"
+                    className="w-full px-4 py-3 text-neutral-700 hover:text-neutral-900 border border-neutral-200 hover:border-neutral-400 text-sm font-medium tracking-wider uppercase transition-colors duration-200"
                   >
                     Host Login
                   </button>
                   <button
                     onClick={() => navigate("/host-signup")}
-                    className="w-full px-4 py-3 bg-primary-800 text-white rounded-xl font-medium hover:bg-primary-900 transition-all duration-200"
+                    className="w-full px-4 py-3 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold tracking-[0.15em] uppercase transition-colors duration-200"
                   >
                     Create Account
                   </button>
@@ -1888,83 +1886,125 @@ const Dashboard = () => {
     switch (activeTab) {
       case "overview":
         return (
-          <div className="space-y-4 sm:space-y-6 md:space-y-8">
-            <div className="bg-gradient-to-r from-primary-800 to-primary-600 rounded-xl md:rounded-2xl p-4 sm:p-6 md:p-8 text-white">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-3 md:mb-4">
-                Welcome back, Host!
-              </h2>
-              <p className="text-lg sm:text-xl md:text-2xl opacity-90 mb-3 sm:mb-4 md:mb-6">
-                Ready to share your space with the world?
-              </p>
-              <ButtonTooltip content="Start creating your first property listing">
-                <button
-                  onClick={() => setActiveTab("create")}
-                  className="bg-white text-primary-800 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl font-semibold hover:bg-primary-50 transition-colors duration-300 text-base sm:text-lg md:text-lg"
-                >
-                  Create New Listing
-                </button>
-              </ButtonTooltip>
+          <div className="space-y-6 md:space-y-10">
+            {/* Welcome Banner — dark editorial */}
+            <div className="relative bg-neutral-900 text-white p-6 sm:p-8 md:p-12 overflow-hidden">
+              {/* Subtle dot pattern */}
+              <div
+                className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle, #ffffff 1px, transparent 1px)",
+                  backgroundSize: "28px 28px",
+                }}
+              />
+              {/* Amber accent left edge */}
+              <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-amber-500 to-transparent" />
+
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-8 h-px bg-amber-500" />
+                  <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-400">
+                    Welcome Back
+                  </span>
+                </div>
+                <h2 className="font-Cormorant text-3xl sm:text-4xl md:text-5xl font-light leading-tight mb-3">
+                  Hello, <span className="italic">{user?.firstName || user?.displayName?.split(" ")[0] || "Host"}</span>
+                </h2>
+                <p className="text-white/70 text-sm sm:text-base md:text-lg mb-6 max-w-lg leading-relaxed">
+                  Ready to share your space with the world? Create your next listing and reach more guests.
+                </p>
+                <ButtonTooltip content="Start creating your first property listing">
+                  <button
+                    onClick={() => setActiveTab("create")}
+                    className="inline-flex items-center gap-2 bg-white hover:bg-amber-50 text-neutral-900 px-6 py-3 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200"
+                  >
+                    Create New Listing
+                    <HiArrowRight className="text-base" />
+                  </button>
+                </ButtonTooltip>
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-              <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-primary-600 text-sm sm:text-base md:text-base font-medium">
-                      Total Listings
-                    </p>
-                    <p
-                      className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800"
-                      key={hostProperties?.length}
-                    >
-                      {hostProperties?.length || 0}
-                    </p>
-                  </div>
-                  <FaHome className="text-lg sm:text-xl md:text-2xl text-primary-400" />
+            {/* Stat Cards — sharp, editorial */}
+            <div className="grid grid-cols-2 md:grid-cols-3 divide-x divide-y md:divide-y-0 divide-neutral-200 border border-neutral-200 bg-white">
+              <div className="p-5 sm:p-6 md:p-8">
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-amber-600">
+                    Listings
+                  </span>
+                  <FaHome className="text-neutral-300 text-lg" />
                 </div>
+                <p
+                  className="font-Cormorant text-4xl sm:text-5xl md:text-6xl font-light text-neutral-900 leading-none"
+                  key={hostProperties?.length}
+                >
+                  {hostProperties?.length || 0}
+                </p>
+                <p className="text-xs text-neutral-500 mt-3">Total properties</p>
               </div>
 
-              <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-primary-600 text-sm sm:text-base md:text-base font-medium">
-                      Total Bookings
-                    </p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800">
-                      {statsLoading ? "..." : hostStats.totalBookings}
-                    </p>
-                  </div>
-                  <FaCalendarAlt className="text-lg sm:text-xl md:text-2xl text-primary-400" />
+              <div className="p-5 sm:p-6 md:p-8">
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-amber-600">
+                    Bookings
+                  </span>
+                  <FaCalendarAlt className="text-neutral-300 text-lg" />
                 </div>
+                <p className="font-Cormorant text-4xl sm:text-5xl md:text-6xl font-light text-neutral-900 leading-none">
+                  {statsLoading ? "—" : hostStats.totalBookings}
+                </p>
+                <p className="text-xs text-neutral-500 mt-3">Total bookings</p>
               </div>
 
-              <div className="bg-white p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl md:rounded-2xl border border-primary-200 shadow-soft">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-primary-600 text-sm sm:text-base md:text-base font-medium">
-                      Monthly Earnings
-                    </p>
-                    <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-800">
-                      {statsLoading
-                        ? "..."
-                        : `₦${(hostStats.monthlyEarnings || 0).toLocaleString()}`}
-                    </p>
-                  </div>
-                  <FaDollarSign className="text-lg sm:text-xl md:text-2xl text-primary-400" />
+              <div className="col-span-2 md:col-span-1 p-5 sm:p-6 md:p-8 border-t md:border-t-0 border-neutral-200">
+                <div className="flex items-start justify-between mb-4">
+                  <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-amber-600">
+                    Earnings
+                  </span>
+                  <FaDollarSign className="text-neutral-300 text-lg" />
                 </div>
+                <p className="font-Cormorant text-3xl sm:text-4xl md:text-5xl font-light text-neutral-900 leading-none">
+                  {statsLoading
+                    ? "—"
+                    : `₦${(hostStats.monthlyEarnings || 0).toLocaleString()}`}
+                </p>
+                <p className="text-xs text-neutral-500 mt-3">This month</p>
               </div>
+            </div>
+
+            {/* Property Listings section header */}
+            <div className="flex items-center gap-3 pt-2">
+              <div className="w-6 h-px bg-amber-500" />
+              <span className="text-[10px] font-semibold tracking-[0.25em] uppercase text-amber-600">
+                Your Properties
+              </span>
+              <div className="flex-1 h-px bg-neutral-100" />
             </div>
 
             {/* Property Listings - API DATA */}
-            <div className="mt-8 space-y-4">
+            <div className="space-y-4">
               {error && (
-                <div className="text-error-600 bg-error-50 p-3 rounded-lg">
+                <div className="border-l-2 border-red-500 bg-red-50 text-red-700 text-sm px-4 py-3">
                   Error loading properties: {error.message || error.toString()}
                 </div>
               )}
               {hostProperties?.length === 0 && !error ? (
-                <div className="text-primary-600 p-3">
-                  No properties found. Create your first listing!
+                <div className="border border-neutral-200 bg-white p-10 sm:p-14 text-center">
+                  <FaHome className="text-3xl text-neutral-300 mx-auto mb-4" />
+                  <h3 className="font-Cormorant text-2xl sm:text-3xl font-light text-neutral-900 mb-2">
+                    No properties yet
+                  </h3>
+                  <p className="text-neutral-500 text-sm mb-6">
+                    Create your first listing to start welcoming guests.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab("create")}
+                    className="inline-flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200"
+                  >
+                    Create Listing
+                    <HiArrowRight className="text-base" />
+                  </button>
                 </div>
               ) : (
                 <>
@@ -1976,10 +2016,10 @@ const Dashboard = () => {
                   {hostProperties?.map((property) => (
                     <div
                       key={property._id || property.id}
-                      className="bg-white p-4 md:p-6 rounded-xl md:rounded-2xl border border-primary-200 shadow-soft"
+                      className="bg-white border border-neutral-200 hover:border-neutral-400 p-4 md:p-6 transition-colors duration-200"
                     >
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 md:gap-6">
-                        <div className="w-16 h-16 md:w-24 md:h-24 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <div className="w-20 h-20 md:w-28 md:h-28 bg-neutral-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {property.images && property.images.length > 0 ? (
                             <img
                               src={
@@ -1992,51 +2032,57 @@ const Dashboard = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <FaHome className="text-2xl md:text-3xl text-primary-600" />
+                            <FaHome className="text-2xl md:text-3xl text-neutral-400" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg md:text-xl font-bold text-primary-800 mb-2">
+                          <h3 className="font-Cormorant text-xl md:text-2xl font-light text-neutral-900 mb-1.5 leading-tight">
                             {property.title}
                           </h3>
-                          <p className="text-primary-600 mb-2 text-sm md:text-base">
-                            {property.bedrooms} beds • {property.bathrooms}{" "}
-                            baths{property.area && ` • ${property.area} m²`}
+                          <p className="text-neutral-500 mb-3 text-xs md:text-sm">
+                            {property.bedrooms} beds · {property.bathrooms}{" "}
+                            baths{property.area && ` · ${property.area} m²`}
                           </p>
-                          <div className="flex flex-wrap items-center gap-3 md:gap-4">
-                            <span className="bg-accent-green-100 text-accent-green-700 px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium">
+                          <div className="flex flex-wrap items-center gap-2 md:gap-3">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold tracking-[0.15em] uppercase ${
+                              property.isActive
+                                ? "bg-amber-50 text-amber-700"
+                                : "bg-neutral-100 text-neutral-500"
+                            }`}>
+                              <div className={`w-1.5 h-1.5 ${property.isActive ? "bg-amber-500" : "bg-neutral-400"}`} />
                               {property.isActive ? "Active" : "Inactive"}
                             </span>
-                            <span className="text-primary-600 text-xs md:text-sm">
+                            <span className="text-neutral-900 text-xs md:text-sm font-medium">
                               {property.currency || "₦"}
-                              {property.price}/night
+                              {property.price}
+                              <span className="text-neutral-400 font-normal">/night</span>
                             </span>
-                            <span className="text-primary-500 text-xs md:text-sm">
-                              {property.type}
+                            <span className="text-neutral-400 text-xs md:text-sm">
+                              · {property.type}
                             </span>
                           </div>
                           {/* Truncated Description */}
                           {property.description && (
-                            <p className="text-primary-600 mt-2 text-xs md:text-sm">
+                            <p className="text-neutral-500 mt-3 text-xs md:text-sm leading-relaxed">
                               {property.description
                                 .split(" ")
                                 .slice(0, 25)
                                 .join(" ")}
                               {property.description.split(" ").length > 25
-                                ? "..."
+                                ? "…"
                                 : ""}
                             </p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 self-start sm:self-center">
+                        <div className="flex items-center gap-1 self-start sm:self-center">
                           <ButtonTooltip content="View listing details">
                             <button
                               onClick={() =>
                                 handleViewProperty(property._id || property.id)
                               }
-                              className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                              className="p-3 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors duration-200"
                             >
-                              <FaEye className="text-base md:text-lg" />
+                              <FaEye className="text-base" />
                             </button>
                           </ButtonTooltip>
                           <ButtonTooltip content="Edit listing">
@@ -2044,17 +2090,17 @@ const Dashboard = () => {
                               onClick={() =>
                                 handleEditProperty(property._id || property.id)
                               }
-                              className="p-3 md:p-2 text-primary-600 hover:bg-primary-50 rounded-lg"
+                              className="p-3 text-neutral-500 hover:text-neutral-900 hover:bg-neutral-100 transition-colors duration-200"
                             >
-                              <FaEdit className="text-base md:text-lg" />
+                              <FaEdit className="text-base" />
                             </button>
                           </ButtonTooltip>
                           <ButtonTooltip
                             content="Delete listing"
                             variant="error"
                           >
-                            <button className="p-3 md:p-2 text-error-600 hover:bg-error-50 rounded-lg">
-                              <FaTrash className="text-base md:text-lg" />
+                            <button className="p-3 text-neutral-500 hover:text-red-600 hover:bg-red-50 transition-colors duration-200">
+                              <FaTrash className="text-base" />
                             </button>
                           </ButtonTooltip>
                         </div>
@@ -2076,33 +2122,43 @@ const Dashboard = () => {
 
       case "listings":
         return (
-          <div className="space-y-4 md:space-y-6">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-primary-800">
-                My Listings
-              </h2>
+          <div className="space-y-6 md:space-y-8">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 pb-4 border-b border-neutral-200">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-6 h-px bg-amber-500" />
+                  <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                    Portfolio
+                  </span>
+                </div>
+                <h2 className="font-Cormorant text-3xl md:text-4xl font-light text-neutral-900 leading-tight">
+                  My <span className="italic">Listings</span>
+                </h2>
+              </div>
               <button
                 onClick={() => setActiveTab("create")}
-                className="bg-primary-800 text-white px-4 md:px-6 py-2 md:py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300 text-base md:text-lg"
+                className="inline-flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-5 py-3 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200 self-start sm:self-end"
               >
                 Add New Listing
+                <HiArrowRight className="text-base" />
               </button>
             </div>
 
             {hostProperties?.length === 0 ? (
-              <div className="bg-white p-6 rounded-xl border border-primary-200 text-center">
-                <FaHome className="text-4xl text-primary-400 mx-auto mb-4" />
-                <h3 className="text-lg font-bold text-primary-800 mb-2">
+              <div className="bg-white border border-neutral-200 p-10 sm:p-14 text-center">
+                <FaHome className="text-3xl text-neutral-300 mx-auto mb-4" />
+                <h3 className="font-Cormorant text-2xl sm:text-3xl font-light text-neutral-900 mb-2">
                   No listings yet
                 </h3>
-                <p className="text-primary-600 mb-4">
-                  Start by creating your first property listing
+                <p className="text-neutral-500 text-sm mb-6">
+                  Start by creating your first property listing.
                 </p>
                 <button
                   onClick={() => setActiveTab("create")}
-                  className="bg-primary-800 text-white px-6 py-3 rounded-xl font-semibold hover:bg-primary-900 transition-colors duration-300"
+                  className="inline-flex items-center gap-2 bg-neutral-900 hover:bg-neutral-800 text-white px-6 py-3 text-xs font-semibold tracking-[0.2em] uppercase transition-colors duration-200"
                 >
                   Create First Listing
+                  <HiArrowRight className="text-base" />
                 </button>
               </div>
             ) : (
@@ -2985,33 +3041,45 @@ const Dashboard = () => {
       {renderNavbar()}
 
       {/* Main Dashboard Content */}
-      <div className="min-h-screen bg-gradient-to-br from-primary-25 via-neutral-50 to-primary-100 pt-20">
-        <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 md:py-8 max-w-[1400px]">
-          <div className="mb-4 sm:mb-6 md:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold bg-gradient-to-r from-primary-800 to-primary-600 bg-clip-text text-transparent mb-1 sm:mb-1 md:mb-2">
-              Host Dashboard
+      <div className="min-h-screen bg-neutral-50 pt-20">
+        <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 md:py-12 max-w-[1400px]">
+          {/* Editorial Page Header */}
+          <div className="mb-8 md:mb-10">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-px bg-amber-500" />
+              <span className="text-[10px] font-semibold tracking-[0.3em] uppercase text-amber-600">
+                Host Dashboard
+              </span>
+            </div>
+            <h1 className="font-Cormorant text-4xl sm:text-5xl md:text-6xl font-light text-neutral-900 leading-[1.05] mb-3">
+              Manage your{" "}
+              <span className="italic">properties</span>
             </h1>
-            <p className="text-primary-600 text-base sm:text-lg md:text-xl">
-              Manage your properties and grow your hosting business
+            <p className="text-neutral-500 text-sm sm:text-base md:text-lg max-w-xl leading-relaxed">
+              Track bookings, grow your earnings, and curate every detail of your hosting business.
             </p>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-soft border border-primary-200 p-1 sm:p-1.5 md:p-2 mb-6 md:mb-8">
-            <div className="flex space-x-1 sm:space-x-1.5 md:space-x-2 overflow-x-auto scrollbar-hide">
+          {/* Tab Nav — sharp, editorial */}
+          <div className="border-b border-neutral-200 mb-8 md:mb-10 -mx-4 sm:mx-0 px-4 sm:px-0">
+            <div className="flex space-x-6 sm:space-x-8 overflow-x-auto scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 md:gap-3 px-2 sm:px-3 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg md:rounded-xl font-semibold transition-all duration-300 whitespace-nowrap text-sm sm:text-base md:text-lg min-w-0 flex-1 sm:flex-none ${
+                  className={`relative flex items-center gap-2 py-4 whitespace-nowrap transition-colors duration-200 ${
                     activeTab === tab.id
-                      ? "bg-primary-800 text-white shadow-medium"
-                      : "text-primary-600 hover:bg-primary-50"
+                      ? "text-neutral-900"
+                      : "text-neutral-500 hover:text-neutral-700"
                   }`}
                 >
-                  <tab.icon className="text-xl sm:text-2xl md:text-xl flex-shrink-0" />
-                  <span className="text-sm sm:text-base md:text-lg md:inline leading-tight sm:leading-normal">
+                  <tab.icon className="text-lg flex-shrink-0" />
+                  <span className="text-xs sm:text-sm font-semibold tracking-[0.15em] uppercase">
                     {tab.name}
                   </span>
+                  {activeTab === tab.id && (
+                    <span className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-amber-500" />
+                  )}
                 </button>
               ))}
             </div>
